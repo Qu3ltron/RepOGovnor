@@ -1,0 +1,21 @@
+# Project extensions for task-registry-flow
+
+Optional. Copy to `PROJECT.md` beside the installed skill and edit for your repository.
+
+## Path and executor
+
+- Repository: `<absolute-path>`
+- Executor: `<registry-cli-command>`
+
+## Opcode commands
+
+| Opcode | Command |
+|--------|---------|
+| `PLAN_ACTIVATE` | `<cli> activate <docs/plans/file.md>` |
+| `TASK_STATUS` | `<cli> status <task_id> <status>` |
+| `TASK_DEFER` | `<cli> defer <task_id> <basis> <reactivation_condition>` |
+| `TASK_REPORT` | `<cli> report <plan_id>` |
+
+## Project-specific rules
+
+- CI integration, feature registry, or deferral bases unique to this repo.

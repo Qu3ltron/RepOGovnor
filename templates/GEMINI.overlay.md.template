@@ -1,0 +1,7 @@
+## Agent governance (portable plugin)
+
+Plugin: [plugins/agent-governance/](plugins/agent-governance/). **Policy and workflow:** [AGENTS.md](AGENTS.md) and sections above — this block is install posture only.
+
+- Posture: `plugins/agent-governance/scripts/status.sh`
+- Skills: `.agents/skills/` → `.cursor/skills/` (`SKILL.md` + optional `PROJECT.md`)
+- Hook: `{{MUTATION_HOOK_SCRIPT}}` via `{{VERIFY_HOOK_COMMAND}}`

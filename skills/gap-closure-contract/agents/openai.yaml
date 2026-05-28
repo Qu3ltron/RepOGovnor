@@ -1,0 +1,7 @@
+interface:
+  display_name: "Gap Closure Contract"
+  short_description: "Mandatory repo gap closure before implementation"
+  default_prompt: "Use $gap-closure-contract after approved gap analyses to create docs/plans/<slug>.md with Task Manifest and [[behaviors]], then $task-registry-flow and registry activate before implementation. TASK_DEFER requires deferral_governance_basis and reactivation_condition."
+
+policy:
+  allow_implicit_invocation: true

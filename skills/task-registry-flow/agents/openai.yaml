@@ -1,0 +1,7 @@
+interface:
+  display_name: "Task Registry Flow"
+  short_description: "Activate plans and track task status"
+  default_prompt: "Use $task-registry-flow after an approved docs/plans contract to activate via the registry CLI, update status or defer, archive completed history when needed, and include TASK_REPORT in the final handoff. TASK_DEFER is the only opcode for deferred status and requires deferral_governance_basis and reactivation_condition."
+
+policy:
+  allow_implicit_invocation: true

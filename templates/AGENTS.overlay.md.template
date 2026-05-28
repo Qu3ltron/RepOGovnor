@@ -1,0 +1,13 @@
+## Agent governance (portable plugin)
+
+Maintained by [plugins/agent-governance/](plugins/agent-governance/). **Workflow authority:** the main sections above in this file — not this block.
+
+| Item | Location |
+|------|----------|
+| Reference config | `plugins/agent-governance/examples/spectrum-arcana.project.config.toml` |
+| Posture check | `plugins/agent-governance/scripts/status.sh` |
+| Refresh overlay | `plugins/agent-governance/scripts/install-to-workspace.sh --config plugins/agent-governance/examples/spectrum-arcana.project.config.toml --overlay` |
+| Registry CLI | `{{TASK_REGISTRY_CLI}}` |
+| Mutation verify | `{{VERIFY_HOOK_COMMAND}}` |
+| Hook script | `{{MUTATION_HOOK_SCRIPT}}` |
+| Skills | `.cursor/skills/*` portable `SKILL.md` + optional `PROJECT.md` |

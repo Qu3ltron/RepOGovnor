@@ -1,0 +1,38 @@
+# Internal plugin requirements — authoritative list for install, status, and CI.
+# Consumed by: scripts/status.sh, src/agent_governance.rs (TRACKED_CI_ARTIFACTS must match
+# tracked_for_ci.required), scripts/install-to-workspace.sh (post-install commit checklist).
+
+schema_version = 1
+plugin_name = "agent-governance"
+
+[tracked_for_ci]
+design_rule = """
+After install or overlay, these paths MUST be committed to git.
+Fresh CI clones only see tracked files; untracked governance artifacts
+cause task_registry validate and status.sh --strict to fail.
+"""
+required = [
+  ".codex/governance-cli.env",
+  ".agents/plugins/agent-governance",
+  "AGENTS.md",
+  "GEMINI.md",
+  ".cursor/skills/gap-closure-contract/PROJECT.md",
+  ".cursor/skills/task-registry-flow/PROJECT.md",
+]
+
+[tracked_for_ci.plugin_link]
+path = ".agents/plugins/agent-governance"
+symlink_target = "../../plugins/agent-governance"
+must_be_symlink = true
+
+[tracked_for_ci.overlay_markers]
+agents_doc = "AGENTS.md"
+antigravity_doc = "GEMINI.md"
+begin = "<!-- agent-governance:begin -->"
+end = "<!-- agent-governance:end -->"
+exactly_one_pair = true
+
+[post_install]
+commit_checklist_command = "git add -N . && plugins/agent-governance/scripts/status.sh --strict"
+status_command = "plugins/agent-governance/scripts/status.sh --strict"
+validate_command = "cargo run --bin task_registry -- validate"

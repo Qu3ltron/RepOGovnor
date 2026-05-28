@@ -1,0 +1,11 @@
+{
+  "context": {
+    "fileName": ["GEMINI.md", "AGENTS.md"]
+  },
+  "skills": {
+    "enabled": true
+  },
+  "hooksConfig": {
+    "enabled": true
+  }
+}

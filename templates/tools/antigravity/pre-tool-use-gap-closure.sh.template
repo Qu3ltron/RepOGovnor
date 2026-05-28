@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Canonical mutation gate — sources .codex/governance-cli.env (GOVERNANCE_VERIFY_HOOK_CMD).
+set -euo pipefail
+
+root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+cd "$root"
+
+if [[ -f .codex/governance-cli.env ]]; then
+  # shellcheck disable=SC1091
+  source .codex/governance-cli.env
+fi
+
+verify_cmd="${GOVERNANCE_VERIFY_HOOK_CMD:-{{VERIFY_HOOK_COMMAND}}}"
+
+if [[ -z "$verify_cmd" || "$verify_cmd" == "{{VERIFY_HOOK_COMMAND}}" ]]; then
+  printf '%s\n' '{"decision":"deny","reason":"GOVERNANCE_VERIFY_HOOK_CMD not configured"}'
+  exit 0
+fi
+
+if ! bash -lc "$verify_cmd"; then
+  printf '%s\n' '{"decision":"deny","reason":"mutation gate failed"}'
+  exit 0
+fi

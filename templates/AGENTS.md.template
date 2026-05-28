@@ -1,0 +1,53 @@
+# {{REPO_NAME}} — Agent Instructions
+
+Portable governance entry installed by the **agent-governance** plugin. Project-specific architecture, CI, and product rules belong in your constitution, vision, and AGENTS extensions — not in the plugin.
+
+## Governance
+
+Read before feature work:
+
+| Document | Role |
+|----------|------|
+| [{{CONSTITUTION_PATH}}]({{CONSTITUTION_PATH}}) | Non-negotiable product and engineering rules |
+| [{{VISION_PATH}}]({{VISION_PATH}}) | Why the project exists; direction |
+| [{{DESIGN_DOCS_PATH}}/]({{DESIGN_DOCS_PATH}}/) | Exploratory drafts — not spec authority unless your project says otherwise |
+| [.cursor/skills/gap-closure-contract/](.cursor/skills/gap-closure-contract/) | Mandatory gap closure contracts before approved implementation |
+| [.cursor/skills/task-registry-flow/](.cursor/skills/task-registry-flow/) | Plan activation and `docs/task-registry.toml` workflow |
+| [GEMINI.md](GEMINI.md) | Antigravity (`agy`) entry — same governance, Antigravity-native paths |
+
+**Active agents:** Codex (this file + [.codex/settings.toml](.codex/settings.toml)) and Antigravity ([GEMINI.md](GEMINI.md) + [.gemini/settings.json](.gemini/settings.json) + [.agents/skills/](.agents/skills/) + [.agents/hooks.json](.agents/hooks.json)). Skill content is canonical under `.cursor/skills/`; Antigravity discovers via `.agents/skills/`.
+
+**Authority order** (highest first): {{AUTHORITY_ORDER}}. Do not guess across conflicts; ask.
+
+## Gap closure and registry (mandatory)
+
+After user-approved gap closure:
+
+1. Load `$gap-closure-contract` and write `docs/plans/<slug>.md` with **behavioral** per-gap criteria and typed `[[behaviors]]` in the Task Manifest (`given` / `when` / `then` / `confirmation` with runnable commands).
+2. `$task-registry-flow` → `{{TASK_REGISTRY_CLI}} activate docs/plans/<file>.md` before code edits.
+3. Mark tasks `completed` only after linked behavior confirmations pass.
+4. Final handoff: `{{TASK_REGISTRY_CLI}} report <plan_id>`; archive completed history when the executor supports it.
+
+Registry work uses typed TOML validation via `{{TASK_REGISTRY_CLI}} validate` and behavior verification via `{{TASK_REGISTRY_CLI}} verify-behaviors` when configured. `TASK_DEFER` requires `deferral_governance_basis` and `reactivation_condition`.
+
+{{COMMIT_GOVERNANCE_SECTION}}
+
+## Architecture
+
+Define stack boundaries, layer ownership, and forbidden patterns in project docs ([{{CONSTITUTION_PATH}}]({{CONSTITUTION_PATH}}), README, or a dedicated architecture doc). This plugin does not prescribe language, framework, or CI layout.
+
+## Validation
+
+Each closure contract carries its own **Validation Plan** with runnable commands. Suggested project gates (from install config):
+
+**Focused:** {{VALIDATION_FOCUSED}}
+
+**Full:** {{VALIDATION_FULL}}
+
+Run the smallest honest subset that proves the approved scope; broaden when shared infrastructure or contracts change.
+
+## Workspace boundary
+
+- **Repo root:** `{{REPO_ROOT}}`
+- **Scratch:** `{{SCRATCH_ROOT}}/<short-slug>/`
+- Confirm `git rev-parse --show-toplevel` matches repo root before mutating files.

@@ -1,0 +1,46 @@
+[hook]
+name = "user-plan-approval"
+description = "Trigger gap-closure-contract after gap analysis plus user approval, with [[behaviors]] confirmations, registry CLI activation, and typed TOML validation."
+skill = "gap-closure-contract"
+skill_path = ".cursor/skills/gap-closure-contract/SKILL.md"
+required_before_mutation = true
+contract_required = true
+contract_path_pattern = "docs/plans/<short-slug>.md"
+scratch_root = "{{SCRATCH_ROOT}}"
+
+approval_triggers = [
+  "Implement the plan",
+  "approved",
+  "proceed",
+  "continue",
+  "close these gaps",
+  "use this to close",
+  "reviewer output followed by a fix instruction"
+]
+
+[requirements]
+approved_scope = true
+required_change_checklist_with_file_names = true
+task_manifest = true
+registry_activation = true
+task_registry_check = true
+task_report = true
+per_gap_success_criteria = true
+behavioral_contract = true
+validation_plan = true
+walkthrough_evidence = true
+
+[task_registry]
+registry_path = "{{REGISTRY_PATH}}"
+skill = "task-registry-flow"
+activation_opcode = "PLAN_ACTIVATE"
+status_opcode = "TASK_STATUS"
+defer_opcode = "TASK_DEFER"
+report_opcode = "TASK_REPORT"
+cli_command = "{{TASK_REGISTRY_CLI}}"
+typed_validation_command = "{{TASK_REGISTRY_CLI}} validate"
+deferred_without_governed_reason_forbidden = true
+deferred_governance_basis_required = true
+deferred_reactivation_condition_required = true
+deferred_status_requires_defer_opcode = true
+required_deferred_task_fields = ["deferral_governance_basis", "reactivation_condition"]

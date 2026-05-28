@@ -1,0 +1,107 @@
+schema_version = 1
+plugin_name = "agent-governance"
+plugin_version = "0.2.0"
+portable = true
+
+# Templates render via scripts/render-from-config.sh + project.config.toml
+
+[[render]]
+template = "templates/AGENTS.md.template"
+destination = "AGENTS.md"
+mode = "full"
+
+[[render]]
+template = "templates/GEMINI.md.template"
+destination = "GEMINI.md"
+mode = "full"
+
+[[render]]
+template = "templates/AGENTS.overlay.md.template"
+destination = "AGENTS.md"
+mode = "overlay"
+
+[[render]]
+template = "templates/GEMINI.overlay.md.template"
+destination = "GEMINI.md"
+mode = "overlay"
+
+[[render]]
+template = "templates/.codex/settings.toml.template"
+destination = ".codex/settings.toml"
+
+[[render]]
+template = "templates/.codex/hooks/user-plan-approval.toml.template"
+destination = ".codex/hooks/user-plan-approval.toml"
+
+[[render]]
+template = "templates/.agents/hooks.json.template"
+destination = ".agents/hooks.json"
+
+[[render]]
+template = "templates/tools/antigravity/pre-tool-use-gap-closure.sh.template"
+destination = "tools/antigravity/pre-tool-use-gap-closure.sh"
+config_key = "mutation_gate.hook_script_path"
+
+[[copy]]
+source = "templates/.gemini/settings.json"
+destination = ".gemini/settings.json"
+
+[[copy]]
+source = "skills/gap-closure-contract"
+destination = ".cursor/skills/gap-closure-contract"
+recursive = true
+
+[[copy]]
+source = "skills/task-registry-flow"
+destination = ".cursor/skills/task-registry-flow"
+recursive = true
+
+[[symlinks]]
+link = ".agents/skills/gap-closure-contract"
+target = "../../.cursor/skills/gap-closure-contract"
+
+[[symlinks]]
+link = ".agents/skills/task-registry-flow"
+target = "../../.cursor/skills/task-registry-flow"
+
+[[generated]]
+destination = ".codex/governance-cli.env"
+from_config = "mutation_gate.verify_hook_command"
+
+[[symlinks]]
+link = ".agents/plugins/agent-governance"
+target = "../../plugins/agent-governance"
+note = "Required tracked CI artifact; install creates when absent"
+
+[[plugin_only]]
+source = "plugin.json"
+destination = ".agents/plugins/agent-governance/plugin.json"
+
+[[plugin_only]]
+source = "hooks.json"
+destination = ".agents/plugins/agent-governance/hooks.json"
+
+[[plugin_only]]
+source = "skills"
+destination = ".agents/plugins/agent-governance/skills"
+recursive = true
+
+[[plugin_only]]
+source = "scripts/pre-tool-use-gap-closure.sh"
+destination = ".agents/plugins/agent-governance/scripts/pre-tool-use-gap-closure.sh"
+executable = true
+
+[examples]
+spectrum_arcana_overlay = "examples/spectrum-arcana-overlay.md"
+spectrum_arcana_config = "examples/spectrum-arcana.project.config.toml"
+
+[requirements]
+manifest = "REQUIREMENTS.toml"
+tracked_for_ci = [
+  ".codex/governance-cli.env",
+  ".agents/plugins/agent-governance",
+  "AGENTS.md",
+  "GEMINI.md",
+  ".cursor/skills/gap-closure-contract/PROJECT.md",
+  ".cursor/skills/task-registry-flow/PROJECT.md",
+]

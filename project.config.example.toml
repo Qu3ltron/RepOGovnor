@@ -1,0 +1,38 @@
+# Copy to project.config.toml and edit before install-to-workspace.sh
+# Paths may use {{AUTO_REPO_ROOT}} to substitute git rev-parse --show-toplevel at install time.
+
+[project]
+repo_name = "my-project"
+repo_root = "{{AUTO_REPO_ROOT}}"
+scratch_root = "/tmp/my-project-gap-closure"
+constitution_path = "CONSTITUTION.md"
+vision_path = "VISION.md"
+agents_path = "AGENTS.md"
+design_docs_path = "docs/design"
+
+[task_registry]
+# Executor for registry opcodes (must support activate, status, defer, report, validate, verify-behaviors, verify-mutation-hook)
+cli_command = "cargo run --bin task_registry --"
+registry_path = "docs/task-registry.toml"
+plans_path = "docs/plans"
+archive_dir = "docs/task-registry/archive"
+
+[mutation_gate]
+# PreToolUse hook command; must read hook JSON from stdin and print {"decision":"allow"|"deny"}
+verify_hook_command = "cargo run --quiet --bin task_registry -- verify-mutation-hook"
+hook_script_path = "tools/antigravity/pre-tool-use-gap-closure.sh"
+
+[validation]
+# Suggested gates for contract Validation Plan sections (project-specific; not enforced by plugin)
+focused = ["cargo test"]
+full = ["cargo test", "cargo fmt --check"]
+
+# Optional — omit or leave verify_command empty to skip commit-governance section in AGENTS.md
+[commit_governance]
+plan_id_footer_required = false
+verify_command = ""
+implementation_path_globs = []
+
+[authority]
+# Ordered list for conflict resolution (highest first). Project defines meaning of each doc.
+order = ["CONSTITUTION.md", "VISION.md", "docs/design/*"]

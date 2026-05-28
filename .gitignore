@@ -1,0 +1,12 @@
+# OS
+.DS_Store
+
+# Editor
+*.swp
+*~
+
+# Local consumer config (created per project)
+project.config.toml
+
+# Temp render output
+.workspace-render/
