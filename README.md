@@ -1,6 +1,6 @@
 # Agent Governance Plugin
 
-Portable **Codex + Antigravity** workflow: gap-closure contract, task-registry flow, approval hooks, and mutation gates.
+Portable **Codex + Cursor + Antigravity** workflow: gap-closure contract, task-registry flow, approval hooks, and mutation gates.
 
 Repository: https://github.com/Qu3ltron/Governance-plugin
 
@@ -53,6 +53,7 @@ After install, commit every path in [`REQUIREMENTS.toml`](REQUIREMENTS.toml) →
 
 - `.codex/governance-cli.env`
 - `.agents/plugins/agent-governance` (relative symlink → `../../plugins/agent-governance`)
+- `.cursor/hooks.json` and `.cursor/hooks/gap-closure-gate.sh` (Cursor `preToolUse` Write gate)
 - `AGENTS.md` and `GEMINI.md` (with `<!-- agent-governance:begin/end -->` overlay markers)
 - `.cursor/skills/gap-closure-contract/PROJECT.md`
 - `.cursor/skills/task-registry-flow/PROJECT.md`
@@ -93,3 +94,4 @@ Mutation hook default: `cargo run --quiet --bin task_registry -- verify-mutation
 | Task manifest schema | Registry CLI implementation |
 | Codex hook metadata | CI verify commands |
 | Antigravity skills + hooks | Architecture, implementation path globs |
+| Cursor preToolUse Write gate | `.cursor/hooks.json` + adapter script |

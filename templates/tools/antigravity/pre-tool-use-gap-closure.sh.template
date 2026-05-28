@@ -5,6 +5,17 @@ set -euo pipefail
 root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 cd "$root"
 
+format="${GOVERNANCE_HOOK_FORMAT:-antigravity}"
+
+emit_deny() {
+  local reason="$1"
+  if [[ "$format" == "cursor" ]]; then
+    printf '{"permission":"deny","user_message":"%s","agent_message":"%s"}\n' "$reason" "$reason"
+  else
+    printf '{"decision":"deny","reason":"%s"}\n' "$reason" "$reason"
+  fi
+}
+
 if [[ -f .codex/governance-cli.env ]]; then
   # shellcheck disable=SC1091
   source .codex/governance-cli.env
@@ -13,11 +24,11 @@ fi
 verify_cmd="${GOVERNANCE_VERIFY_HOOK_CMD:-{{VERIFY_HOOK_COMMAND}}}"
 
 if [[ -z "$verify_cmd" || "$verify_cmd" == "{{VERIFY_HOOK_COMMAND}}" ]]; then
-  printf '%s\n' '{"decision":"deny","reason":"GOVERNANCE_VERIFY_HOOK_CMD not configured"}'
+  emit_deny "GOVERNANCE_VERIFY_HOOK_CMD not configured; run plugins/agent-governance/scripts/install-to-workspace.sh --overlay or set .codex/governance-cli.env"
   exit 0
 fi
 
 if ! bash -lc "$verify_cmd"; then
-  printf '%s\n' '{"decision":"deny","reason":"mutation gate failed"}'
+  emit_deny "mutation gate failed"
   exit 0
 fi

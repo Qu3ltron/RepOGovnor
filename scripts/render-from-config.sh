@@ -197,6 +197,14 @@ infra_files = [
         target_root / ".agents/hooks.json",
     ),
     (
+        templates / ".cursor/hooks.json.template",
+        target_root / ".cursor/hooks.json",
+    ),
+    (
+        templates / ".cursor/hooks/gap-closure-gate.sh.template",
+        target_root / ".cursor/hooks/gap-closure-gate.sh",
+    ),
+    (
         templates / "tools/antigravity/pre-tool-use-gap-closure.sh.template",
         target_root / Path(hook_script),
     ),
@@ -282,6 +290,10 @@ else:
 hook_path = target_root / hook_script
 if hook_path.exists() or force or not overlay:
     hook_path.chmod(0o755)
+
+cursor_hook = target_root / ".cursor/hooks/gap-closure-gate.sh"
+if cursor_hook.exists() or force or not overlay:
+    cursor_hook.chmod(0o755)
 
 mode = "overlay" if overlay else "full"
 print(f"Rendered agent-governance ({mode}) into {target_root}")

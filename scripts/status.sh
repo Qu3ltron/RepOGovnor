@@ -170,6 +170,19 @@ if [[ -f "${TARGET_ROOT}/.agents/hooks.json" ]] && grep -q 'tools/antigravity/pr
 else
   bad ".agents/hooks.json does not point at tools/antigravity/pre-tool-use-gap-closure.sh"
 fi
+if [[ -f "${TARGET_ROOT}/.cursor/hooks.json" ]] && grep -q 'hooks/gap-closure-gate.sh' "${TARGET_ROOT}/.cursor/hooks.json"; then
+  ok ".cursor/hooks.json defines preToolUse Write gate"
+else
+  bad ".cursor/hooks.json missing preToolUse hook for hooks/gap-closure-gate.sh"
+fi
+check_hook_uses_env "${TARGET_ROOT}/.cursor/hooks/gap-closure-gate.sh"
+if [[ -f "${TARGET_ROOT}/.cursor/hooks/gap-closure-gate.sh" ]] \
+  && grep -q 'GOVERNANCE_HOOK_FORMAT=cursor' "${TARGET_ROOT}/.cursor/hooks/gap-closure-gate.sh" \
+  && grep -q 'tools/antigravity/pre-tool-use-gap-closure.sh' "${TARGET_ROOT}/.cursor/hooks/gap-closure-gate.sh"; then
+  ok ".cursor/hooks/gap-closure-gate.sh delegates to canonical mutation gate"
+else
+  bad ".cursor/hooks/gap-closure-gate.sh must set GOVERNANCE_HOOK_FORMAT=cursor and delegate to canonical script"
+fi
 if [[ -f "${PLUGIN_ROOT}/hooks.json" ]] && grep -q 'tools/antigravity/pre-tool-use-gap-closure.sh' "${PLUGIN_ROOT}/hooks.json"; then
   ok "plugin hooks.json uses canonical hook script path"
 else

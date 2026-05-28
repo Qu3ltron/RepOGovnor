@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Cursor preToolUse adapter — delegates to the canonical mutation gate with Cursor JSON output.
+# Canonical gate sources .codex/governance-cli.env and reads GOVERNANCE_VERIFY_HOOK_CMD.
+set -euo pipefail
+
+root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+export GOVERNANCE_HOOK_FORMAT=cursor
+exec "${root}/{{MUTATION_HOOK_SCRIPT}}"

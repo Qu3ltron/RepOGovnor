@@ -1,16 +1,28 @@
 {
   "name": "agent-governance",
-  "version": "0.2.0",
-  "description": "Portable Codex + Antigravity gap-closure contract, task-registry flow, and mutation-gate workflow",
+  "version": "0.3.0",
+  "description": "Portable Codex + Cursor + Antigravity gap-closure contract, task-registry flow, and mutation-gate workflow",
   "author": "Qu3ltron",
   "repository": "https://github.com/Qu3ltron/Governance-plugin",
   "homepage": "https://github.com/Qu3ltron/Governance-plugin",
-  "tags": ["governance", "gap-closure", "task-registry", "codex", "antigravity"],
-  "skills": ["gap-closure-contract", "task-registry-flow"],
+  "tags": [
+    "governance",
+    "gap-closure",
+    "task-registry",
+    "codex",
+    "cursor",
+    "antigravity"
+  ],
+  "skills": [
+    "gap-closure-contract",
+    "task-registry-flow"
+  ],
   "requirements": "REQUIREMENTS.toml",
   "tracked_for_ci": [
     ".codex/governance-cli.env",
     ".agents/plugins/agent-governance",
+    ".cursor/hooks.json",
+    ".cursor/hooks/gap-closure-gate.sh",
     "AGENTS.md",
     "GEMINI.md",
     ".cursor/skills/gap-closure-contract/PROJECT.md",

@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "command": "hooks/gap-closure-gate.sh",
+        "matcher": "Write",
+        "failClosed": true
+      }
+    ]
+  }
+}

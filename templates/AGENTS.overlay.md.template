@@ -10,4 +10,5 @@ Maintained by [plugins/agent-governance/](plugins/agent-governance/). **Workflow
 | Registry CLI | `{{TASK_REGISTRY_CLI}}` |
 | Mutation verify | `{{VERIFY_HOOK_COMMAND}}` |
 | Hook script | `{{MUTATION_HOOK_SCRIPT}}` |
+| Cursor hook | `.cursor/hooks/gap-closure-gate.sh` → canonical gate (`preToolUse` / `Write`) |
 | Skills | `.cursor/skills/*` portable `SKILL.md` + optional `PROJECT.md` |

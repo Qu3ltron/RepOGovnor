@@ -1,6 +1,6 @@
 schema_version = 1
 plugin_name = "agent-governance"
-plugin_version = "0.2.0"
+plugin_version = "0.3.0"
 portable = true
 
 # Templates render via scripts/render-from-config.sh + project.config.toml
@@ -36,6 +36,15 @@ destination = ".codex/hooks/user-plan-approval.toml"
 [[render]]
 template = "templates/.agents/hooks.json.template"
 destination = ".agents/hooks.json"
+
+[[render]]
+template = "templates/.cursor/hooks.json.template"
+destination = ".cursor/hooks.json"
+
+[[render]]
+template = "templates/.cursor/hooks/gap-closure-gate.sh.template"
+destination = ".cursor/hooks/gap-closure-gate.sh"
+config_key = "mutation_gate.hook_script_path"
 
 [[render]]
 template = "templates/tools/antigravity/pre-tool-use-gap-closure.sh.template"
@@ -100,6 +109,8 @@ manifest = "REQUIREMENTS.toml"
 tracked_for_ci = [
   ".codex/governance-cli.env",
   ".agents/plugins/agent-governance",
+  ".cursor/hooks.json",
+  ".cursor/hooks/gap-closure-gate.sh",
   "AGENTS.md",
   "GEMINI.md",
   ".cursor/skills/gap-closure-contract/PROJECT.md",
