@@ -1,0 +1,154 @@
+#!/usr/bin/env bash
+# Validate installer mode semantics against a real temporary git workspace.
+set -euo pipefail
+
+PLUGIN_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+TARGET_ROOT="$(mktemp -d)"
+OUT_DIR="$(mktemp -d)"
+
+cleanup() {
+  rm -rf "$TARGET_ROOT" "$OUT_DIR"
+}
+trap cleanup EXIT
+
+git init -q "$TARGET_ROOT"
+mkdir -p "$TARGET_ROOT/.codex" "$TARGET_ROOT/.agents/plugins" "$TARGET_ROOT/tools/antigravity"
+mkdir -p "$TARGET_ROOT/.agents/skills" "$TARGET_ROOT/.cursor/skills"
+
+printf 'custom agents\n' > "$TARGET_ROOT/AGENTS.md"
+printf 'custom gemini\n<!-- agent-governance:begin -->\nold\n<!-- agent-governance:end -->\n' > "$TARGET_ROOT/GEMINI.md"
+printf 'old config\n' > "$TARGET_ROOT/.codex/config.toml"
+printf 'stale\n' > "$TARGET_ROOT/.codex/settings.toml"
+printf 'stale root hook\n' > "$TARGET_ROOT/hooks.json"
+printf 'stale agy hook\n' > "$TARGET_ROOT/tools/antigravity/pre-tool-use-gap-closure.sh"
+printf 'wrong plugin link occupant\n' > "$TARGET_ROOT/.agents/plugins/agent-governance"
+
+for skill in gap-closure-contract task-registry-flow; do
+  mkdir -p "$TARGET_ROOT/.cursor/skills/$skill"
+  printf 'legacy cursor skill\n' > "$TARGET_ROOT/.cursor/skills/$skill/SKILL.md"
+  printf 'legacy symlink target project\n' > "$TARGET_ROOT/.cursor/skills/$skill/PROJECT.md"
+  ln -s "../../.cursor/skills/$skill" "$TARGET_ROOT/.agents/skills/$skill"
+done
+
+hash_workspace() {
+  (
+    cd "$TARGET_ROOT"
+    {
+      find . -type f -print0 \
+        | sort -z \
+        | while IFS= read -r -d '' path; do sha256sum "$path"; done
+      find . -type l -print0 \
+        | sort -z \
+        | while IFS= read -r -d '' path; do
+            printf 'symlink  %s -> %s\n' "$path" "$(readlink "$path")"
+          done
+    } | sha256sum
+  )
+}
+
+if "${PLUGIN_ROOT}/scripts/install-to-workspace.sh" \
+  --config "${PLUGIN_ROOT}/project.config.example.toml" \
+  --target "$TARGET_ROOT" >"$OUT_DIR/no-mode.out" 2>"$OUT_DIR/no-mode.err"; then
+  echo "install without a mode unexpectedly succeeded" >&2
+  exit 1
+fi
+grep -q 'missing install mode' "$OUT_DIR/no-mode.err"
+
+if "${PLUGIN_ROOT}/scripts/install-to-workspace.sh" \
+  --config "${PLUGIN_ROOT}/project.config.example.toml" \
+  --target "$TARGET_ROOT" \
+  --overlay >"$OUT_DIR/overlay.out" 2>"$OUT_DIR/overlay.err"; then
+  echo "--overlay unexpectedly succeeded" >&2
+  exit 1
+fi
+grep -q -- '--overlay has been removed' "$OUT_DIR/overlay.err"
+
+before_sha="$(hash_workspace)"
+"${PLUGIN_ROOT}/scripts/install-to-workspace.sh" \
+  --config "${PLUGIN_ROOT}/project.config.example.toml" \
+  --target "$TARGET_ROOT" \
+  --dry-run > "$OUT_DIR/dry-run.out"
+after_sha="$(hash_workspace)"
+
+[[ "$before_sha" == "$after_sha" ]]
+grep -q 'would-update' "$OUT_DIR/dry-run.out"
+grep -q 'would-remove-stale' "$OUT_DIR/dry-run.out"
+grep -q '.agents/skills/gap-closure-contract: would-replace-symlink' "$OUT_DIR/dry-run.out"
+grep -q '.agents/skills/task-registry-flow: would-replace-symlink' "$OUT_DIR/dry-run.out"
+test -L "$TARGET_ROOT/.agents/skills/gap-closure-contract"
+test -L "$TARGET_ROOT/.agents/skills/task-registry-flow"
+
+"${PLUGIN_ROOT}/scripts/install-to-workspace.sh" \
+  --config "${PLUGIN_ROOT}/project.config.example.toml" \
+  --target "$TARGET_ROOT" \
+  --merge > "$OUT_DIR/merge.out"
+
+grep -q 'custom agents' "$TARGET_ROOT/AGENTS.md"
+grep -q 'agent-governance:begin' "$TARGET_ROOT/AGENTS.md"
+test ! -e "$TARGET_ROOT/.codex/settings.toml"
+test ! -e "$TARGET_ROOT/hooks.json"
+test ! -e "$TARGET_ROOT/tools/antigravity/pre-tool-use-gap-closure.sh"
+grep -q 'remove-stale' "$OUT_DIR/merge.out"
+! grep -q 'preserve-stale' "$OUT_DIR/merge.out"
+grep -q 'preserve-drift' "$OUT_DIR/merge.out"
+grep -q 'hooks = true' "$TARGET_ROOT/.codex/config.toml"
+grep -q '.agents/skills/gap-closure-contract: replace-symlink' "$OUT_DIR/merge.out"
+grep -q '.agents/skills/task-registry-flow: replace-symlink' "$OUT_DIR/merge.out"
+! grep -q '.agents/skills/gap-closure-contract: aligned' "$OUT_DIR/merge.out"
+! grep -q '.agents/skills/task-registry-flow: aligned' "$OUT_DIR/merge.out"
+! grep -q '.agents/skills/gap-closure-contract: preserve-drift' "$OUT_DIR/merge.out"
+! grep -q '.agents/skills/task-registry-flow: preserve-drift' "$OUT_DIR/merge.out"
+test ! -L "$TARGET_ROOT/.agents/skills/gap-closure-contract"
+test ! -L "$TARGET_ROOT/.agents/skills/task-registry-flow"
+test -d "$TARGET_ROOT/.agents/skills/gap-closure-contract"
+test -d "$TARGET_ROOT/.agents/skills/task-registry-flow"
+grep -q 'name: gap-closure-contract' "$TARGET_ROOT/.agents/skills/gap-closure-contract/SKILL.md"
+grep -q 'name: task-registry-flow' "$TARGET_ROOT/.agents/skills/task-registry-flow/SKILL.md"
+! grep -q 'legacy symlink target project' "$TARGET_ROOT/.agents/skills/gap-closure-contract/PROJECT.md"
+! grep -q 'legacy symlink target project' "$TARGET_ROOT/.agents/skills/task-registry-flow/PROJECT.md"
+test -f "$TARGET_ROOT/docs/task-registry.toml"
+mkdir -p "$TARGET_ROOT/nested/work"
+(
+  cd "$TARGET_ROOT/nested/work"
+  "$TARGET_ROOT/.codex/scripts/task-registry" validate > "$OUT_DIR/nested-validate.out"
+)
+grep -q 'task registry validate ok' "$OUT_DIR/nested-validate.out"
+test -f "$TARGET_ROOT/docs/task-registry/events.jsonl"
+test ! -e "$TARGET_ROOT/nested/work/docs/task-registry.toml"
+test ! -e "$TARGET_ROOT/nested/work/docs/task-registry/events.jsonl"
+
+for skill in gap-closure-contract task-registry-flow; do
+  rm -rf "$TARGET_ROOT/.agents/skills/$skill"
+  ln -s "../../.cursor/skills/$skill" "$TARGET_ROOT/.agents/skills/$skill"
+done
+
+if (cd "$TARGET_ROOT" && "$PLUGIN_ROOT/scripts/status.sh" --strict > "$OUT_DIR/symlink-status.out" 2>&1); then
+  echo "strict status unexpectedly accepted symlinked skill projections" >&2
+  exit 1
+fi
+grep -q '.agents/skills/gap-closure-contract must be a native directory, not a symlink' "$OUT_DIR/symlink-status.out"
+grep -q '.agents/skills/task-registry-flow must be a native directory, not a symlink' "$OUT_DIR/symlink-status.out"
+
+"${PLUGIN_ROOT}/scripts/install-to-workspace.sh" \
+  --config "${PLUGIN_ROOT}/project.config.example.toml" \
+  --target "$TARGET_ROOT" \
+  --force > "$OUT_DIR/force.out"
+
+! grep -q 'custom agents' "$TARGET_ROOT/AGENTS.md"
+test ! -e "$TARGET_ROOT/.codex/settings.toml"
+test ! -e "$TARGET_ROOT/hooks.json"
+test ! -e "$TARGET_ROOT/tools/antigravity/pre-tool-use-gap-closure.sh"
+test -L "$TARGET_ROOT/.agents/plugins/agent-governance"
+[[ "$(readlink "$TARGET_ROOT/.agents/plugins/agent-governance")" == "../../plugins/agent-governance" ]]
+grep -q '.agents/skills/gap-closure-contract: replace-symlink' "$OUT_DIR/force.out"
+grep -q '.agents/skills/task-registry-flow: replace-symlink' "$OUT_DIR/force.out"
+! grep -q '.agents/skills/gap-closure-contract: aligned' "$OUT_DIR/force.out"
+! grep -q '.agents/skills/task-registry-flow: aligned' "$OUT_DIR/force.out"
+! grep -q '.agents/skills/gap-closure-contract: preserve-drift' "$OUT_DIR/force.out"
+! grep -q '.agents/skills/task-registry-flow: preserve-drift' "$OUT_DIR/force.out"
+test ! -L "$TARGET_ROOT/.agents/skills/gap-closure-contract"
+test ! -L "$TARGET_ROOT/.agents/skills/task-registry-flow"
+test -d "$TARGET_ROOT/.agents/skills/gap-closure-contract"
+test -d "$TARGET_ROOT/.agents/skills/task-registry-flow"
+
+echo "install mode validation ok"

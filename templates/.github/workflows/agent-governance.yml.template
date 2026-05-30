@@ -1,0 +1,19 @@
+name: Agent Governance
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+
+jobs:
+  governance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Validate task registry and source-file limits
+        run: .codex/scripts/task-registry validate
+      - name: Verify governance install posture
+        run: plugins/agent-governance/scripts/status.sh --strict

@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Source-file limit
+        run: cargo run --locked --quiet --manifest-path rust/task-registry-flow-cli/Cargo.toml -- source-limit check
+      - name: Rust format
+        run: cargo fmt --manifest-path rust/task-registry-flow-cli/Cargo.toml -- --check
+      - name: Rust tests
+        run: cargo test --locked --manifest-path rust/task-registry-flow-cli/Cargo.toml
+      - name: Rust clippy
+        run: cargo clippy --locked --manifest-path rust/task-registry-flow-cli/Cargo.toml -- -D warnings
+      - name: Shell syntax
+        run: |
+          bash -n scripts/install-to-workspace.sh
+          bash -n scripts/render-from-config.sh
+          bash -n scripts/status.sh
+          bash -n scripts/test-install-modes.sh
+          bash -n scripts/test-release-readiness.sh
+          bash -n scripts/release-version-check.sh
+          bash -n scripts/release-audit.sh
+          bash -n scripts/pre-tool-use-gap-closure.sh
+          bash -n templates/.codex/scripts/task-registry.template
+          bash -n templates/.cursor/hooks/gap-closure-gate.sh.template
+          bash -n templates/tools/agent-governance/pre-tool-use-gap-closure.sh.template
+      - name: Install mode behavior
+        run: bash scripts/test-install-modes.sh
+      - name: Release readiness behavior
+        run: bash scripts/test-release-readiness.sh
+      - name: Release source status
+        run: scripts/status.sh --release-source
+      - name: Install release audit tools
+        run: cargo install cargo-audit cargo-deny --locked
+      - name: Release audit
+        run: scripts/release-audit.sh
+      - name: TOML and JSON syntax
+        run: python3 -c 'import json,pathlib,tomllib; [tomllib.loads(pathlib.Path(p).read_text()) for p in ["MANIFEST.toml","REQUIREMENTS.toml","project.config.example.toml","examples/spectrum-arcana.project.config.toml","docs/task-registry.toml"]]; [json.loads(pathlib.Path(p).read_text()) for p in [".codex-plugin/plugin.json","plugin.json","hooks/hooks.json","hooks/codex-hooks.json","templates/.codex/hooks.json.template","templates/.agents/hooks.json.template","templates/.cursor/hooks.json.template"]]'
+      - name: Plugin manifest validation
+        run: python3 -c 'import json,pathlib; m=json.loads(pathlib.Path(".codex-plugin/plugin.json").read_text()); required=["name","version","description","author","skills","interface"]; missing=[k for k in required if k not in m]; assert not missing, missing; assert pathlib.Path(m["skills"]).exists()'
+      - name: Antigravity plugin layout
+        run: |
+          if command -v agy >/dev/null 2>&1; then
+            agy plugin validate .
+          else
+            echo "agy not installed on runner; local status.sh enforces this where AGY is available"
+          fi

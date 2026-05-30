@@ -9,8 +9,8 @@ Optional. Copy to `PROJECT.md` beside the installed skill and edit for your repo
 
 ## Registry CLI
 
-- Executor: `<registry-cli-command>`
-- Mutation hook: `<verify-mutation-hook-command>`
+- Executor: `.codex/scripts/task-registry`
+- Mutation hook: `.codex/scripts/task-registry verify-mutation-hook`
 
 ## Ground rules
 

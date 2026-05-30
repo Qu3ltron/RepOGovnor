@@ -5,4 +5,4 @@ set -euo pipefail
 
 root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 export GOVERNANCE_HOOK_FORMAT=cursor
-exec "${root}/{{MUTATION_HOOK_SCRIPT}}"
+exec "${root}/{{MUTATION_HOOK_SCRIPT}}" --format cursor

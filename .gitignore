@@ -10,3 +10,10 @@ project.config.toml
 
 # Temp render output
 .workspace-render/
+
+# Plugin-local CLI receipts
+docs/task-registry/events.jsonl
+
+# Rust build output
+target/
+rust/**/target/

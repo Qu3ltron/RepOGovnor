@@ -11,21 +11,28 @@ agents_path = "AGENTS.md"
 design_docs_path = "docs/design"
 
 [task_registry]
-# Executor for registry opcodes (must support activate, status, defer, report, validate, verify-behaviors, verify-mutation-hook)
-cli_command = "cargo run --bin task_registry --"
+# Canonical plugin-owned executor. Hard cutover forbids project-native task_registry executors.
+cli_command = ".codex/scripts/task-registry"
 registry_path = "docs/task-registry.toml"
 plans_path = "docs/plans"
 archive_dir = "docs/task-registry/archive"
 
 [mutation_gate]
-# PreToolUse hook command; must read hook JSON from stdin and print {"decision":"allow"|"deny"}
-verify_hook_command = "cargo run --quiet --bin task_registry -- verify-mutation-hook"
-hook_script_path = "tools/antigravity/pre-tool-use-gap-closure.sh"
+# Hook command; reads hook JSON from stdin and emits native Codex, AGY, or Cursor JSON.
+verify_hook_command = ".codex/scripts/task-registry verify-mutation-hook"
+hook_script_path = "tools/agent-governance/pre-tool-use-gap-closure.sh"
+
+[environments]
+render_codex = true
+render_antigravity = true
+render_cursor = true
+install_global_antigravity_plugin = false
+minimum_agy_version = "1.0.3"
 
 [validation]
 # Suggested gates for contract Validation Plan sections (project-specific; not enforced by plugin)
-focused = ["cargo test"]
-full = ["cargo test", "cargo fmt --check"]
+focused = [".codex/scripts/task-registry source-limit check", "cargo test"]
+full = [".codex/scripts/task-registry validate", "cargo test", "cargo fmt --check"]
 
 # Optional — omit or leave verify_command empty to skip commit-governance section in AGENTS.md
 [commit_governance]

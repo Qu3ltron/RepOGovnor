@@ -1,0 +1,72 @@
+# <Plan Title>
+
+## Approved Scope
+
+Approved gaps:
+- <gap id>: <gap summary>
+
+Out of scope:
+- <explicit non-goal or deferred scope>
+
+Interfaces affected:
+- <docs/source/runtime/governance surface>
+
+## Required Change Checklist
+
+- [ ] `[MODIFY]` `<path>` - <purpose>; acceptance proof: <behavior/test/gate/evidence>.
+- [ ] `[VERIFY]` `source-file limit` - ensure changed source/governance files remain at or below 1600 lines; acceptance proof: `.codex/scripts/task-registry source-limit check`.
+
+## Per-Gap Success Criteria
+
+### <gap id>
+
+- Behavioral: Given <state> when <action> then <observable outcome>.
+- Data/schema/provenance: <ledger or manifest evidence, or N/A with reason>.
+- Runtime: <live/runtime check, or N/A with reason>.
+
+## Validation Plan
+
+Focused:
+- `.codex/scripts/task-registry validate`
+- `.codex/scripts/task-registry source-limit check`
+- `.codex/scripts/task-registry verify-behaviors <plan_id>`
+
+Full:
+- <project full gate or N/A>
+
+## Walkthrough Evidence Required
+
+- `.codex/scripts/task-registry report <plan_id>`
+- `.codex/scripts/task-registry metrics`
+
+## Task Manifest
+
+```toml
+schema_version = 1
+plan_id = "PLAN-YYYY-MM-DD-{{REPO_SLUG}}-<slug>"
+
+[[behaviors]]
+behavior_id = "B-001-<short-name>"
+title = "<short behavior title>"
+given = "<initial state or fixture>"
+when = "<action under test>"
+then = "<observable outcome asserted by the command>"
+confirmation = "<runnable command>"
+
+[[tasks]]
+task_id = "TASK-YYYY-MM-DD-<slug>-001"
+title = "<task title>"
+status = "planned"
+kind = "<agent_workflow|development_governance|test|runtime|docs>"
+reason = "<why this task exists>"
+acceptance_proof = "Behavior B-001-<short-name>: <same runnable command>"
+behavior_ids = ["B-001-<short-name>"]
+[[tasks.targets]]
+file = "<exact relative path>"
+object = "<specific object or section>"
+required_change = "<diffable required change>"
+```
+
+## Assumptions
+
+- <defaults chosen and constraints>

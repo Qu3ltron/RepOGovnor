@@ -1,0 +1,7 @@
+# Codex project config. Codex loads this only when the project is trusted.
+
+[features]
+hooks = true
+
+# Plugin workflow metadata is intentionally stored separately in
+# .codex/agent-governance.toml because Codex config.toml is runtime config.

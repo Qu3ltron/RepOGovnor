@@ -1,6 +1,6 @@
 schema_version = 1
 plugin_name = "agent-governance"
-plugin_version = "0.3.0"
+plugin_version = "2.0.0"
 portable = true
 
 # Templates render via scripts/render-from-config.sh + project.config.toml
@@ -19,19 +19,43 @@ mode = "full"
 template = "templates/AGENTS.overlay.md.template"
 destination = "AGENTS.md"
 mode = "overlay"
+meaning = "merge-block"
 
 [[render]]
 template = "templates/GEMINI.overlay.md.template"
 destination = "GEMINI.md"
 mode = "overlay"
+meaning = "merge-block"
 
 [[render]]
-template = "templates/.codex/settings.toml.template"
-destination = ".codex/settings.toml"
+template = "templates/.codex/config.toml.template"
+destination = ".codex/config.toml"
 
 [[render]]
-template = "templates/.codex/hooks/user-plan-approval.toml.template"
-destination = ".codex/hooks/user-plan-approval.toml"
+template = "templates/.codex/hooks.json.template"
+destination = ".codex/hooks.json"
+
+[[render]]
+template = "templates/.codex/agent-governance.toml.template"
+destination = ".codex/agent-governance.toml"
+
+[[render]]
+template = "templates/.codex/scripts/task-registry.template"
+destination = ".codex/scripts/task-registry"
+executable = true
+
+[[render]]
+template = "templates/.codex/templates/task-registry-plan-template.md.template"
+destination = ".codex/templates/task-registry-plan-template.md"
+
+[[render]]
+template = "templates/.github/workflows/agent-governance.yml.template"
+destination = ".github/workflows/agent-governance.yml"
+
+[[render]]
+template = "templates/docs/task-registry.toml.template"
+destination = "docs/task-registry.toml"
+mode = "create-if-missing-preserve-valid"
 
 [[render]]
 template = "templates/.agents/hooks.json.template"
@@ -47,13 +71,13 @@ destination = ".cursor/hooks/gap-closure-gate.sh"
 config_key = "mutation_gate.hook_script_path"
 
 [[render]]
-template = "templates/tools/antigravity/pre-tool-use-gap-closure.sh.template"
-destination = "tools/antigravity/pre-tool-use-gap-closure.sh"
-config_key = "mutation_gate.hook_script_path"
+template = "templates/.cursor/rules/agent-governance.mdc.template"
+destination = ".cursor/rules/agent-governance.mdc"
 
-[[copy]]
-source = "templates/.gemini/settings.json"
-destination = ".gemini/settings.json"
+[[render]]
+template = "templates/tools/agent-governance/pre-tool-use-gap-closure.sh.template"
+destination = "tools/agent-governance/pre-tool-use-gap-closure.sh"
+config_key = "mutation_gate.hook_script_path"
 
 [[copy]]
 source = "skills/gap-closure-contract"
@@ -65,17 +89,31 @@ source = "skills/task-registry-flow"
 destination = ".cursor/skills/task-registry-flow"
 recursive = true
 
-[[symlinks]]
-link = ".agents/skills/gap-closure-contract"
-target = "../../.cursor/skills/gap-closure-contract"
+[[copy]]
+source = "skills/gap-closure-contract"
+destination = ".agents/skills/gap-closure-contract"
+recursive = true
 
-[[symlinks]]
-link = ".agents/skills/task-registry-flow"
-target = "../../.cursor/skills/task-registry-flow"
+[[copy]]
+source = "skills/task-registry-flow"
+destination = ".agents/skills/task-registry-flow"
+recursive = true
+
+[[generated]]
+destination = ".agents/skills/gap-closure-contract.md"
+from = "skills/gap-closure-contract/SKILL.md"
+
+[[generated]]
+destination = ".agents/skills/task-registry-flow.md"
+from = "skills/task-registry-flow/SKILL.md"
 
 [[generated]]
 destination = ".codex/governance-cli.env"
 from_config = "mutation_gate.verify_hook_command"
+
+[[generated]]
+destination = "docs/task-registry/events.jsonl"
+mode = "create-empty-if-missing"
 
 [[symlinks]]
 link = ".agents/plugins/agent-governance"
@@ -83,12 +121,17 @@ target = "../../plugins/agent-governance"
 note = "Required tracked CI artifact; install creates when absent"
 
 [[plugin_only]]
+source = ".codex-plugin/plugin.json"
+destination = ".agents/plugins/agent-governance/.codex-plugin/plugin.json"
+
+[[plugin_only]]
 source = "plugin.json"
 destination = ".agents/plugins/agent-governance/plugin.json"
 
 [[plugin_only]]
-source = "hooks.json"
-destination = ".agents/plugins/agent-governance/hooks.json"
+source = "hooks"
+destination = ".agents/plugins/agent-governance/hooks"
+recursive = true
 
 [[plugin_only]]
 source = "skills"
@@ -100,6 +143,11 @@ source = "scripts/pre-tool-use-gap-closure.sh"
 destination = ".agents/plugins/agent-governance/scripts/pre-tool-use-gap-closure.sh"
 executable = true
 
+[[plugin_only]]
+source = "rust/task-registry-flow-cli"
+destination = ".agents/plugins/agent-governance/rust/task-registry-flow-cli"
+recursive = true
+
 [examples]
 spectrum_arcana_overlay = "examples/spectrum-arcana-overlay.md"
 spectrum_arcana_config = "examples/spectrum-arcana.project.config.toml"
@@ -107,12 +155,27 @@ spectrum_arcana_config = "examples/spectrum-arcana.project.config.toml"
 [requirements]
 manifest = "REQUIREMENTS.toml"
 tracked_for_ci = [
+  "plugins/agent-governance",
+  ".codex/config.toml",
+  ".codex/hooks.json",
+  ".codex/agent-governance.toml",
   ".codex/governance-cli.env",
+  ".codex/scripts/task-registry",
+  ".codex/templates/task-registry-plan-template.md",
+  ".github/workflows/agent-governance.yml",
   ".agents/plugins/agent-governance",
+  ".agents/hooks.json",
+  ".agents/skills/gap-closure-contract",
+  ".agents/skills/gap-closure-contract.md",
+  ".agents/skills/task-registry-flow",
+  ".agents/skills/task-registry-flow.md",
+  ".cursor/rules/agent-governance.mdc",
   ".cursor/hooks.json",
   ".cursor/hooks/gap-closure-gate.sh",
   "AGENTS.md",
   "GEMINI.md",
   ".cursor/skills/gap-closure-contract/PROJECT.md",
   ".cursor/skills/task-registry-flow/PROJECT.md",
+  "docs/task-registry.toml",
+  "docs/task-registry/events.jsonl",
 ]

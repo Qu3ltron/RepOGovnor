@@ -1,7 +1,7 @@
 {
   "name": "agent-governance",
-  "version": "0.3.0",
-  "description": "Portable Codex + Cursor + Antigravity gap-closure contract, task-registry flow, and mutation-gate workflow",
+  "version": "2.0.0",
+  "description": "Portable Codex + Cursor + Antigravity CLI gap-closure contract, plugin-owned task-registry CLI, mutation gates, and 1600-line source limits",
   "author": "Qu3ltron",
   "repository": "https://github.com/Qu3ltron/Governance-plugin",
   "homepage": "https://github.com/Qu3ltron/Governance-plugin",
@@ -17,15 +17,31 @@
     "gap-closure-contract",
     "task-registry-flow"
   ],
+  "hooks": "./hooks/hooks.json",
   "requirements": "REQUIREMENTS.toml",
   "tracked_for_ci": [
+    "plugins/agent-governance",
+    ".codex/config.toml",
+    ".codex/hooks.json",
+    ".codex/agent-governance.toml",
     ".codex/governance-cli.env",
+    ".codex/scripts/task-registry",
+    ".codex/templates/task-registry-plan-template.md",
+    ".github/workflows/agent-governance.yml",
     ".agents/plugins/agent-governance",
+    ".agents/hooks.json",
+    ".agents/skills/gap-closure-contract",
+    ".agents/skills/gap-closure-contract.md",
+    ".agents/skills/task-registry-flow",
+    ".agents/skills/task-registry-flow.md",
+    ".cursor/rules/agent-governance.mdc",
     ".cursor/hooks.json",
     ".cursor/hooks/gap-closure-gate.sh",
     "AGENTS.md",
     "GEMINI.md",
     ".cursor/skills/gap-closure-contract/PROJECT.md",
-    ".cursor/skills/task-registry-flow/PROJECT.md"
+    ".cursor/skills/task-registry-flow/PROJECT.md",
+    "docs/task-registry.toml",
+    "docs/task-registry/events.jsonl"
   ]
 }

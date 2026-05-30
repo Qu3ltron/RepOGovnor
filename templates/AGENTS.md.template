@@ -11,11 +11,12 @@ Read before feature work:
 | [{{CONSTITUTION_PATH}}]({{CONSTITUTION_PATH}}) | Non-negotiable product and engineering rules |
 | [{{VISION_PATH}}]({{VISION_PATH}}) | Why the project exists; direction |
 | [{{DESIGN_DOCS_PATH}}/]({{DESIGN_DOCS_PATH}}/) | Exploratory drafts — not spec authority unless your project says otherwise |
-| [.cursor/skills/gap-closure-contract/](.cursor/skills/gap-closure-contract/) | Mandatory gap closure contracts before approved implementation |
-| [.cursor/skills/task-registry-flow/](.cursor/skills/task-registry-flow/) | Plan activation and `docs/task-registry.toml` workflow |
+| [.agents/skills/gap-closure-contract/](.agents/skills/gap-closure-contract/) | Codex skill for mandatory gap closure contracts before approved implementation |
+| [.agents/skills/task-registry-flow/](.agents/skills/task-registry-flow/) | Codex skill for plugin-owned plan activation and `docs/task-registry.toml` workflow |
+| [.cursor/rules/agent-governance.mdc](.cursor/rules/agent-governance.mdc) | Cursor-native design-time rule |
 | [GEMINI.md](GEMINI.md) | Antigravity (`agy`) entry — same governance, Antigravity-native paths |
 
-**Active agents:** Codex (this file + [.codex/settings.toml](.codex/settings.toml)) and Antigravity ([GEMINI.md](GEMINI.md) + [.gemini/settings.json](.gemini/settings.json) + [.agents/skills/](.agents/skills/) + [.agents/hooks.json](.agents/hooks.json)). Skill content is canonical under `.cursor/skills/`; Antigravity discovers via `.agents/skills/`.
+**Active agents:** Codex (this file + [.codex/config.toml](.codex/config.toml) + [.codex/hooks.json](.codex/hooks.json) + [.agents/skills/](.agents/skills/)), Antigravity CLI 1.0.3+ ([GEMINI.md](GEMINI.md) + [.agents/skills/](.agents/skills/) + [.agents/hooks.json](.agents/hooks.json)), and Cursor ([.cursor/rules/agent-governance.mdc](.cursor/rules/agent-governance.mdc) + [.cursor/skills/](.cursor/skills/) + [.cursor/hooks.json](.cursor/hooks.json)).
 
 **Authority order** (highest first): {{AUTHORITY_ORDER}}. Do not guess across conflicts; ask.
 
@@ -26,15 +27,19 @@ After user-approved gap closure:
 1. Load `$gap-closure-contract` and write `docs/plans/<slug>.md` with **behavioral** per-gap criteria and typed `[[behaviors]]` in the Task Manifest (`given` / `when` / `then` / `confirmation` with runnable commands).
 2. `$task-registry-flow` → `{{TASK_REGISTRY_CLI}} activate docs/plans/<file>.md` before code edits.
 3. Mark tasks `completed` only after linked behavior confirmations pass.
-4. Final handoff: `{{TASK_REGISTRY_CLI}} report <plan_id>`; archive completed history when the executor supports it.
+4. Final handoff: `{{TASK_REGISTRY_CLI}} report <plan_id>` and `{{TASK_REGISTRY_CLI}} metrics`; archive completed history with `{{TASK_REGISTRY_CLI}} archive-completed`.
 
-Registry work uses typed TOML validation via `{{TASK_REGISTRY_CLI}} validate` and behavior verification via `{{TASK_REGISTRY_CLI}} verify-behaviors` when configured. `TASK_DEFER` requires `deferral_governance_basis` and `reactivation_condition`.
+Registry work uses the plugin-owned Rust CLI at `{{TASK_REGISTRY_CLI}}`. Typed TOML validation, behavior verification, mutation checks, and local metrics are canonical there. `TASK_DEFER` requires `deferral_governance_basis` and `reactivation_condition`.
 
 {{COMMIT_GOVERNANCE_SECTION}}
 
 ## Architecture
 
 Define stack boundaries, layer ownership, and forbidden patterns in project docs ([{{CONSTITUTION_PATH}}]({{CONSTITUTION_PATH}}), README, or a dedicated architecture doc). This plugin does not prescribe language, framework, or CI layout.
+
+## Source file limit
+
+1600 lines is a hard limit for source, scripts, configs, docs, templates, and governance files. Treat this as a design-time constraint: split before adding code or prose that would exceed the limit. Check with `{{TASK_REGISTRY_CLI}} source-limit check`; for existing violations, get a deterministic split path with `{{TASK_REGISTRY_CLI}} source-limit plan --path <file>`.
 
 ## Validation
 

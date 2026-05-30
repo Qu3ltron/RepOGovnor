@@ -8,13 +8,12 @@ Antigravity (`agy`) entry point. Shared repo rules: [AGENTS.md](AGENTS.md) (Code
 |-------|------|------|
 | Context | [GEMINI.md](GEMINI.md) | Always-loaded instructions (this file) |
 | Context | [AGENTS.md](AGENTS.md) | Shared governance |
-| Project CLI settings | [.gemini/settings.json](.gemini/settings.json) | `context.fileName`, `skills.enabled`, `hooksConfig.enabled` |
 | Workspace hooks | [.agents/hooks.json](.agents/hooks.json) | PreToolUse hard gate on implementation writes (when executor supports it) |
-| Mutation gate | `{{MUTATION_HOOK_SCRIPT}}` | Calls configured `verify-mutation-hook` command |
-| Workspace skills | [.agents/skills/](.agents/skills/) | On-demand skills (`SKILL.md` per folder) |
+| Mutation gate | `{{MUTATION_HOOK_SCRIPT}}` | Calls plugin-owned `verify-mutation-hook` command |
+| Workspace skills | [.agents/skills/](.agents/skills/) | AGY markdown skills plus Codex-compatible skill folders |
 | User CLI settings | `~/.gemini/antigravity-cli/settings.json` | Model, permissions, trusted workspaces |
 
-Antigravity does **not** read `.codex/settings.toml`, `.codex/hooks/`, or any `.gemini/settings.toml`.
+Antigravity CLI does **not** read `.codex/config.toml`, `.codex/hooks.json`, `.codex/agent-governance.toml`, or repo-local `.gemini/settings.json`. Do not create workspace `.gemini/settings.json`.
 
 ## Codebase policy
 
@@ -25,21 +24,12 @@ Read [AGENTS.md](AGENTS.md) before feature work.
 
 ## Mandatory skills
 
-Canonical skill content: `.cursor/skills/`. Antigravity discovers copies via `.agents/skills/`.
+Canonical skill content ships from `plugins/agent-governance/skills/`. Antigravity discovers markdown projections in `.agents/skills/*.md`; Codex discovers folder projections in `.agents/skills/<skill>/`; Cursor discovers `.cursor/skills/<skill>/`.
 
 | Skill | Antigravity path | When |
 |-------|------------------|------|
-| `gap-closure-contract` | [.agents/skills/gap-closure-contract/](.agents/skills/gap-closure-contract/) | After gap analysis + user approval, before plan edits or implementation |
-| `task-registry-flow` | [.agents/skills/task-registry-flow/](.agents/skills/task-registry-flow/) | Plan activation, status, deferrals, handoff |
-
-**Self-heal broken skill symlinks:**
-
-```bash
-mkdir -p .agents/skills
-cd .agents/skills
-ln -sf ../../.cursor/skills/gap-closure-contract gap-closure-contract
-ln -sf ../../.cursor/skills/task-registry-flow task-registry-flow
-```
+| `gap-closure-contract` | [.agents/skills/gap-closure-contract.md](.agents/skills/gap-closure-contract.md) | After gap analysis + user approval, before plan edits or implementation |
+| `task-registry-flow` | [.agents/skills/task-registry-flow.md](.agents/skills/task-registry-flow.md) | Plan activation, status, deferrals, handoff |
 
 ## Plan activation (before code edits)
 
@@ -51,16 +41,17 @@ After user-approved gap closure:
 4. Confirm tasks in `docs/task-registry.toml` with matching `source_plan_hash_sha256`.
 5. Only then edit implementation files listed in active task targets.
 
-**Hard gate:** when the project executor implements mutation verification, `.agents/hooks.json` blocks unbound implementation writes. Test with your executor's `verify-mutation` / `verify-mutation-hook` commands.
+**Hard gate:** `.agents/hooks.json` calls `.codex/scripts/task-registry verify-mutation-hook` and blocks unbound implementation writes outside governance files or active/planned task targets.
 
 Handoff: `{{TASK_REGISTRY_CLI}} report <plan_id>`; archive completed when supported.
 
 ## Governance reminders
 
 - **Spec authority:** {{AUTHORITY_ORDER}}. On conflict, ask.
-- **Registry:** use `{{TASK_REGISTRY_CLI}}` opcodes; typed validation via `validate`.
+- **Registry:** use only `{{TASK_REGISTRY_CLI}}` opcodes; typed validation via `validate`.
 - **Deferrals:** `TASK_DEFER` via registry CLI `defer`; requires `deferral_governance_basis` + `reactivation_condition`.
+- **Source file limit:** 1600 lines is a hard design-time budget for source/governance files. Run `{{TASK_REGISTRY_CLI}} source-limit check`; use `{{TASK_REGISTRY_CLI}} source-limit plan --path <file>` before splitting existing violations.
 
 ## Verify in Antigravity
 
-Run `agy` in this repo, then `/skills` — expect `gap-closure-contract` and `task-registry-flow`. Hooks load from `.agents/hooks.json` when `hooksConfig.enabled` is true in `.gemini/settings.json`.
+Run `agy --version` and require 1.0.3 or newer. Run `agy` in this repo, then `/skills` — expect `gap-closure-contract` and `task-registry-flow`. Hooks load from `.agents/hooks.json`; plugin package validation must show hooks processed with `agy plugin validate plugins/agent-governance`.

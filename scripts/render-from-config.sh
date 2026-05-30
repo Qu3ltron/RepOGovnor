@@ -5,15 +5,20 @@ set -euo pipefail
 PLUGIN_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CONFIG="${1:-${PLUGIN_ROOT}/project.config.toml}"
 TARGET_ROOT="${2:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
-OVERLAY="${OVERLAY:-0}"
-FORCE="${FORCE:-0}"
+MODE="${MODE:-}"
+DRY_RUN="${DRY_RUN:-0}"
 
 if [[ ! -f "$CONFIG" ]]; then
   echo "missing config: $CONFIG (copy project.config.example.toml)" >&2
   exit 1
 fi
 
-export PLUGIN_ROOT CONFIG TARGET_ROOT OVERLAY FORCE
+case "$MODE" in
+  merge|force) ;;
+  *) echo "missing or invalid MODE: use merge or force" >&2; exit 1 ;;
+esac
+
+export PLUGIN_ROOT CONFIG TARGET_ROOT MODE DRY_RUN
 
 python3 <<'PY'
 import os
@@ -33,8 +38,9 @@ OVERLAY_END = "<!-- agent-governance:end -->"
 plugin_root = Path(os.environ["PLUGIN_ROOT"])
 config_path = Path(os.environ["CONFIG"])
 target_root = Path(os.environ["TARGET_ROOT"]).resolve()
-overlay = os.environ.get("OVERLAY", "0") == "1"
-force = os.environ.get("FORCE", "0") == "1"
+mode = os.environ["MODE"]
+dry_run = os.environ.get("DRY_RUN", "0") == "1"
+force = mode == "force"
 cfg = tomllib.loads(config_path.read_text())
 
 project = cfg.get("project", {})
@@ -52,23 +58,22 @@ if repo_root == "{{AUTO_REPO_ROOT}}":
     ).strip()
 
 repo_name = project.get("repo_name", Path(repo_root).name)
+repo_slug = re.sub(r"[^A-Za-z0-9]+", "-", repo_name.strip().lower()).strip("-") or "repo"
 scratch_root = project.get("scratch_root", f"/tmp/{repo_name}-gap-closure")
 constitution_path = project.get("constitution_path", "CONSTITUTION.md")
 vision_path = project.get("vision_path", "VISION.md")
 design_docs_path = project.get("design_docs_path", "docs/design")
 
-cli_command = task_registry.get("cli_command", "cargo run --bin task_registry --")
-registry_path = task_registry.get("registry_path", "docs/task-registry.toml")
-plans_path = task_registry.get("plans_path", "docs/plans")
-archive_dir = task_registry.get("archive_dir", "docs/task-registry/archive")
+cli_command = ".codex/scripts/task-registry"
+registry_path = "docs/task-registry.toml"
+plans_path = "docs/plans"
+archive_dir = "docs/task-registry/archive"
+registry_id = task_registry.get("registry_id", f"{repo_slug}-task-registry")
 
-verify_hook = mutation.get(
-    "verify_hook_command",
-    f"{cli_command.rstrip()} verify-mutation-hook",
-)
+verify_hook = ".codex/scripts/task-registry verify-mutation-hook"
 hook_script = mutation.get(
     "hook_script_path",
-    "tools/antigravity/pre-tool-use-gap-closure.sh",
+    "tools/agent-governance/pre-tool-use-gap-closure.sh",
 )
 
 authority_order = authority.get("order", [constitution_path, vision_path, f"{design_docs_path}/*"])
@@ -77,10 +82,18 @@ authority_order_toml = "[" + ", ".join(f'"{item}"' for item in authority_order) 
 
 focused = validation.get("focused", ["cargo test"])
 full = validation.get("full", ["cargo test"])
+focused_with_source = [".codex/scripts/task-registry source-limit check"] + [
+    command for command in focused if command != ".codex/scripts/task-registry source-limit check"
+]
+full_with_source = [".codex/scripts/task-registry validate"] + [
+    command for command in full if command != ".codex/scripts/task-registry validate"
+]
 focused_md = ", ".join(f"`{c}`" for c in focused) or "_(configure in project.config.toml)_"
 full_md = ", ".join(f"`{c}`" for c in full) or "_(configure in project.config.toml)_"
 focused_toml = "[" + ", ".join(f'"{c}"' for c in focused) + "]"
 full_toml = "[" + ", ".join(f'"{c}"' for c in full) + "]"
+focused_with_source_toml = "[" + ", ".join(f'"{c}"' for c in focused_with_source) + "]"
+full_with_source_toml = "[" + ", ".join(f'"{c}"' for c in full_with_source) + "]"
 
 verify_cmd = commit.get("verify_command", "")
 plan_id_required = commit.get("plan_id_footer_required", False)
@@ -110,7 +123,9 @@ design_rule = "Optional project policy — configure enforcement in CI separatel
 
 subs = {
     "{{REPO_NAME}}": repo_name,
+    "{{REPO_SLUG}}": repo_slug,
     "{{REPO_ROOT}}": repo_root,
+    "{{PLUGIN_ROOT}}": str(plugin_root),
     "{{SCRATCH_ROOT}}": scratch_root,
     "{{CONSTITUTION_PATH}}": constitution_path,
     "{{VISION_PATH}}": vision_path,
@@ -121,12 +136,15 @@ subs = {
     "{{REGISTRY_PATH}}": registry_path,
     "{{PLANS_PATH}}": plans_path,
     "{{ARCHIVE_DIR}}": archive_dir,
+    "{{REGISTRY_ID}}": registry_id,
     "{{VERIFY_HOOK_COMMAND}}": verify_hook,
     "{{MUTATION_HOOK_SCRIPT}}": hook_script,
     "{{VALIDATION_FOCUSED}}": focused_md,
     "{{VALIDATION_FULL}}": full_md,
     "{{VALIDATION_FOCUSED_TOML}}": focused_toml,
     "{{VALIDATION_FULL_TOML}}": full_toml,
+    "{{VALIDATION_FOCUSED_WITH_SOURCE_TOML}}": focused_with_source_toml,
+    "{{VALIDATION_FULL_WITH_SOURCE_TOML}}": full_with_source_toml,
     "{{COMMIT_GOVERNANCE_SECTION}}": commit_section,
     "{{COMMIT_GOVERNANCE_OVERLAY}}": commit_overlay,
     "{{COMMIT_GOVERNANCE_TOML}}": commit_toml,
@@ -140,12 +158,81 @@ def substitute(text: str) -> str:
 def render_template(template_path: Path) -> str:
     return substitute(template_path.read_text())
 
-def write_file(dest_path: Path, content: str, *, always: bool = False) -> str:
+def rel(path: Path) -> str:
+    try:
+        return str(path.relative_to(target_root))
+    except ValueError:
+        return str(path)
+
+def projected(action: str) -> str:
+    if not dry_run or action.startswith("preserve") or action in {"aligned", "skip"}:
+        return action
+    return f"would-{action}"
+
+def remove_existing(path: Path) -> None:
+    if path.is_symlink() or path.is_file():
+        path.unlink()
+    elif path.is_dir():
+        shutil.rmtree(path)
+
+def write_file(dest_path: Path, content: str, *, merge_updates: bool = True, preserve_existing: bool = False) -> str:
+    exists = dest_path.exists() or dest_path.is_symlink()
+    if exists and (dest_path.is_file() or dest_path.is_symlink()):
+        try:
+            if dest_path.read_text() == content:
+                return "aligned"
+        except (OSError, UnicodeDecodeError):
+            pass
+
+    if exists and preserve_existing:
+        return "preserve"
+    if exists and mode == "merge" and not merge_updates:
+        return "preserve-drift"
+    if exists and mode == "merge" and (dest_path.is_symlink() or not dest_path.is_file()):
+        return "preserve-drift"
+
+    action = "create"
+    if exists:
+        action = "replace" if dest_path.is_symlink() or not dest_path.is_file() else "update"
+
+    if dry_run:
+        return projected(action)
+
     dest_path.parent.mkdir(parents=True, exist_ok=True)
-    if dest_path.exists() and not force and not always:
-        return "skip"
+    if action == "replace":
+        remove_existing(dest_path)
     dest_path.write_text(content)
-    return "write"
+    return action
+
+def validate_existing_registry(dest_path: Path) -> None:
+    try:
+        registry = tomllib.loads(dest_path.read_text())
+    except Exception as exc:
+        raise SystemExit(
+            f"{dest_path.relative_to(target_root)} exists but is not valid TOML; hard cutover refuses to overwrite it: {exc}"
+        )
+    required_statuses = {"planned", "active", "blocked", "deferred", "completed", "cancelled"}
+    statuses = set(registry.get("status_vocabulary", []))
+    if (
+        registry.get("schema_version") != 1
+        or registry.get("registry_authority") != "docs/task-registry.toml"
+        or registry.get("activation_skill") != "task-registry-flow"
+        or not required_statuses.issubset(statuses)
+    ):
+        raise SystemExit(
+            f"{dest_path.relative_to(target_root)} is incompatible with agent-governance task registry schema v1; repair it before hard cutover"
+        )
+    for task in registry.get("tasks", []):
+        if not task.get("behavior_ids"):
+            task_id = task.get("task_id", "<unknown>")
+            raise SystemExit(
+                f"{dest_path.relative_to(target_root)} task {task_id} is missing behavior_ids; repair it before hard cutover"
+            )
+        if not task.get("targets"):
+            task_id = task.get("task_id", "<unknown>")
+            raise SystemExit(
+                f"{dest_path.relative_to(target_root)} task {task_id} is missing targets; repair it before hard cutover"
+            )
 
 def merge_overlay(dest_path: Path, overlay_body: str) -> str:
     block = f"{OVERLAY_BEGIN}\n{overlay_body.rstrip()}\n{OVERLAY_END}\n"
@@ -156,17 +243,28 @@ def merge_overlay(dest_path: Path, overlay_body: str) -> str:
             re.DOTALL,
         )
         if pattern.search(text):
-            dest_path.write_text(pattern.sub(block, text))
-            return "merge-update"
-        dest_path.write_text(text.rstrip() + "\n\n" + block)
-        return "merge-append"
-    dest_path.write_text(f"# {repo_name} — Agent Instructions\n\n{block}")
-    return "merge-create"
+            updated = pattern.sub(block, text)
+            if updated == text:
+                return "aligned"
+            action = "merge-update"
+        else:
+            updated = text.rstrip() + "\n\n" + block
+            action = "merge-append"
+    else:
+        updated = f"# {repo_name} - Agent Instructions\n\n{block}"
+        action = "merge-create"
+
+    if dry_run:
+        return projected(action)
+
+    dest_path.parent.mkdir(parents=True, exist_ok=True)
+    dest_path.write_text(updated)
+    return action
 
 templates = plugin_root / "templates"
 actions: list[str] = []
 
-if overlay:
+if mode == "merge":
     agents_tpl = templates / "AGENTS.overlay.md.template"
     gemini_tpl = templates / "GEMINI.overlay.md.template"
     actions.append(
@@ -185,118 +283,250 @@ else:
 
 infra_files = [
     (
-        templates / ".codex/settings.toml.template",
-        target_root / ".codex/settings.toml",
+        templates / ".codex/config.toml.template",
+        target_root / ".codex/config.toml",
+        True,
     ),
     (
-        templates / ".codex/hooks/user-plan-approval.toml.template",
-        target_root / ".codex/hooks/user-plan-approval.toml",
+        templates / ".codex/hooks.json.template",
+        target_root / ".codex/hooks.json",
+        True,
+    ),
+    (
+        templates / ".codex/agent-governance.toml.template",
+        target_root / ".codex/agent-governance.toml",
+        True,
+    ),
+    (
+        templates / ".codex/scripts/task-registry.template",
+        target_root / ".codex/scripts/task-registry",
+        True,
+    ),
+    (
+        templates / ".codex/templates/task-registry-plan-template.md.template",
+        target_root / ".codex/templates/task-registry-plan-template.md",
+        True,
+    ),
+    (
+        templates / ".github/workflows/agent-governance.yml.template",
+        target_root / ".github/workflows/agent-governance.yml",
+        True,
     ),
     (
         templates / ".agents/hooks.json.template",
         target_root / ".agents/hooks.json",
+        True,
     ),
     (
         templates / ".cursor/hooks.json.template",
         target_root / ".cursor/hooks.json",
+        True,
     ),
     (
         templates / ".cursor/hooks/gap-closure-gate.sh.template",
         target_root / ".cursor/hooks/gap-closure-gate.sh",
+        True,
     ),
     (
-        templates / "tools/antigravity/pre-tool-use-gap-closure.sh.template",
+        templates / ".cursor/rules/agent-governance.mdc.template",
+        target_root / ".cursor/rules/agent-governance.mdc",
+        True,
+    ),
+    (
+        templates / "tools/agent-governance/pre-tool-use-gap-closure.sh.template",
         target_root / Path(hook_script),
+        True,
     ),
 ]
 
-for src, dest in infra_files:
-    action = write_file(dest, render_template(src))
-    actions.append(f"{dest.relative_to(target_root)}: {action}")
+for src, dest, always in infra_files:
+    action = write_file(dest, render_template(src), merge_updates=always)
+    actions.append(f"{rel(dest)}: {action}")
 
-gemini_dest = target_root / ".gemini/settings.json"
-(target_root / ".gemini").mkdir(parents=True, exist_ok=True)
-if force or not gemini_dest.exists():
-    shutil.copy2(templates / ".gemini/settings.json", gemini_dest)
-    actions.append(".gemini/settings.json: write")
+for stale in (
+    ".codex/settings.toml",
+    ".codex/hooks/user-plan-approval.toml",
+    ".gemini/settings.json",
+    "hooks.json",
+    "tools/antigravity/pre-tool-use-gap-closure.sh",
+):
+    stale_path = target_root / stale
+    if stale_path.exists() or stale_path.is_symlink():
+        if not dry_run:
+            remove_existing(stale_path)
+        actions.append(f"{stale}: {projected('remove-stale')}")
+
+registry_dest = target_root / registry_path
+if registry_dest.exists():
+    validate_existing_registry(registry_dest)
+    actions.append(f"{rel(registry_dest)}: preserve-valid")
 else:
-    actions.append(".gemini/settings.json: skip")
+    actions.append(
+        f"{rel(registry_dest)}: {write_file(registry_dest, render_template(templates / 'docs/task-registry.toml.template'))}"
+    )
+
+events_dest = target_root / "docs/task-registry/events.jsonl"
+if events_dest.exists():
+    actions.append("docs/task-registry/events.jsonl: preserve")
+else:
+    actions.append(f"docs/task-registry/events.jsonl: {write_file(events_dest, '')}")
 
 skills_src = plugin_root / "skills"
-skills_dest = target_root / ".cursor/skills"
 
-def sync_skill(skill: str) -> str:
-    src = skills_src / skill
-    dest = skills_dest / skill
-    project_md = dest / "PROJECT.md"
-    preserved = project_md.read_text() if project_md.exists() else None
+def copied_skill_files(src: Path) -> dict[Path, bytes]:
+    files: dict[Path, bytes] = {}
+    for src_file in sorted(src.rglob("*")):
+        if not src_file.is_file() or src_file.name == "PROJECT.md.template":
+            continue
+        files[src_file.relative_to(src)] = src_file.read_bytes()
+    return files
 
-    if overlay and (dest / "SKILL.md").exists() and not force:
-        dest.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(src / "SKILL.md", dest / "SKILL.md")
-        agents_src = src / "agents"
-        agents_dest = dest / "agents"
-        if agents_dest.exists():
-            shutil.rmtree(agents_dest)
-        if agents_src.exists():
-            shutil.copytree(agents_src, agents_dest)
-        if preserved is not None:
-            project_md.write_text(preserved)
-        return f".cursor/skills/{skill}: sync-skill"
+def skill_aligned(src: Path, dest: Path, *, strict: bool) -> bool:
+    if not dest.is_dir():
+        return False
+    desired = copied_skill_files(src)
+    for rel_path, content in desired.items():
+        dest_file = dest / rel_path
+        if not dest_file.is_file() or dest_file.read_bytes() != content:
+            return False
+    if strict:
+        allowed = set(desired) | {Path("PROJECT.md")}
+        for existing in dest.rglob("*"):
+            if existing.is_file() and existing.relative_to(dest) not in allowed:
+                return False
+    return True
 
-    if dest.exists():
-        shutil.rmtree(dest)
+def copy_skill_full(src: Path, dest: Path, preserved_project: str | None) -> None:
+    if dest.exists() or dest.is_symlink():
+        remove_existing(dest)
     shutil.copytree(
         src,
         dest,
         ignore=shutil.ignore_patterns("PROJECT.md.template"),
     )
-    if preserved is not None:
-        project_md.write_text(preserved)
+    project_md = dest / "PROJECT.md"
+    if preserved_project is not None:
+        project_md.write_text(preserved_project)
     else:
         template = src / "PROJECT.md.template"
         if template.exists() and not project_md.exists():
             shutil.copy2(template, project_md)
-    return f".cursor/skills/{skill}: write"
+
+def merge_skill_tree(src: Path, dest: Path, preserved_project: str | None) -> None:
+    if not dest.exists():
+        copy_skill_full(src, dest, preserved_project)
+        return
+
+    dest.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(src / "SKILL.md", dest / "SKILL.md")
+    agents_src = src / "agents"
+    agents_dest = dest / "agents"
+    if agents_dest.exists() or agents_dest.is_symlink():
+        remove_existing(agents_dest)
+    if agents_src.exists():
+        shutil.copytree(agents_src, agents_dest)
+
+    project_md = dest / "PROJECT.md"
+    if preserved_project is not None:
+        project_md.write_text(preserved_project)
+    else:
+        template = src / "PROJECT.md.template"
+        if template.exists() and not project_md.exists():
+            shutil.copy2(template, project_md)
+
+def sync_skill(skill: str, base: Path) -> str:
+    src = skills_src / skill
+    dest = base / skill
+    preserved = None
+    if dest.is_symlink():
+        action = "replace-symlink"
+    elif dest.is_dir():
+        project_md = dest / "PROJECT.md"
+        preserved = project_md.read_text() if project_md.exists() else None
+        if skill_aligned(src, dest, strict=force):
+            action = "aligned"
+        else:
+            action = "update" if force else "sync-skill"
+    elif dest.exists():
+        action = "replace" if force else "preserve-drift"
+    else:
+        action = "create"
+
+    if dry_run or action in {"aligned", "preserve-drift"}:
+        return f"{rel(dest)}: {projected(action)}"
+
+    if force or action == "replace-symlink":
+        copy_skill_full(src, dest, preserved)
+    else:
+        merge_skill_tree(src, dest, preserved)
+    return f"{rel(dest)}: {action}"
+
+def render_agy_skill(skill: str) -> str:
+    src = skills_src / skill / "SKILL.md"
+    dest = target_root / ".agents/skills" / f"{skill}.md"
+    return f"{rel(dest)}: {write_file(dest, src.read_text())}"
 
 for skill in ("gap-closure-contract", "task-registry-flow"):
-    actions.append(sync_skill(skill))
+    actions.append(sync_skill(skill, target_root / ".cursor/skills"))
+    actions.append(sync_skill(skill, target_root / ".agents/skills"))
+    actions.append(render_agy_skill(skill))
 
 agents_skills = target_root / ".agents/skills"
-agents_skills.mkdir(parents=True, exist_ok=True)
-for skill in ("gap-closure-contract", "task-registry-flow"):
-    link = agents_skills / skill
-    if link.is_symlink() or link.exists():
-        link.unlink()
-    link.symlink_to(Path("../../.cursor/skills") / skill)
-actions.append(".agents/skills symlinks: write")
+if agents_skills.is_dir():
+    actions.append(".agents/skills native projections: aligned")
+elif agents_skills.exists() or agents_skills.is_symlink():
+    action = "replace-dir" if force else "preserve-drift"
+    if not dry_run and force:
+        remove_existing(agents_skills)
+        agents_skills.mkdir(parents=True, exist_ok=True)
+    actions.append(f".agents/skills native projections: {projected(action)}")
+else:
+    if not dry_run:
+        agents_skills.mkdir(parents=True, exist_ok=True)
+    actions.append(f".agents/skills native projections: {projected('create-dir')}")
 
 governance_env = target_root / ".codex/governance-cli.env"
-governance_env.parent.mkdir(parents=True, exist_ok=True)
-governance_env.write_text(f'GOVERNANCE_VERIFY_HOOK_CMD="{verify_hook}"\n')
-actions.append(".codex/governance-cli.env: write")
+governance_env_content = f'GOVERNANCE_VERIFY_HOOK_CMD="{verify_hook}"\n'
+actions.append(
+    f".codex/governance-cli.env: {write_file(governance_env, governance_env_content)}"
+)
 
 plugin_link = target_root / ".agents/plugins/agent-governance"
-plugin_link.parent.mkdir(parents=True, exist_ok=True)
-if plugin_link.is_symlink() or plugin_link.exists():
-    if force:
-        plugin_link.unlink(missing_ok=True)
-if not plugin_link.exists():
-    plugin_link.symlink_to(Path("../../plugins/agent-governance"))
-    actions.append(".agents/plugins/agent-governance: write-symlink")
+plugin_target = Path("../../plugins/agent-governance")
+if plugin_link.is_symlink() and os.readlink(plugin_link) == str(plugin_target):
+    actions.append(".agents/plugins/agent-governance: aligned")
+elif plugin_link.exists() or plugin_link.is_symlink():
+    action = "replace-symlink" if force else "preserve-drift"
+    if not dry_run and force:
+        remove_existing(plugin_link)
+        plugin_link.parent.mkdir(parents=True, exist_ok=True)
+        plugin_link.symlink_to(plugin_target)
+    actions.append(f".agents/plugins/agent-governance: {projected(action)}")
 else:
-    actions.append(".agents/plugins/agent-governance: skip")
+    if not dry_run:
+        plugin_link.parent.mkdir(parents=True, exist_ok=True)
+        plugin_link.symlink_to(plugin_target)
+    actions.append(f".agents/plugins/agent-governance: {projected('create-symlink')}")
 
-hook_path = target_root / hook_script
-if hook_path.exists() or force or not overlay:
-    hook_path.chmod(0o755)
+def ensure_executable(path: Path) -> str:
+    if not path.exists():
+        return projected("chmod")
+    if path.stat().st_mode & 0o777 == 0o755:
+        return "aligned"
+    if dry_run:
+        return projected("chmod")
+    path.chmod(0o755)
+    return "chmod"
 
-cursor_hook = target_root / ".cursor/hooks/gap-closure-gate.sh"
-if cursor_hook.exists() or force or not overlay:
-    cursor_hook.chmod(0o755)
+for executable in (
+    target_root / hook_script,
+    target_root / ".cursor/hooks/gap-closure-gate.sh",
+    target_root / ".codex/scripts/task-registry",
+):
+    actions.append(f"{rel(executable)}: {ensure_executable(executable)}")
 
-mode = "overlay" if overlay else "full"
-print(f"Rendered agent-governance ({mode}) into {target_root}")
+verb = "Projected" if dry_run else "Rendered"
+print(f"{verb} agent-governance ({mode}) into {target_root}")
 for line in actions:
     print(f"  {line}")
 PY

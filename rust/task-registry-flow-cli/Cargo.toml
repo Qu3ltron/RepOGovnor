@@ -1,0 +1,17 @@
+[package]
+name = "task-registry-flow-cli"
+version = "2.0.0"
+edition = "2024"
+publish = false
+license-file = "../../LICENSE"
+
+[[bin]]
+name = "task-registry-flow"
+path = "src/main.rs"
+
+[dependencies]
+chrono = { version = "0.4.42", default-features = false, features = ["clock"] }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.145"
+sha2 = "0.10.9"
+toml = "0.8.23"

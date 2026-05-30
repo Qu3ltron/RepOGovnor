@@ -5,9 +5,8 @@ set -euo pipefail
 PLUGIN_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CONFIG=""
 TARGET_ROOT=""
+MODE=""
 DRY_RUN=0
-FORCE=0
-OVERLAY=0
 
 usage() {
   cat <<'EOF'
@@ -18,15 +17,16 @@ Render templates from project.config.toml into the target repo.
 Options:
   --config PATH   Config file (default: ./project.config.toml or plugin example)
   --target PATH   Repo root (default: git toplevel from cwd)
-  --overlay       Merge AGENTS.md/GEMINI.md blocks; skip existing infra unless --force
-  --dry-run       Show what would run
-  --force         Overwrite existing infrastructure files
+  --dry-run       Project the complete force install without writing files
+  --merge         Add missing files and update managed governance surfaces
+  --force         Apply the dry-run projection: overwrite managed files and remove stale paths
   -h, --help      Show help
 
 Modes:
-  default   Replace AGENTS.md, GEMINI.md, and infrastructure from templates
-  --overlay Update <!-- agent-governance:begin/end --> blocks in AGENTS/GEMINI;
-            skip .codex, hooks, skills, and tools if they already exist
+  --dry-run  No mutation; prints the complete create/update/remove/chmod projection.
+  --merge    Existing repo path; merges AGENTS/GEMINI markers, refreshes managed
+             plugin files, preserves project registry/events and stale paths.
+  --force    Rebaseline path; matches --dry-run, including stale path removal.
 
 Steps:
   1. Copy project.config.example.toml to project.config.toml and edit
@@ -34,17 +34,36 @@ Steps:
 EOF
 }
 
+set_mode() {
+  local requested="$1"
+  if [[ -n "$MODE" ]]; then
+    echo "choose exactly one install mode: --dry-run, --merge, or --force" >&2
+    exit 1
+  fi
+  MODE="$requested"
+}
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --config) CONFIG="$2"; shift 2 ;;
     --target) TARGET_ROOT="$2"; shift 2 ;;
-    --overlay) OVERLAY=1; shift ;;
-    --dry-run) DRY_RUN=1; shift ;;
-    --force) FORCE=1; shift ;;
+    --dry-run) set_mode force; DRY_RUN=1; shift ;;
+    --merge) set_mode merge; shift ;;
+    --force) set_mode force; shift ;;
+    --overlay)
+      echo "--overlay has been removed. Use --merge for existing repos or --force for rebaseline." >&2
+      exit 1
+      ;;
     -h|--help) usage; exit 0 ;;
     *) echo "unknown arg: $1" >&2; usage; exit 1 ;;
   esac
 done
+
+if [[ -z "$MODE" ]]; then
+  echo "missing install mode: choose --dry-run, --merge, or --force" >&2
+  usage >&2
+  exit 1
+fi
 
 if [[ -z "$TARGET_ROOT" ]]; then
   TARGET_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
@@ -65,19 +84,14 @@ if [[ -z "$CONFIG" ]]; then
   fi
 fi
 
+export MODE DRY_RUN
+bash "${PLUGIN_ROOT}/scripts/render-from-config.sh" "$CONFIG" "$TARGET_ROOT"
+
 if [[ "$DRY_RUN" -eq 1 ]]; then
-  echo "Would render using:"
-  echo "  config:   ${CONFIG}"
-  echo "  target:   ${TARGET_ROOT}"
-  echo "  plugin:   ${PLUGIN_ROOT}"
-  echo "  overlay:  ${OVERLAY}"
-  echo "  force:    ${FORCE}"
+  echo ""
+  echo "Dry run only; no files changed."
   exit 0
 fi
-
-export OVERLAY FORCE
-chmod +x "${PLUGIN_ROOT}/scripts/render-from-config.sh"
-"${PLUGIN_ROOT}/scripts/render-from-config.sh" "$CONFIG" "$TARGET_ROOT"
 
 echo ""
 echo "Required for CI (commit these — plugins/agent-governance/REQUIREMENTS.toml):"
@@ -93,7 +107,9 @@ PY
 echo ""
 echo "Posture check (must pass before push):"
 echo "  ${PLUGIN_ROOT}/scripts/status.sh --strict"
-echo "  cargo run --bin task_registry -- validate"
+echo "  .codex/scripts/task-registry validate"
+echo "  .codex/scripts/task-registry source-limit check"
+echo "  .codex/scripts/task-registry metrics"
 echo ""
 echo "Optional if plugin link was missing (install creates it when absent):"
 echo "  ls -la ${TARGET_ROOT}/.agents/plugins/agent-governance"

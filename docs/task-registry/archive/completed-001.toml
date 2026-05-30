@@ -1,0 +1,331 @@
+schema_version = 1
+registry_id = "agent-governance-task-registry"
+archive_id = "completed-001"
+archive_authority = "docs/task-registry/archive/completed-001.toml"
+
+[[plans]]
+plan_id = "PLAN-2026-05-30-v2-production-followup-gap-closures"
+plan_path = "docs/plans/v2-production-followup-gap-closures.md"
+plan_hash_sha256 = "ab4fd233b98075e85655529d5f19ac802a33143639c797a0f41be0f079f81665"
+activated_at = "2026-05-30"
+status = "completed"
+
+[[plans]]
+plan_id = "PLAN-2026-05-30-v2-release-readiness"
+plan_path = "docs/plans/v2-release-readiness.md"
+plan_hash_sha256 = "da5e3db0040edfe3b98795585b9d980da9c16980eab43d56849d6488139011f8"
+activated_at = "2026-05-30"
+status = "completed"
+
+[[plans]]
+plan_id = "PLAN-2026-05-30-production-gap-closures"
+plan_path = "docs/plans/production-gap-closures.md"
+plan_hash_sha256 = "625aa13c0ef2a077fd3a95235aec3728cc3db63f7e64bf457b46910f7bd14b5a"
+activated_at = "2026-05-30"
+status = "completed"
+
+[[tasks]]
+task_id = "TASK-2026-05-30-v2-followup-001"
+plan_id = "PLAN-2026-05-30-v2-production-followup-gap-closures"
+status = "completed"
+title = "Replace legacy skill symlinks with native v2 directories"
+kind = "migration"
+source_plan_path = "docs/plans/v2-production-followup-gap-closures.md"
+source_plan_hash_sha256 = "ab4fd233b98075e85655529d5f19ac802a33143639c797a0f41be0f079f81665"
+reason = "Legacy v0.3 skill symlinks can be treated as aligned and survive v2 installs."
+acceptance_proof = "Behavior B-2026-05-30-v2-followup-skill-symlink-replacement passes."
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = ["B-2026-05-30-v2-followup-skill-symlink-replacement"]
+
+[[tasks.targets]]
+file = "scripts/render-from-config.sh"
+object = "sync_skill"
+required_change = "Detect symlink destinations before directory alignment and replace them as stale migration artifacts."
+
+[[tasks.targets]]
+file = "scripts/status.sh"
+object = "skill_diff_hint"
+required_change = "Fail strict status for symlinked native skill projection paths."
+
+[[tasks.targets]]
+file = "scripts/test-install-modes.sh"
+object = "legacy_skill_symlink_migration_tests"
+required_change = "Add dry-run, merge, force, and negative assertions for legacy skill symlink replacement."
+
+[[tasks]]
+task_id = "TASK-2026-05-30-v2-followup-002"
+plan_id = "PLAN-2026-05-30-v2-production-followup-gap-closures"
+status = "completed"
+title = "Anchor release audit source-limit checks at repo root"
+kind = "release"
+source_plan_path = "docs/plans/v2-production-followup-gap-closures.md"
+source_plan_hash_sha256 = "ab4fd233b98075e85655529d5f19ac802a33143639c797a0f41be0f079f81665"
+reason = "release-audit.sh can run source-limit against a subdirectory because the CLI ignored the extra --root argument."
+acceptance_proof = "Behavior B-2026-05-30-v2-followup-release-audit-root passes."
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = ["B-2026-05-30-v2-followup-release-audit-root"]
+
+[[tasks.targets]]
+file = "scripts/release-audit.sh"
+object = "repo_root_execution"
+required_change = "cd to repo root before source-limit and remove ignored --root argument."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/source_limit.rs"
+object = "source_limit_check_args"
+required_change = "Reject unexpected arguments for source-limit check."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests.rs"
+object = "source_limit_check_arg_tests"
+required_change = "Add negative unit test proving extra check args fail."
+
+[[tasks.targets]]
+file = "scripts/test-release-readiness.sh"
+object = "nested_release_audit_tests"
+required_change = "Add nested positive audit test and over-limit root-file negative test."
+
+[[tasks.targets]]
+file = "docs/releases/v2.md"
+object = "release_audit_policy"
+required_change = "Document cwd-independent release audit behavior."
+
+[[tasks.targets]]
+file = "CHANGELOG.md"
+object = "v2_followup_notes"
+required_change = "Record production-blocker fixes for skill symlinks and release audit root scanning."
+
+[[tasks]]
+task_id = "TASK-2026-05-30-v2-release-readiness-001"
+plan_id = "PLAN-2026-05-30-v2-release-readiness"
+status = "completed"
+title = "Align v2 version metadata"
+kind = "release"
+source_plan_path = "docs/plans/v2-release-readiness.md"
+source_plan_hash_sha256 = "da5e3db0040edfe3b98795585b9d980da9c16980eab43d56849d6488139011f8"
+reason = "Release metadata is still pre-v2."
+acceptance_proof = "Behavior B-2026-05-30-v2-version-consistency passes."
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = ["B-2026-05-30-v2-version-consistency"]
+
+[[tasks.targets]]
+file = "plugin.json"
+object = "package_version"
+required_change = "Set version to 2.0.0."
+
+[[tasks.targets]]
+file = ".codex-plugin/plugin.json"
+object = "codex_plugin_version"
+required_change = "Set version to 2.0.0."
+
+[[tasks.targets]]
+file = "MANIFEST.toml"
+object = "plugin_version"
+required_change = "Set plugin_version to 2.0.0 and remove stale mode wording."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/Cargo.toml"
+object = "rust_cli_version"
+required_change = "Set package version to 2.0.0."
+
+[[tasks.targets]]
+file = "VERSION"
+object = "release_version_file"
+required_change = "Add 2.0.0 release version file."
+
+[[tasks.targets]]
+file = "scripts/release-version-check.sh"
+object = "version_consistency_gate"
+required_change = "Add version drift and missing file checks."
+
+[[tasks]]
+task_id = "TASK-2026-05-30-v2-release-readiness-002"
+plan_id = "PLAN-2026-05-30-v2-release-readiness"
+status = "completed"
+title = "Add v2 release artifacts"
+kind = "release"
+source_plan_path = "docs/plans/v2-release-readiness.md"
+source_plan_hash_sha256 = "da5e3db0040edfe3b98795585b9d980da9c16980eab43d56849d6488139011f8"
+reason = "Release notes, license artifact, and v2 release checklist are missing."
+acceptance_proof = "Behavior B-2026-05-30-v2-release-artifacts passes."
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = ["B-2026-05-30-v2-release-artifacts"]
+
+[[tasks.targets]]
+file = "CHANGELOG.md"
+object = "v2_release_notes"
+required_change = "Add v2 release notes with breaking changes, migration notes, and validation proof."
+
+[[tasks.targets]]
+file = "LICENSE"
+object = "license_artifact"
+required_change = "Add all-rights-reserved license artifact."
+
+[[tasks.targets]]
+file = "docs/releases/v2.md"
+object = "v2_release_checklist"
+required_change = "Add v2 release readiness checklist."
+
+[[tasks.targets]]
+file = "README.md"
+object = "release_artifact_links"
+required_change = "Link v2 release artifacts and clarify release-source checks."
+
+[[tasks]]
+task_id = "TASK-2026-05-30-v2-release-readiness-003"
+plan_id = "PLAN-2026-05-30-v2-release-readiness"
+status = "completed"
+title = "Add plugin-source release status"
+kind = "release"
+source_plan_path = "docs/plans/v2-release-readiness.md"
+source_plan_hash_sha256 = "da5e3db0040edfe3b98795585b9d980da9c16980eab43d56849d6488139011f8"
+reason = "Consumer strict status cannot be used as plugin-source release readiness."
+acceptance_proof = "Behavior B-2026-05-30-v2-source-status passes."
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = ["B-2026-05-30-v2-source-status"]
+
+[[tasks.targets]]
+file = "scripts/status.sh"
+object = "release_source_mode"
+required_change = "Add --release-source mode that checks plugin-source package readiness separately from consumer install posture."
+
+[[tasks.targets]]
+file = "scripts/test-release-readiness.sh"
+object = "release_status_tests"
+required_change = "Add positive and negative tests for release-source and consumer strict status separation."
+
+[[tasks.targets]]
+file = "REQUIREMENTS.toml"
+object = "release_source_artifacts"
+required_change = "Document plugin-source release artifacts."
+
+[[tasks.targets]]
+file = "rules/tracked-for-ci.md"
+object = "source_vs_consumer_tracking"
+required_change = "Clarify consumer tracked artifacts and plugin-source release artifacts."
+
+[[tasks]]
+task_id = "TASK-2026-05-30-v2-release-readiness-004"
+plan_id = "PLAN-2026-05-30-v2-release-readiness"
+status = "completed"
+title = "Add deterministic release audit gate"
+kind = "release"
+source_plan_path = "docs/plans/v2-release-readiness.md"
+source_plan_hash_sha256 = "da5e3db0040edfe3b98795585b9d980da9c16980eab43d56849d6488139011f8"
+reason = "Dependency and security audit tooling was missing or undocumented during the v2 sweep."
+acceptance_proof = "Behavior B-2026-05-30-v2-audit-gate passes."
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = ["B-2026-05-30-v2-audit-gate"]
+
+[[tasks.targets]]
+file = "scripts/release-audit.sh"
+object = "release_audit_gate"
+required_change = "Add Rust gates, duplicate dependency detection, audit tool checks, and explicit waiver behavior."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/deny.toml"
+object = "release_dependency_policy"
+required_change = "Add explicit cargo-deny policy for licenses, bans, advisories, and source registries."
+
+[[tasks.targets]]
+file = ".github/workflows/ci.yml"
+object = "release_ci_gates"
+required_change = "Run release readiness tests and audit gate in CI."
+
+[[tasks.targets]]
+file = "scripts/test-release-readiness.sh"
+object = "audit_negative_tests"
+required_change = "Add negative tests for missing audit tools without waiver and positive waiver behavior."
+
+[[tasks]]
+task_id = "TASK-2026-05-30-production-gap-closures-001"
+plan_id = "PLAN-2026-05-30-production-gap-closures"
+status = "completed"
+title = "Repair mutation hook validation order"
+kind = "implementation"
+source_plan_path = "docs/plans/production-gap-closures.md"
+source_plan_hash_sha256 = "625aa13c0ef2a077fd3a95235aec3728cc3db63f7e64bf457b46910f7bd14b5a"
+reason = "The hook currently runs full validation before path inspection and can block plan activation."
+acceptance_proof = "Behavior B-2026-05-30-hook-governance-before-validation passes."
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = ["B-2026-05-30-hook-governance-before-validation"]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/main.rs"
+object = "verify_mutation_hook_dispatch"
+required_change = "Delegate hook verification to a module without running full validation before governance path inspection."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/mutation_hook.rs"
+object = "mutation_hook_verifier"
+required_change = "Implement governance-first hook verification with negative guards for unsafe writes."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests.rs"
+object = "mutation_hook_behavior_tests"
+required_change = "Add positive and negative tests for governance writes, activation commands, and denied implementation writes."
+
+[[tasks]]
+task_id = "TASK-2026-05-30-production-gap-closures-002"
+plan_id = "PLAN-2026-05-30-production-gap-closures"
+status = "completed"
+title = "Run rendered registry wrapper from repo root"
+kind = "implementation"
+source_plan_path = "docs/plans/production-gap-closures.md"
+source_plan_hash_sha256 = "625aa13c0ef2a077fd3a95235aec3728cc3db63f7e64bf457b46910f7bd14b5a"
+reason = "The wrapper computes the repo root but currently leaves the Rust CLI running from the caller directory."
+acceptance_proof = "Behavior B-2026-05-30-wrapper-root-cwd passes."
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = ["B-2026-05-30-wrapper-root-cwd"]
+
+[[tasks.targets]]
+file = "templates/.codex/scripts/task-registry.template"
+object = "repo_root_execution"
+required_change = "Change to the repo root before invoking cargo run."
+
+[[tasks.targets]]
+file = "scripts/test-install-modes.sh"
+object = "nested_wrapper_validation"
+required_change = "Assert nested wrapper execution reads and writes only repo-root registry artifacts."
+
+[[tasks]]
+task_id = "TASK-2026-05-30-production-gap-closures-003"
+plan_id = "PLAN-2026-05-30-production-gap-closures"
+status = "completed"
+title = "Align merge install with strict status"
+kind = "implementation"
+source_plan_path = "docs/plans/production-gap-closures.md"
+source_plan_hash_sha256 = "625aa13c0ef2a077fd3a95235aec3728cc3db63f7e64bf457b46910f7bd14b5a"
+reason = "Merge currently preserves stale files that strict status rejects."
+acceptance_proof = "Behavior B-2026-05-30-merge-status-hard-cutover passes."
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = ["B-2026-05-30-merge-status-hard-cutover"]
+
+[[tasks.targets]]
+file = "scripts/render-from-config.sh"
+object = "merge_stale_file_removal"
+required_change = "Remove stale legacy governance files during merge and force while keeping dry-run projection-only."
+
+[[tasks.targets]]
+file = "scripts/test-install-modes.sh"
+object = "merge_status_alignment_tests"
+required_change = "Assert merge removes stale files and never reports preserve-stale."
+
+[[tasks.targets]]
+file = "README.md"
+object = "install_mode_documentation"
+required_change = "Document merge stale removal and root-wrapper behavior."
+
+[[tasks.targets]]
+file = "examples/spectrum-arcana-overlay.md"
+object = "reference_install_mode_documentation"
+required_change = "Update reference docs to describe hard-cutover merge behavior."

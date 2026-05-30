@@ -1,0 +1,28 @@
+{
+  "name": "agent-governance",
+  "version": "2.0.0",
+  "description": "Portable governed implementation workflow with a plugin-owned task registry CLI and 1600-line source limit.",
+  "author": {
+    "name": "Qu3ltron"
+  },
+  "repository": "https://github.com/Qu3ltron/Governance-plugin",
+  "homepage": "https://github.com/Qu3ltron/Governance-plugin",
+  "skills": "./skills/",
+  "hooks": "./hooks/codex-hooks.json",
+  "interface": {
+    "displayName": "Agent Governance",
+    "shortDescription": "Governed gap closure, registry, and source-limit workflow.",
+    "longDescription": "Agent Governance installs repo-local instructions, hooks, skills, a Rust task registry CLI, mutation gates, posture checks, a hard 1600-line source/governance limit, deterministic split planning, and local measurement receipts for approved implementation contracts.",
+    "developerName": "Qu3ltron",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Write",
+      "Workflow"
+    ],
+    "defaultPrompt": [
+      "Install agent governance in this repo.",
+      "Activate this plan into the task registry.",
+      "Verify registry posture and workflow metrics."
+    ]
+  }
+}

@@ -9,7 +9,7 @@ Manages `docs/task-registry.toml` — authoritative status ledger for approved p
 
 **Project extensions:** when `PROJECT.md` exists beside this skill, load it after this file for repo-specific executor commands and policy.
 
-**Executor:** registry CLI from `.codex/settings.toml` → `[task_registry].cli_command` — do not hand-edit the registry when the CLI can perform the operation.
+**Executor:** plugin-owned Rust CLI at `.codex/scripts/task-registry` from `.codex/agent-governance.toml` → `[task_registry].cli_command`. Do not use project-native `task_registry` binaries or hand-edit the registry when the CLI can perform the operation.
 
 ## Required Opcodes
 
@@ -22,8 +22,12 @@ Manages `docs/task-registry.toml` — authoritative status ledger for approved p
 | `TASK_ARCHIVE_COMPLETED` | Move completed history to archive when supported |
 | `TASK_VALIDATE` | Typed TOML validation of registry + agent paths |
 | `TASK_VERIFY_BEHAVIORS` | Run linked behavior confirmations |
+| `TASK_VERIFY_MUTATION_HOOK` | Deny unbound implementation writes through the hook |
+| `TASK_METRICS` | Summarize local workflow receipts and registry state |
+| `SOURCE_LIMIT_CHECK` | Enforce the 1600-line source/governance file limit |
+| `SOURCE_LIMIT_PLAN` | Produce deterministic split guidance for violating files |
 
-Exact command strings live in `.codex/settings.toml` and the registry CLI skill path. Typical pattern: `<cli_command> activate|status|defer|report|validate|verify-behaviors ...`.
+Exact command strings live in `.codex/agent-governance.toml`; the canonical pattern is `.codex/scripts/task-registry activate|status|defer|report|validate|archive-completed|verify-behaviors|verify-mutation-hook|metrics|source-limit ...`.
 
 Do not set `deferred` via `TASK_STATUS`. Use `TASK_DEFER` only with governed basis and exact reactivation condition.
 
@@ -37,13 +41,13 @@ Do not set `deferred` via `TASK_STATUS`. Use `TASK_DEFER` only with governed bas
 - Plan hash change after activation → reconcile before continuing implementation.
 - Duplicate `plan_id` in registry or across manifests fails validation.
 - Every task row must carry matching `plan_id`, `source_plan_path`, `source_plan_hash_sha256`.
-- Completed history may live in `docs/task-registry/archive/*.toml` when the executor supports archives.
+- Completed history may live in `docs/task-registry/archive/*.toml`; the plugin CLI supports `archive-completed`.
 
 ## Task Requirements
 
 Each row: `task_id`, `plan_id`, `status`, `title`, `kind`, `reason`, `acceptance_proof`, `source_plan_path`, `source_plan_hash_sha256`, and ≥1 `targets` entry (`file`, `object`, `required_change`).
 
-Active plans must declare `[[behaviors]]` in the plan manifest with runnable `confirmation` commands. Each task lists `behavior_ids`. Marking a task `completed` should run those confirmations and fail if checks fail.
+Active plans must declare `[[behaviors]]` in the plan manifest with runnable `confirmation` commands. Each task lists `behavior_ids`. Marking a task `completed` runs those confirmations and fails if checks fail.
 
 Statuses: `planned`, `active`, `blocked`, `deferred`, `completed`, `cancelled`.
 
@@ -70,7 +74,11 @@ Task registry: <completed> completed, <deferred> deferred, <blocked> blocked for
 
 List every `deferred` and `blocked` task with `task_id`, title, and reason. Do not claim full closure while tasks remain `planned`, `active`, `blocked`, or `deferred` unless the user explicitly accepts that state.
 
+Run `.codex/scripts/task-registry metrics` after substantial implementation work to capture local efficacy evidence from `docs/task-registry/events.jsonl`. Receipts are local only; do not send telemetry.
+
+Run `.codex/scripts/task-registry source-limit check` before marking implementation tasks complete. If it fails, run `.codex/scripts/task-registry source-limit plan --path <file>` and split the file through an approved contract.
+
 ## Related Skills
 
 - Contract authoring: `$gap-closure-contract`
-- Project governance: [AGENTS.md](AGENTS.md) and paths in `.codex/settings.toml`
+- Project governance: [AGENTS.md](AGENTS.md) and paths in `.codex/agent-governance.toml`

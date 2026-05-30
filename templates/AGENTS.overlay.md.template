@@ -6,9 +6,12 @@ Maintained by [plugins/agent-governance/](plugins/agent-governance/). **Workflow
 |------|----------|
 | Reference config | `plugins/agent-governance/examples/spectrum-arcana.project.config.toml` |
 | Posture check | `plugins/agent-governance/scripts/status.sh` |
-| Refresh overlay | `plugins/agent-governance/scripts/install-to-workspace.sh --config plugins/agent-governance/examples/spectrum-arcana.project.config.toml --overlay` |
+| Refresh overlay | `plugins/agent-governance/scripts/install-to-workspace.sh --config plugins/agent-governance/examples/spectrum-arcana.project.config.toml --merge` |
 | Registry CLI | `{{TASK_REGISTRY_CLI}}` |
 | Mutation verify | `{{VERIFY_HOOK_COMMAND}}` |
 | Hook script | `{{MUTATION_HOOK_SCRIPT}}` |
-| Cursor hook | `.cursor/hooks/gap-closure-gate.sh` → canonical gate (`preToolUse` / `Write`) |
-| Skills | `.cursor/skills/*` portable `SKILL.md` + optional `PROJECT.md` |
+| Codex hooks | `.codex/hooks.json` → canonical gate (`PreToolUse`) |
+| Antigravity hooks | `.agents/hooks.json` → canonical gate (`run_command` / file edit tools) |
+| Cursor hooks | `.cursor/hooks.json` + `.cursor/hooks/gap-closure-gate.sh` |
+| Skills | `.agents/skills/*`, `.agents/skills/*.md`, `.cursor/skills/*` |
+| Source limit | 1600 lines; check `{{TASK_REGISTRY_CLI}} source-limit check`; split plan `{{TASK_REGISTRY_CLI}} source-limit plan --path <file>` |

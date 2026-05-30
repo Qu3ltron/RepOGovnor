@@ -7,19 +7,28 @@ TARGET_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 TARGET_ROOT="$(cd "$TARGET_ROOT" && pwd)"
 CONFIG="${PLUGIN_ROOT}/examples/spectrum-arcana.project.config.toml"
 STRICT=0
+ENV_FILTER="all"
+RELEASE_SOURCE=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --strict) STRICT=1; shift ;;
+    --release-source) RELEASE_SOURCE=1; shift ;;
+    --env) ENV_FILTER="$2"; shift 2 ;;
     -*) echo "unknown option: $1" >&2; exit 2 ;;
     *) CONFIG="$1"; shift ;;
   esac
 done
 
+case "$ENV_FILTER" in
+  all|codex|antigravity|cursor) ;;
+  *) echo "unknown --env: $ENV_FILTER" >&2; exit 2 ;;
+esac
+
 pass=0
 warn=0
 fail=0
-overlay_installed=0
+marker_installed=0
 
 ok()   { printf '  OK   %s\n' "$1"; pass=$((pass + 1)); }
 note() { printf '  NOTE %s\n' "$1"; warn=$((warn + 1)); }
@@ -35,18 +44,18 @@ check_markers() {
   begin_count="$(grep -c 'agent-governance:begin' "$file" || true)"
   end_count="$(grep -c 'agent-governance:end' "$file" || true)"
   if [[ "$begin_count" -eq 1 && "$end_count" -eq 1 ]]; then
-    ok "$file overlay markers present (single pair)"
-    overlay_installed=1
+    ok "$file governance markers present (single pair)"
+    marker_installed=1
   elif [[ "$begin_count" -gt 0 || "$end_count" -gt 0 ]]; then
-    bad "$file overlay markers malformed (begin=$begin_count end=$end_count)"
+    bad "$file governance markers malformed (begin=$begin_count end=$end_count)"
   else
-    note "$file has no agent-governance overlay markers"
+    note "$file has no agent-governance markers"
   fi
 }
 
 check_symlink() {
   local link="$1" expected_target="$2"
-  if [[ ! -e "$link" ]]; then
+  if [[ ! -e "$link" && ! -L "$link" ]]; then
     bad "missing symlink: $link"
     return
   fi
@@ -68,6 +77,15 @@ check_symlink() {
   fi
 }
 
+check_absent() {
+  local path="$1" label="$2"
+  if [[ -e "$path" || -L "$path" ]]; then
+    bad "$label"
+  else
+    ok "$label"
+  fi
+}
+
 check_hook_uses_env() {
   local script="$1"
   if [[ ! -f "$script" ]]; then
@@ -81,6 +99,35 @@ check_hook_uses_env() {
   fi
 }
 
+check_plugin_checkout() {
+  local path="${TARGET_ROOT}/plugins/agent-governance"
+  if [[ ! -e "$path" ]]; then
+    bad "plugins/agent-governance missing; install the plugin as a repo-local submodule or vendored checkout"
+    return
+  fi
+  if [[ -L "$path" ]]; then
+    local target resolved
+    target="$(readlink "$path")"
+    if [[ "$target" == /* ]]; then
+      bad "plugins/agent-governance is an absolute symlink; CI requires a repo-local submodule or vendored checkout"
+      return
+    fi
+    resolved="$(cd "$(dirname "$path")" && cd "$target" && pwd)"
+    case "${resolved}/" in
+      "${TARGET_ROOT}/"*) ;;
+      *)
+        bad "plugins/agent-governance symlink resolves outside the repo; CI requires a repo-local submodule or vendored checkout"
+        return
+        ;;
+    esac
+  fi
+  if [[ -f "${path}/.codex-plugin/plugin.json" ]] && [[ -x "${path}/scripts/status.sh" ]]; then
+    ok "plugins/agent-governance repo-local checkout present"
+  else
+    bad "plugins/agent-governance is missing plugin metadata or executable status.sh"
+  fi
+}
+
 check_file_contains() {
   local file="$1" needle="$2" label="$3"
   if [[ -f "$file" ]] && grep -q "$needle" "$file"; then
@@ -90,10 +137,29 @@ check_file_contains() {
   fi
 }
 
+check_executable() {
+  local path="$1" label="$2"
+  if [[ -x "$path" ]]; then
+    ok "$label"
+  else
+    bad "$label"
+  fi
+}
+
+version_at_least() {
+  local actual="$1" minimum="$2"
+  [[ "$(printf '%s\n%s\n' "$minimum" "$actual" | sort -V | head -n1)" == "$minimum" ]]
+}
+
 skill_diff_hint() {
-  local skill="$1"
-  local live="${TARGET_ROOT}/.cursor/skills/${skill}/SKILL.md"
+  local skill="$1" base="$2"
+  local skill_dir="${TARGET_ROOT}/${base}/${skill}"
+  local live="${skill_dir}/SKILL.md"
   local plugin="${PLUGIN_ROOT}/skills/${skill}/SKILL.md"
+  if [[ -L "$skill_dir" ]]; then
+    bad "${base}/${skill} must be a native directory, not a symlink"
+    return
+  fi
   if [[ ! -f "$live" ]]; then
     bad "skill missing: $live"
     return
@@ -103,16 +169,16 @@ skill_diff_hint() {
     return
   fi
   if diff -q "$live" "$plugin" >/dev/null 2>&1; then
-    ok "skill ${skill}/SKILL.md matches plugin portable base"
+    ok "${base}/${skill}/SKILL.md matches plugin portable base"
   else
-    note "skill ${skill}/SKILL.md differs from plugin (expected when PROJECT.md extends)"
+    note "${base}/${skill}/SKILL.md differs from plugin (expected when PROJECT.md extends)"
   fi
   if [[ -f "${live%/SKILL.md}/PROJECT.md" ]]; then
     ok "skill ${skill}/PROJECT.md present"
-  elif [[ "$overlay_installed" -eq 1 || "$STRICT" -eq 1 ]]; then
-    bad "skill ${skill}/PROJECT.md required when overlay is installed (--strict)"
+  elif [[ "$marker_installed" -eq 1 || "$STRICT" -eq 1 ]]; then
+    bad "skill ${skill}/PROJECT.md required when governance markers are installed (--strict)"
   else
-    note "skill ${skill}/PROJECT.md absent (optional without overlay)"
+    note "skill ${skill}/PROJECT.md absent (optional without governance markers)"
   fi
 }
 
@@ -126,6 +192,26 @@ check_tracked_for_ci() {
     [[ -z "$path" ]] && continue
     if [[ ! -e "${TARGET_ROOT}/${path}" ]]; then
       bad "missing required CI artifact: ${path}"
+      continue
+    fi
+    if [[ "$path" == "plugins/agent-governance" ]]; then
+      local tracked stage
+      tracked="$(cd "$TARGET_ROOT" && git ls-files "$path")"
+      if [[ -n "$tracked" ]]; then
+        stage="$(cd "$TARGET_ROOT" && git ls-files --stage -- "$path")"
+        if [[ "$stage" == 160000* ]]; then
+          if [[ -f "${TARGET_ROOT}/.gitmodules" ]] \
+            && grep -q 'path = plugins/agent-governance' "${TARGET_ROOT}/.gitmodules"; then
+            ok "git tracks ${path} as a configured submodule"
+          else
+            bad "${path} is an embedded gitlink without .gitmodules; use git submodule add or vendor files without .git"
+          fi
+        else
+          ok "git tracks ${path}"
+        fi
+      else
+        bad "not tracked in git: ${path} (required for CI — use submodule or vendored checkout)"
+      fi
       continue
     fi
     if (cd "$TARGET_ROOT" && git ls-files --error-unmatch "$path" >/dev/null 2>&1); then
@@ -146,6 +232,165 @@ PY
   )
 }
 
+check_release_file() {
+  local path="$1"
+  if [[ -f "${TARGET_ROOT}/${path}" ]]; then
+    ok "release file present: ${path}"
+  else
+    bad "release file missing: ${path}"
+  fi
+}
+
+check_release_absent() {
+  local path="$1"
+  if [[ -e "${TARGET_ROOT}/${path}" || -L "${TARGET_ROOT}/${path}" ]]; then
+    bad "stale release-incompatible path present: ${path}"
+  else
+    ok "stale release-incompatible path absent: ${path}"
+  fi
+}
+
+check_release_clean_git() {
+  if [[ "${AGENT_GOVERNANCE_ALLOW_DIRTY_RELEASE_CHECK:-0}" == "1" ]]; then
+    note "dirty release-source check waiver active"
+    return
+  fi
+  local status
+  status="$(cd "$TARGET_ROOT" && git status --short)"
+  if [[ -z "$status" ]]; then
+    ok "git worktree clean for release"
+  else
+    bad "git worktree dirty; commit or discard changes before release"
+    printf '%s\n' "$status" | sed 's/^/       /'
+  fi
+}
+
+check_release_tracked() {
+  if [[ "${AGENT_GOVERNANCE_ALLOW_DIRTY_RELEASE_CHECK:-0}" == "1" ]]; then
+    note "tracked release-source check skipped by dirty waiver"
+    return
+  fi
+  local path
+  for path in "$@"; do
+    if (cd "$TARGET_ROOT" && git ls-files --error-unmatch "$path" >/dev/null 2>&1); then
+      ok "git tracks release file: ${path}"
+    else
+      bad "release file not tracked in git: ${path}"
+    fi
+  done
+}
+
+run_release_source_status() {
+  local release_files=(
+    "VERSION"
+    "LICENSE"
+    "CHANGELOG.md"
+    "README.md"
+    "MANIFEST.toml"
+    "REQUIREMENTS.toml"
+    "plugin.json"
+    ".codex-plugin/plugin.json"
+    ".github/workflows/ci.yml"
+    "docs/releases/v2.md"
+    "docs/task-registry.toml"
+    "hooks/codex-hooks.json"
+    "hooks/hooks.json"
+    "rust/task-registry-flow-cli/Cargo.toml"
+    "rust/task-registry-flow-cli/Cargo.lock"
+    "rust/task-registry-flow-cli/deny.toml"
+    "rust/task-registry-flow-cli/src/main.rs"
+    "rust/task-registry-flow-cli/src/model.rs"
+    "rust/task-registry-flow-cli/src/mutation_hook.rs"
+    "rust/task-registry-flow-cli/src/source_limit.rs"
+    "rust/task-registry-flow-cli/src/tests.rs"
+    "scripts/install-to-workspace.sh"
+    "scripts/render-from-config.sh"
+    "scripts/status.sh"
+    "scripts/test-install-modes.sh"
+    "scripts/test-release-readiness.sh"
+    "scripts/release-version-check.sh"
+    "scripts/release-audit.sh"
+    "templates/.codex/scripts/task-registry.template"
+    "templates/tools/agent-governance/pre-tool-use-gap-closure.sh.template"
+  )
+
+  echo "Agent governance release-source status"
+  echo "  repo:   ${TARGET_ROOT}"
+  echo "  plugin: ${PLUGIN_ROOT}"
+  echo ""
+
+  echo "Release artifacts"
+  local path
+  for path in "${release_files[@]}"; do
+    check_release_file "$path"
+  done
+  check_release_absent "hooks.json"
+  check_release_absent "templates/.codex/settings.toml.template"
+  check_release_absent "templates/.codex/hooks/user-plan-approval.toml.template"
+  check_release_absent "templates/.gemini/settings.json"
+  check_release_absent "templates/tools/antigravity/pre-tool-use-gap-closure.sh.template"
+  echo ""
+
+  echo "Release version"
+  if (cd "$TARGET_ROOT" && scripts/release-version-check.sh >/dev/null); then
+    ok "release versions are consistent"
+  else
+    bad "release versions are inconsistent"
+  fi
+  check_file_contains "${TARGET_ROOT}/CHANGELOG.md" '## 2.0.0' "CHANGELOG.md includes 2.0.0 section"
+  check_file_contains "${TARGET_ROOT}/docs/releases/v2.md" 'Audit Policy' "v2 release docs include audit policy"
+  check_file_contains "${TARGET_ROOT}/README.md" 'CHANGELOG.md' "README links changelog"
+  check_file_contains "${TARGET_ROOT}/README.md" 'docs/releases/v2.md' "README links v2 release checklist"
+  echo ""
+
+  echo "Package validation"
+  if (cd "$TARGET_ROOT" && cargo run --locked --quiet --manifest-path rust/task-registry-flow-cli/Cargo.toml -- source-limit check >/dev/null); then
+    ok "source limit check"
+  else
+    bad "source limit check failed"
+  fi
+  if (cd "$TARGET_ROOT" && cargo run --quiet --manifest-path rust/task-registry-flow-cli/Cargo.toml -- validate >/dev/null); then
+    ok "task registry validate"
+  else
+    bad "task registry validate failed"
+  fi
+  if [[ "${AGENT_GOVERNANCE_ALLOW_ACTIVE_RELEASE_TASKS:-0}" == "1" ]]; then
+    note "active release task waiver active"
+  elif (cd "$TARGET_ROOT" && cargo run --quiet --manifest-path rust/task-registry-flow-cli/Cargo.toml -- metrics | grep -q 'active=0'); then
+    ok "task registry has no active tasks"
+  else
+    bad "task registry still has active tasks"
+  fi
+  if (cd "$TARGET_ROOT" && cargo run --quiet --manifest-path rust/task-registry-flow-cli/Cargo.toml -- metrics | grep -q 'deferred=0, blocked=0'); then
+    ok "task registry has no deferred or blocked tasks"
+  else
+    bad "task registry has deferred or blocked tasks"
+  fi
+  if ! command -v agy >/dev/null 2>&1; then
+    note "agy CLI not found on PATH; skip runtime plugin validation"
+  elif (cd "$TARGET_ROOT" && agy plugin validate . >/dev/null 2>&1); then
+    ok "agy plugin validate"
+  else
+    bad "agy plugin validate failed"
+  fi
+  echo ""
+
+  echo "Git release hygiene"
+  check_release_clean_git
+  check_release_tracked "${release_files[@]}"
+  echo ""
+
+  printf 'Summary: %d ok, %d note, %d fail\n' "$pass" "$warn" "$fail"
+  if [[ "$fail" -gt 0 ]]; then
+    exit 1
+  fi
+}
+
+if [[ "$RELEASE_SOURCE" -eq 1 ]]; then
+  run_release_source_status
+  exit 0
+fi
+
 echo "Agent governance status"
 echo "  repo:   ${TARGET_ROOT}"
 echo "  plugin: ${PLUGIN_ROOT}"
@@ -153,49 +398,145 @@ echo "  config: ${CONFIG}"
 echo "  requirements: ${PLUGIN_ROOT}/REQUIREMENTS.toml"
 echo ""
 
-echo "Overlay markers"
+echo "Governance markers"
 check_markers "${TARGET_ROOT}/AGENTS.md"
 check_markers "${TARGET_ROOT}/GEMINI.md"
 echo ""
 
 echo "Plugin link"
+check_plugin_checkout
 check_symlink "${TARGET_ROOT}/.agents/plugins/agent-governance" "../../plugins/agent-governance"
+if [[ -f "${PLUGIN_ROOT}/.codex-plugin/plugin.json" ]]; then
+  ok "plugin .codex-plugin/plugin.json present"
+else
+  bad "plugin .codex-plugin/plugin.json missing"
+fi
 echo ""
 
 echo "Mutation gate"
-check_hook_uses_env "${TARGET_ROOT}/tools/antigravity/pre-tool-use-gap-closure.sh"
+check_hook_uses_env "${TARGET_ROOT}/tools/agent-governance/pre-tool-use-gap-closure.sh"
 check_file_contains "${TARGET_ROOT}/.codex/governance-cli.env" 'GOVERNANCE_VERIFY_HOOK_CMD' "governance-cli.env defines GOVERNANCE_VERIFY_HOOK_CMD"
-if [[ -f "${TARGET_ROOT}/.agents/hooks.json" ]] && grep -q 'tools/antigravity/pre-tool-use-gap-closure.sh' "${TARGET_ROOT}/.agents/hooks.json"; then
+check_file_contains "${TARGET_ROOT}/.codex/governance-cli.env" '.codex/scripts/task-registry verify-mutation-hook' "governance-cli.env uses plugin-owned mutation hook"
+if [[ -f "${TARGET_ROOT}/.agents/hooks.json" ]] && grep -q 'tools/agent-governance/pre-tool-use-gap-closure.sh' "${TARGET_ROOT}/.agents/hooks.json"; then
   ok ".agents/hooks.json uses canonical hook script path"
 else
-  bad ".agents/hooks.json does not point at tools/antigravity/pre-tool-use-gap-closure.sh"
+  bad ".agents/hooks.json does not point at tools/agent-governance/pre-tool-use-gap-closure.sh"
 fi
-if [[ -f "${TARGET_ROOT}/.cursor/hooks.json" ]] && grep -q 'hooks/gap-closure-gate.sh' "${TARGET_ROOT}/.cursor/hooks.json"; then
-  ok ".cursor/hooks.json defines preToolUse Write gate"
+if [[ -f "${TARGET_ROOT}/.cursor/hooks.json" ]] && grep -q 'beforeShellExecution' "${TARGET_ROOT}/.cursor/hooks.json"; then
+  ok ".cursor/hooks.json defines Cursor shell/file guardrails"
 else
-  bad ".cursor/hooks.json missing preToolUse hook for hooks/gap-closure-gate.sh"
+  bad ".cursor/hooks.json missing Cursor guardrail hooks"
 fi
 check_hook_uses_env "${TARGET_ROOT}/.cursor/hooks/gap-closure-gate.sh"
 if [[ -f "${TARGET_ROOT}/.cursor/hooks/gap-closure-gate.sh" ]] \
   && grep -q 'GOVERNANCE_HOOK_FORMAT=cursor' "${TARGET_ROOT}/.cursor/hooks/gap-closure-gate.sh" \
-  && grep -q 'tools/antigravity/pre-tool-use-gap-closure.sh' "${TARGET_ROOT}/.cursor/hooks/gap-closure-gate.sh"; then
+  && grep -q 'tools/agent-governance/pre-tool-use-gap-closure.sh' "${TARGET_ROOT}/.cursor/hooks/gap-closure-gate.sh"; then
   ok ".cursor/hooks/gap-closure-gate.sh delegates to canonical mutation gate"
 else
   bad ".cursor/hooks/gap-closure-gate.sh must set GOVERNANCE_HOOK_FORMAT=cursor and delegate to canonical script"
 fi
-if [[ -f "${PLUGIN_ROOT}/hooks.json" ]] && grep -q 'tools/antigravity/pre-tool-use-gap-closure.sh' "${PLUGIN_ROOT}/hooks.json"; then
-  ok "plugin hooks.json uses canonical hook script path"
+if [[ -f "${PLUGIN_ROOT}/hooks/hooks.json" ]] && grep -q 'pre-tool-use-gap-closure.sh' "${PLUGIN_ROOT}/hooks/hooks.json"; then
+  ok "Antigravity plugin hooks/hooks.json present"
 else
-  bad "plugin hooks.json not aligned with canonical hook path"
+  bad "Antigravity plugin hooks/hooks.json missing"
+fi
+if [[ -f "${PLUGIN_ROOT}/hooks/codex-hooks.json" ]] && grep -q 'GOVERNANCE_HOOK_FORMAT=codex' "${PLUGIN_ROOT}/hooks/codex-hooks.json"; then
+  ok "Codex plugin hooks/codex-hooks.json present"
+else
+  bad "Codex plugin hooks/codex-hooks.json missing"
 fi
 echo ""
 
 echo "Skills"
-check_symlink "${TARGET_ROOT}/.agents/skills/gap-closure-contract" "../../.cursor/skills/gap-closure-contract"
-check_symlink "${TARGET_ROOT}/.agents/skills/task-registry-flow" "../../.cursor/skills/task-registry-flow"
-skill_diff_hint "gap-closure-contract"
-skill_diff_hint "task-registry-flow"
+skill_diff_hint "gap-closure-contract" ".agents/skills"
+skill_diff_hint "task-registry-flow" ".agents/skills"
+skill_diff_hint "gap-closure-contract" ".cursor/skills"
+skill_diff_hint "task-registry-flow" ".cursor/skills"
+if [[ -f "${TARGET_ROOT}/.agents/skills/gap-closure-contract.md" ]] && [[ -f "${TARGET_ROOT}/.agents/skills/task-registry-flow.md" ]]; then
+  ok "Antigravity markdown skills present"
+else
+  bad "Antigravity markdown skills missing"
+fi
 echo ""
+
+echo "Task registry artifacts"
+check_executable "${TARGET_ROOT}/.codex/scripts/task-registry" ".codex/scripts/task-registry is executable"
+check_file_contains "${TARGET_ROOT}/.codex/scripts/task-registry" 'task-registry-flow-cli/Cargo.toml' "task-registry wrapper points at plugin Rust CLI"
+check_file_contains "${TARGET_ROOT}/.codex/config.toml" 'hooks = true' ".codex/config.toml enables Codex hooks"
+check_file_contains "${TARGET_ROOT}/.codex/hooks.json" 'PreToolUse' ".codex/hooks.json defines Codex PreToolUse hook"
+check_file_contains "${TARGET_ROOT}/.codex/agent-governance.toml" 'cli_command = ".codex/scripts/task-registry"' ".codex/agent-governance.toml uses plugin-owned registry CLI"
+check_absent "${TARGET_ROOT}/.codex/settings.toml" "stale .codex/settings.toml absent"
+check_absent "${TARGET_ROOT}/.codex/hooks/user-plan-approval.toml" "stale Codex hook TOML absent"
+check_absent "${TARGET_ROOT}/.gemini/settings.json" "stale workspace .gemini/settings.json absent"
+check_absent "${TARGET_ROOT}/hooks.json" "stale root hooks.json absent"
+check_absent "${TARGET_ROOT}/tools/antigravity/pre-tool-use-gap-closure.sh" "stale Antigravity hook path absent"
+if [[ -f "${TARGET_ROOT}/docs/task-registry.toml" ]]; then
+  ok "docs/task-registry.toml present"
+else
+  bad "docs/task-registry.toml missing"
+fi
+if [[ -f "${TARGET_ROOT}/docs/task-registry/events.jsonl" ]]; then
+  ok "docs/task-registry/events.jsonl present"
+else
+  bad "docs/task-registry/events.jsonl missing"
+fi
+if [[ -f "${TARGET_ROOT}/.codex/templates/task-registry-plan-template.md" ]]; then
+  ok ".codex/templates/task-registry-plan-template.md present"
+else
+  bad ".codex/templates/task-registry-plan-template.md missing"
+fi
+if [[ -f "${TARGET_ROOT}/.github/workflows/agent-governance.yml" ]]; then
+  ok ".github/workflows/agent-governance.yml present"
+else
+  bad ".github/workflows/agent-governance.yml missing"
+fi
+echo ""
+
+if [[ "$ENV_FILTER" == "all" || "$ENV_FILTER" == "codex" ]]; then
+  echo "Codex environment"
+  if command -v codex >/dev/null 2>&1; then
+    ok "codex CLI present: $(codex --version 2>/dev/null | head -1)"
+  else
+    note "codex CLI not found on PATH"
+  fi
+  check_file_contains "${TARGET_ROOT}/.codex/hooks.json" 'GOVERNANCE_HOOK_FORMAT=codex' "Codex hook uses codex output format"
+  check_file_contains "${TARGET_ROOT}/.codex/config.toml" 'hooks = true' "Codex project config enables hooks"
+  echo ""
+fi
+
+if [[ "$ENV_FILTER" == "all" || "$ENV_FILTER" == "antigravity" ]]; then
+  echo "Antigravity environment"
+  if command -v agy >/dev/null 2>&1; then
+    agy_version="$(agy --version 2>/dev/null | head -1)"
+    ok "agy CLI present: ${agy_version}"
+    if version_at_least "$agy_version" "1.0.3"; then
+      ok "agy CLI meets minimum 1.0.3"
+    else
+      bad "agy CLI ${agy_version} is older than required 1.0.3"
+    fi
+    if agy plugin validate "$PLUGIN_ROOT" 2>/tmp/agent-governance-agy-validate.log | grep -q 'hooks.*processed'; then
+      ok "agy plugin validate processes hooks"
+    else
+      bad "agy plugin validate did not process hooks"
+    fi
+  else
+    note "agy CLI not found on PATH; skip runtime plugin validation"
+  fi
+  check_file_contains "${TARGET_ROOT}/.agents/hooks.json" 'edit_file' "Antigravity hook matcher includes edit_file"
+  echo ""
+fi
+
+if [[ "$ENV_FILTER" == "all" || "$ENV_FILTER" == "cursor" ]]; then
+  echo "Cursor environment"
+  if command -v cursor-agent >/dev/null 2>&1; then
+    ok "cursor-agent present: $(cursor-agent --version 2>/dev/null | head -1)"
+  else
+    note "cursor-agent not found on PATH"
+  fi
+  check_file_contains "${TARGET_ROOT}/.cursor/hooks.json" 'beforeShellExecution' "Cursor hooks include beforeShellExecution"
+  check_file_contains "${TARGET_ROOT}/.cursor/rules/agent-governance.mdc" '1600 lines' "Cursor rule embeds source limit"
+  echo ""
+fi
 
 if [[ "$STRICT" -eq 1 ]]; then
   echo "Tracked for CI (REQUIREMENTS.toml)"
@@ -204,10 +545,15 @@ if [[ "$STRICT" -eq 1 ]]; then
 fi
 
 echo "Registry CLI"
-if (cd "$TARGET_ROOT" && cargo run --quiet --bin task_registry -- validate >/dev/null 2>&1); then
-  ok "cargo run --bin task_registry -- validate (includes agent governance posture)"
+if (cd "$TARGET_ROOT" && .codex/scripts/task-registry validate >/dev/null 2>&1); then
+  ok ".codex/scripts/task-registry validate"
 else
-  bad "cargo run --bin task_registry -- validate failed"
+  bad ".codex/scripts/task-registry validate failed"
+fi
+if (cd "$TARGET_ROOT" && .codex/scripts/task-registry source-limit check >/dev/null 2>&1); then
+  ok ".codex/scripts/task-registry source-limit check"
+else
+  bad ".codex/scripts/task-registry source-limit check failed"
 fi
 
 echo ""

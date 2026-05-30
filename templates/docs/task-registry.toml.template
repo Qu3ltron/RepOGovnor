@@ -1,0 +1,9 @@
+schema_version = 1
+registry_id = "{{REGISTRY_ID}}"
+registry_authority = "docs/task-registry.toml"
+activation_skill = "task-registry-flow"
+hash_algorithm = "sha256(normalized plan text: CRLF/CR converted to LF, trailing whitespace stripped from each line, exactly one final newline)"
+status_vocabulary = ["planned", "active", "blocked", "deferred", "completed", "cancelled"]
+archive_paths = []
+plans = []
+tasks = []

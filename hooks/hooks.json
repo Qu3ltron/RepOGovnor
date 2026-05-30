@@ -1,0 +1,16 @@
+{
+  "gap-closure-gate": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|apply_patch|Edit|Write|run_command|edit_file|write_to_file|replace_file_content|multi_replace_file_content",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "GOVERNANCE_HOOK_FORMAT=antigravity bash \"$(git rev-parse --show-toplevel)/plugins/agent-governance/scripts/pre-tool-use-gap-closure.sh\" --format antigravity",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}

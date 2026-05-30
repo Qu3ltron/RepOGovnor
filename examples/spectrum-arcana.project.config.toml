@@ -2,11 +2,11 @@
 #
 # This file documents how the portable plugin maps onto this repo.
 # Do NOT run install-to-workspace.sh against the live Tarot tree unless you
-# intend to refresh infrastructure files. Prefer --overlay for safe merges.
+# intend to refresh infrastructure files. Prefer --merge for existing repos.
 #
 #   plugins/agent-governance/scripts/install-to-workspace.sh \
 #     --config plugins/agent-governance/examples/spectrum-arcana.project.config.toml \
-#     --overlay
+#     --merge
 
 [project]
 repo_name = "spectrum-arcana"
@@ -17,22 +17,22 @@ vision_path = "VISION.md"
 design_docs_path = "docs/design"
 
 [task_registry]
-cli_command = "cargo run --bin task_registry --"
+cli_command = ".codex/scripts/task-registry"
 registry_path = "docs/task-registry.toml"
 plans_path = "docs/plans"
 archive_dir = "docs/task-registry/archive"
 
 [mutation_gate]
-verify_hook_command = "cargo run --quiet --bin task_registry -- verify-mutation-hook"
-hook_script_path = "tools/antigravity/pre-tool-use-gap-closure.sh"
+verify_hook_command = ".codex/scripts/task-registry verify-mutation-hook"
+hook_script_path = "tools/agent-governance/pre-tool-use-gap-closure.sh"
 
 [validation]
-focused = ["cargo test"]
+focused = [".codex/scripts/task-registry source-limit check", "cargo test"]
 full = [
+  ".codex/scripts/task-registry validate",
   "cargo test",
   "cargo run --bin enforce-architecture",
   "cargo run --bin verify-artifacts",
-  "cargo run --bin task_registry -- validate",
 ]
 
 [commit_governance]

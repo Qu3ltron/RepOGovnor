@@ -7,19 +7,35 @@ plugin_name = "agent-governance"
 
 [tracked_for_ci]
 design_rule = """
-After install or overlay, these paths MUST be committed to git.
+After --merge or --force install, these paths MUST be committed to git.
 Fresh CI clones only see tracked files; untracked governance artifacts
-cause task_registry validate and status.sh --strict to fail.
+or a missing repo-local plugin checkout cause .codex/scripts/task-registry
+validate and status.sh --strict to fail.
 """
 required = [
+  "plugins/agent-governance",
+  ".codex/config.toml",
+  ".codex/hooks.json",
+  ".codex/agent-governance.toml",
   ".codex/governance-cli.env",
+  ".codex/scripts/task-registry",
+  ".codex/templates/task-registry-plan-template.md",
+  ".github/workflows/agent-governance.yml",
   ".agents/plugins/agent-governance",
+  ".agents/hooks.json",
+  ".agents/skills/gap-closure-contract",
+  ".agents/skills/gap-closure-contract.md",
+  ".agents/skills/task-registry-flow",
+  ".agents/skills/task-registry-flow.md",
+  ".cursor/rules/agent-governance.mdc",
   ".cursor/hooks.json",
   ".cursor/hooks/gap-closure-gate.sh",
   "AGENTS.md",
   "GEMINI.md",
   ".cursor/skills/gap-closure-contract/PROJECT.md",
   ".cursor/skills/task-registry-flow/PROJECT.md",
+  "docs/task-registry.toml",
+  "docs/task-registry/events.jsonl",
 ]
 
 [tracked_for_ci.plugin_link]
@@ -37,4 +53,38 @@ exactly_one_pair = true
 [post_install]
 commit_checklist_command = "git add -N . && plugins/agent-governance/scripts/status.sh --strict"
 status_command = "plugins/agent-governance/scripts/status.sh --strict"
-validate_command = "cargo run --bin task_registry -- validate"
+validate_command = ".codex/scripts/task-registry validate"
+source_limit_command = ".codex/scripts/task-registry source-limit check"
+metrics_command = ".codex/scripts/task-registry metrics"
+
+[source_file_governance]
+max_lines = 1600
+check_command = ".codex/scripts/task-registry source-limit check"
+split_plan_command = ".codex/scripts/task-registry source-limit plan --path <file>"
+design_rule = "Source, scripts, configs, docs, templates, and governance files must stay at or below 1600 lines. Use the split planner before adding behavior to a violating file."
+
+[release_source]
+version = "2.0.0"
+status_command = "scripts/status.sh --release-source"
+version_check_command = "scripts/release-version-check.sh"
+audit_command = "scripts/release-audit.sh"
+required = [
+  "VERSION",
+  "LICENSE",
+  "CHANGELOG.md",
+  "README.md",
+  "MANIFEST.toml",
+  "REQUIREMENTS.toml",
+  "plugin.json",
+  ".codex-plugin/plugin.json",
+  ".github/workflows/ci.yml",
+  "docs/releases/v2.md",
+  "hooks/codex-hooks.json",
+  "hooks/hooks.json",
+  "rust/task-registry-flow-cli/Cargo.toml",
+  "rust/task-registry-flow-cli/Cargo.lock",
+  "rust/task-registry-flow-cli/deny.toml",
+  "scripts/release-version-check.sh",
+  "scripts/release-audit.sh",
+  "scripts/test-release-readiness.sh",
+]

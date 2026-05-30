@@ -12,8 +12,8 @@ Mandatory after gap analysis plus user approval, before implementation. Scope is
 ## Mandatory Approval Hook
 
 - Trigger after gaps are surfaced and the user approves a plan, says proceed, implement, continue, or authorizes gap closure.
-- Codex: `.codex/hooks/user-plan-approval.toml`
-- Antigravity: `.agents/hooks.json` → mutation hook script → project `verify-mutation-hook` command (PreToolUse deny on unbound implementation writes when the executor enforces it).
+- Codex: `.codex/hooks.json` + `.codex/agent-governance.toml`
+- Antigravity: `.agents/hooks.json` → mutation hook script → `.codex/scripts/task-registry verify-mutation-hook` (PreToolUse deny on unbound implementation writes).
 - Do not mutate implementation files until the closure contract exists or is refreshed for approved scope.
 - Do not mutate until the contract has a machine-readable `## Task Manifest` and `PLAN_ACTIVATE` has run via `$task-registry-flow`.
 - Partial approval → contract only for approved subset; list deferred gaps explicitly.
@@ -21,7 +21,7 @@ Mandatory after gap analysis plus user approval, before implementation. Scope is
 
 ## Mandatory Path Isolation
 
-- Target project root: value of `[workspace_boundary].repo_root` in `.codex/settings.toml` (must match `git rev-parse --show-toplevel`).
+- Target project root: value of `[workspace_boundary].repo_root` in `.codex/agent-governance.toml` (must match `git rev-parse --show-toplevel`).
 - Scratch root: `[workspace_boundary].allowed_scratch_root` or `[gap_closure_contract].scratch_root`.
 - Before writes or mutating commands: verify `pwd` and `git rev-parse --show-toplevel` match the target root. Stop otherwise.
 - Persist contracts at `docs/plans/<short-slug>.md`.
@@ -31,7 +31,7 @@ Mandatory after gap analysis plus user approval, before implementation. Scope is
 ## Task Registry Flow
 
 - Approved contracts are tasklist contracts with `## Task Manifest` (one fenced TOML block).
-- After approval: `$task-registry-flow` → registry CLI `activate` opcode (see `.codex/settings.toml` → `[task_registry].cli_command`).
+- After approval: `$task-registry-flow` → `.codex/scripts/task-registry activate` (see `.codex/agent-governance.toml` → `[task_registry].cli_command`).
 - Status updates use the registry CLI `status` opcode — not `deferred` via status.
 - Defer (`TASK_DEFER`): registry CLI `defer` opcode — requires `deferral_governance_basis` and `reactivation_condition` in the registry row.
 - Final report: registry CLI `report` opcode.
@@ -40,9 +40,9 @@ Mandatory after gap analysis plus user approval, before implementation. Scope is
 
 ## Ground Rules
 
-- Follow project authority order in `.codex/settings.toml` and [AGENTS.md](AGENTS.md).
+- Follow project authority order in `.codex/agent-governance.toml` and [AGENTS.md](AGENTS.md).
 - Respect architecture and product rules defined in project docs — not in this skill.
-- Keep source/config/docs/script files within project line limits when configured.
+- Keep source/config/docs/script files at or below 1600 lines. This is a hard plugin rule, not an optional project preference.
 - Protect unrelated dirty worktree changes.
 
 ## Contract Requirements
@@ -54,8 +54,9 @@ Every contract must include:
 3. **Per-Gap Success Criteria** — each `###` gap must include a `- Behavioral:` line describing observable **given/when/then** outcomes (not documentation). Add domain-specific criteria (API, UI, runtime, visual) when touched; honest `N/A` with reason when not.
 4. **Behavioral Contract (Task Manifest)** — every active plan manifest must declare typed `[[behaviors]]` rows (`behavior_id`, `title`, `given`, `when`, `then`, `confirmation`) and link each `[[tasks]]` row through `behavior_ids`. `confirmation` must be a **runnable** command (tests, linters, integration scripts). `acceptance_proof` must cite the behavior and command, not documentation alone.
 5. **Validation Plan** — exact runnable commands; focused vs full gates.
-6. **Walkthrough Evidence** — proof to capture after implementation (command output, not doc edits).
-7. **Task Manifest** — fenced `toml` with `schema_version`, `plan_id`, `[[behaviors]]`, `[[tasks]]` (with `behavior_ids`), and diffable `[[tasks.targets]]`.
+6. **Source File Limit** — state expected line-budget impact and include `.codex/scripts/task-registry source-limit check`; if any file is already over 1600 lines, run `.codex/scripts/task-registry source-limit plan --path <file>` and split before adding more behavior.
+7. **Walkthrough Evidence** — proof to capture after implementation (command output, not doc edits).
+8. **Task Manifest** — fenced `toml` with `schema_version`, `plan_id`, `[[behaviors]]`, `[[tasks]]` (with `behavior_ids`), and diffable `[[tasks.targets]]`.
 
 ## Closure Workflow
 
@@ -64,7 +65,7 @@ Every contract must include:
 3. `PLAN_ACTIVATE` before code edits.
 4. Patch narrowly; match existing project patterns.
 5. Verify: contract tests + project validation gates as applicable.
-6. Report proof; include `TASK_REPORT`; do not close gaps without meeting criteria unless user waives.
+6. Report proof; include `TASK_REPORT` and `TASK_METRICS`; do not close gaps without meeting criteria unless user waives.
 
 ## Contract Template
 
@@ -86,6 +87,7 @@ Every contract must include:
 ## Validation Plan
 Focused:
 - `<runnable confirmation command>`
+- `.codex/scripts/task-registry source-limit check`
 Full:
 - `<project full gate commands>`
 
@@ -115,7 +117,7 @@ acceptance_proof = "Behavior B-001-short-name: <same confirmation command>"
 
 ## Validation Menu
 
-Use the smallest honest subset from the contract Validation Plan. Prefer commands listed in `.codex/settings.toml` → `[validation]` as starting points when the contract does not specify otherwise.
+Use the smallest honest subset from the contract Validation Plan. Prefer commands listed in `.codex/agent-governance.toml` → `[validation]` as starting points when the contract does not specify otherwise.
 
 ## Failure Patterns To Catch
 
@@ -125,3 +127,4 @@ Use the smallest honest subset from the contract Validation Plan. Prefer command
 - Verifier passes on static artifacts while runtime/API behavior diverges.
 - Wrong repo, wrong scratch root, or commands from a different project's toolchain.
 - Behavioral criteria that cite documentation instead of runnable confirmations.
+- Treating the 1600-line source limit as a final cleanup item instead of a design-time split constraint.
