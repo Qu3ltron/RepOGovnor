@@ -3,108 +3,70 @@
 let
   cfg = config.services.agent-governance-auto-update;
 
-  # ---- flake mode -------------------------------------------------------
-  flakeScript = pkgs.writeShellScriptBin "agent-governance-update" ''
+  # The flake input name that points to the Governance-plugin repo.
+  # Consumers add this repo as a flake input; the timer updates it.
+  flakeInput = cfg.flakeInput;
+
+  # Path to the flake whose lock file contains the governance-plugin input.
+  flakeDir = cfg.flakeDir;
+
+  # One-shot service script: update the flake lock and rebuild if changed.
+  updateScript = pkgs.writeShellScriptBin "agent-governance-update" ''
     set -euo pipefail
-    LOCK_FILE="${cfg.flakeDir}/flake.lock"
+
+    LOCK_FILE="${flakeDir}/flake.lock"
+
     if [[ ! -f "$LOCK_FILE" ]]; then
       echo "agent-governance-update: no flake.lock at $LOCK_FILE" >&2
       exit 1
     fi
+
+    # Snapshot the current lock hash for the governance-plugin input.
     old_rev="$(${pkgs.jq}/bin/jq -r \
-      ".nodes.\"${cfg.flakeInput}\".locked.rev // empty" "$LOCK_FILE")"
+      ".nodes.\"${flakeInput}\".locked.rev // empty" \
+      "$LOCK_FILE")"
+
     if [[ -z "$old_rev" ]]; then
-      echo "agent-governance-update: input ${cfg.flakeInput} not in lock" >&2
+      echo "agent-governance-update: input ${flakeInput} not found in lock" >&2
       exit 1
     fi
-    ${pkgs.nix}/bin/nix flake lock --update-input "${cfg.flakeInput}" "${cfg.flakeDir}"
+
+    # Update only the governance-plugin input.
+    ${pkgs.nix}/bin/nix flake lock \
+      --update-input "${flakeInput}" \
+      "$flakeDir" 2>&1
+
+    # Snapshot the new lock hash.
     new_rev="$(${pkgs.jq}/bin/jq -r \
-      ".nodes.\"${cfg.flakeInput}\".locked.rev // empty" "$LOCK_FILE")"
-    if [[ "$old_rev" == "$new_rev" ]]; then
-      echo "agent-governance-update: ${cfg.flakeInput} unchanged at $old_rev"
-      exit 0
-    fi
-    echo "agent-governance-update: ${cfg.flakeInput} $old_rev -> $new_rev"
-    exec ${pkgs.nixos-rebuild}/bin/nixos-rebuild switch --flake "${cfg.flakeDir}"
-  '';
-
-  # ---- fetch-tree mode --------------------------------------------------
-  fetchTreeScript = pkgs.writeShellScriptBin "agent-governance-update" ''
-    set -euo pipefail
-    NIX_FILE="${cfg.nixFile}"
-    REV_VAR="${cfg.revVariable}"
-    REMOTE="${cfg.remoteUrl}"
-
-    old_rev="$(${pkgs.gawk}/bin/awk \
-      "/^[[:space:]]*$REV_VAR[[:space:]]*=/ { gsub(/[^a-f0-9]/, \"\", \$NF); print \$NF; exit }" \
-      "$NIX_FILE")"
-    if [[ -z "$old_rev" ]]; then
-      echo "agent-governance-update: could not read $REV_VAR from $NIX_FILE" >&2
-      exit 1
-    fi
-
-    new_rev="$(${pkgs.git}/bin/git ls-remote "$REMOTE" refs/heads/main \
-      | ${pkgs.gawk}/bin/awk '{print $1}')"
-    if [[ -z "$new_rev" ]]; then
-      echo "agent-governance-update: could not fetch HEAD from $REMOTE" >&2
-      exit 1
-    fi
+      ".nodes.\"${flakeInput}\".locked.rev // empty" \
+      "$LOCK_FILE")"
 
     if [[ "$old_rev" == "$new_rev" ]]; then
-      echo "agent-governance-update: $REV_VAR unchanged at $old_rev"
+      echo "agent-governance-update: ${flakeInput} unchanged at $old_rev"
       exit 0
     fi
 
-    echo "agent-governance-update: $REV_VAR $old_rev -> $new_rev"
-    ${pkgs.gnused}/bin/sed -i \
-      "s/$REV_VAR = \"[^\"]*\"/$REV_VAR = \"$new_rev\"/" \
-      "$NIX_FILE"
-    exec ${pkgs.nixos-rebuild}/bin/nixos-rebuild switch
-  '';
+    echo "agent-governance-update: ${flakeInput} updated $old_rev -> $new_rev"
 
-  updateScript =
-    if cfg.mode == "fetch-tree" then fetchTreeScript
-    else flakeScript;
+    # Rebuild the system so dependent services pick up the new plugin.
+    ${pkgs.nixos-rebuild}/bin/nixos-rebuild switch --flake "$flakeDir" 2>&1
+  '';
 
 in
 {
   options.services.agent-governance-auto-update = {
-    enable = lib.mkEnableOption "automatic updates for the agent-governance plugin";
-
-    mode = lib.mkOption {
-      type = lib.types.enum [ "flake" "fetch-tree" ];
-      default = "flake";
-      description = "Update strategy: flake (nix flake lock) or fetch-tree (git ls-remote + sed bump)";
-    };
+    enable = lib.mkEnableOption "automatic updates for the agent-governance plugin flake input";
 
     flakeDir = lib.mkOption {
       type = lib.types.str;
       default = "/home/hasnamuss";
-      description = "Path to flake (flake mode) or directory (fetch-tree mode)";
+      description = "Path to the flake whose lock file contains the governance-plugin input";
     };
 
     flakeInput = lib.mkOption {
       type = lib.types.str;
       default = "governance-plugin";
-      description = "Flake input name pointing to the Governance-plugin repo (flake mode)";
-    };
-
-    nixFile = lib.mkOption {
-      type = lib.types.str;
-      default = "/home/hasnamuss/reclaimed/system/reclaimed-resources.nix";
-      description = "Path to .nix file containing the pinned rev (fetch-tree mode)";
-    };
-
-    revVariable = lib.mkOption {
-      type = lib.types.str;
-      default = "governancePluginRev";
-      description = "Nix variable name holding the pinned git rev (fetch-tree mode)";
-    };
-
-    remoteUrl = lib.mkOption {
-      type = lib.types.str;
-      default = "ssh://git@github.com/Qu3ltron/Governance-plugin.git";
-      description = "Git remote URL to fetch latest commit from (fetch-tree mode)";
+      description = "Name of the flake input pointing to the Governance-plugin repo";
     };
 
     devLockFile = lib.mkOption {
@@ -134,10 +96,13 @@ in
 
   config = lib.mkIf cfg.enable {
     systemd.services.agent-governance-update = {
-      description = "Update agent-governance plugin and rebuild";
+      description = "Update agent-governance plugin flake input and rebuild";
       after = [ "network-online.target" ];
       wants = [ "network-online.target" ];
+
+      # Skip when the dev lock file exists (active development).
       unitConfig.ConditionPathExists = "!${cfg.devLockFile}";
+
       serviceConfig = {
         Type = "oneshot";
         User = cfg.user;
