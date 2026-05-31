@@ -4,6 +4,13 @@ archive_id = "completed-002"
 archive_authority = "docs/task-registry/archive/completed-002.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-05-31-release-executable-enforcement"
+plan_path = "docs/plans/release-executable-enforcement.md"
+plan_hash_sha256 = "3ad7520f1e9de72abd5e7e704399e4588d00628a3487ef271c337e362b4be72c"
+activated_at = "2026-05-31"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-05-31-governance-marker-enforcement"
 plan_path = "docs/plans/governance-marker-enforcement.md"
 plan_hash_sha256 = "00627806a424bcd1f90d37b58017e7e6b684c9810cd16769bbfdb26afcd68b36"
@@ -52,12 +59,88 @@ plan_hash_sha256 = "a07ccef32b7ff44fe8138a092bc91c6524ec8e207019f4ce2dfd7c590b2d
 activated_at = "2026-05-30"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-05-30-production-gap-closures"
-plan_path = "docs/plans/production-gap-closures.md"
-plan_hash_sha256 = "bdb7cbbd8a51f42ef5759d9c877501a5ad8460690ba547e6c39fc679fcef721d"
-activated_at = "2026-05-30"
+[[tasks]]
+task_id = "TASK-2026-05-31-release-executable-001"
+plan_id = "PLAN-2026-05-31-release-executable-enforcement"
 status = "completed"
+title = "Add executable release schema and runtime checks"
+kind = "implementation"
+source_plan_path = "docs/plans/release-executable-enforcement.md"
+source_plan_hash_sha256 = "3ad7520f1e9de72abd5e7e704399e4588d00628a3487ef271c337e362b4be72c"
+reason = "Release artifact presence is insufficient when scripts are not executable."
+acceptance_proof = "Behaviors B-001-executable-release-positive and B-002-executable-release-negative pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-001-executable-release-positive",
+    "B-002-executable-release-negative",
+]
+
+[[tasks.targets]]
+file = "REQUIREMENTS.toml"
+object = "release_source.executable and check_ids"
+required_change = "Declare executable release artifacts and the release-file-executable diagnostic id."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/schema.rs"
+object = "ReleaseCheckId"
+required_change = "Add release-file-executable as a typed release check id."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/release_checks.rs"
+object = "release_check runtime"
+required_change = "Parse executable requirements and emit pass/fail executable diagnostics."
+
+[[tasks]]
+task_id = "TASK-2026-05-31-release-executable-002"
+plan_id = "PLAN-2026-05-31-release-executable-enforcement"
+status = "completed"
+title = "Add executable migration tests"
+kind = "validation"
+source_plan_path = "docs/plans/release-executable-enforcement.md"
+source_plan_hash_sha256 = "3ad7520f1e9de72abd5e7e704399e4588d00628a3487ef271c337e362b4be72c"
+reason = "The release gate must prove both good executable state and non-executable migration failure."
+acceptance_proof = "Behaviors B-002-executable-release-negative and B-003-direct-script-validation pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-002-executable-release-negative",
+    "B-003-direct-script-validation",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/mod.rs"
+object = "release executable tests"
+required_change = "Seed executable requirements and assert chmod 0644 failures produce release-file-executable diagnostics."
+
+[[tasks.targets]]
+file = "scripts/test-release-readiness.sh"
+object = "check_executable"
+required_change = "Add positive and negative executable-mode release readiness checks."
+
+[[tasks.targets]]
+file = "scripts/test-install-modes.sh"
+object = "filesystem mode"
+required_change = "Track executable mode so direct invocation works."
+
+[[tasks]]
+task_id = "TASK-2026-05-31-release-executable-003"
+plan_id = "PLAN-2026-05-31-release-executable-enforcement"
+status = "completed"
+title = "Document executable release runtime contract"
+kind = "documentation"
+source_plan_path = "docs/plans/release-executable-enforcement.md"
+source_plan_hash_sha256 = "3ad7520f1e9de72abd5e7e704399e4588d00628a3487ef271c337e362b4be72c"
+reason = "Release executable policy must be discoverable as schema, not loose prose."
+acceptance_proof = "Behavior B-001-executable-release-positive passes and docs/runtime-schemas.md names release_source.executable."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = ["B-001-executable-release-positive"]
+
+[[tasks.targets]]
+file = "docs/runtime-schemas.md"
+object = "Release Contract"
+required_change = "Document release_source.executable and release-file-executable diagnostics."
 
 [[tasks]]
 task_id = "TASK-2026-05-31-marker-enforcement-001"
@@ -1390,90 +1473,3 @@ required_change = "Run release readiness tests and audit gate in CI."
 file = "scripts/test-release-readiness.sh"
 object = "audit_negative_tests"
 required_change = "Add negative tests for missing audit tools without waiver and positive waiver behavior."
-
-[[tasks]]
-task_id = "TASK-2026-05-30-production-gap-closures-001"
-plan_id = "PLAN-2026-05-30-production-gap-closures"
-status = "completed"
-title = "Repair mutation hook validation order"
-kind = "implementation"
-source_plan_path = "docs/plans/production-gap-closures.md"
-source_plan_hash_sha256 = "bdb7cbbd8a51f42ef5759d9c877501a5ad8460690ba547e6c39fc679fcef721d"
-reason = "The hook currently runs full validation before path inspection and can block plan activation."
-acceptance_proof = "Behavior B-2026-05-30-hook-governance-before-validation passes."
-created_at = "2026-05-30"
-updated_at = "2026-05-30"
-behavior_ids = ["B-2026-05-30-hook-governance-before-validation"]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/main.rs"
-object = "verify_mutation_hook_dispatch"
-required_change = "Delegate hook verification to a module without running full validation before governance path inspection."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/mutation_hook.rs"
-object = "mutation_hook_verifier"
-required_change = "Implement governance-first hook verification with negative guards for unsafe writes."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests.rs"
-object = "mutation_hook_behavior_tests"
-required_change = "Add positive and negative tests for governance writes, activation commands, and denied implementation writes."
-
-[[tasks]]
-task_id = "TASK-2026-05-30-production-gap-closures-002"
-plan_id = "PLAN-2026-05-30-production-gap-closures"
-status = "completed"
-title = "Run rendered registry wrapper from repo root"
-kind = "implementation"
-source_plan_path = "docs/plans/production-gap-closures.md"
-source_plan_hash_sha256 = "bdb7cbbd8a51f42ef5759d9c877501a5ad8460690ba547e6c39fc679fcef721d"
-reason = "The wrapper computes the repo root but currently leaves the Rust CLI running from the caller directory."
-acceptance_proof = "Behavior B-2026-05-30-wrapper-root-cwd passes."
-created_at = "2026-05-30"
-updated_at = "2026-05-30"
-behavior_ids = ["B-2026-05-30-wrapper-root-cwd"]
-
-[[tasks.targets]]
-file = "templates/.codex/scripts/task-registry.template"
-object = "repo_root_execution"
-required_change = "Change to the repo root before invoking cargo run."
-
-[[tasks.targets]]
-file = "scripts/test-install-modes.sh"
-object = "nested_wrapper_validation"
-required_change = "Assert nested wrapper execution reads and writes only repo-root registry artifacts."
-
-[[tasks]]
-task_id = "TASK-2026-05-30-production-gap-closures-003"
-plan_id = "PLAN-2026-05-30-production-gap-closures"
-status = "completed"
-title = "Align merge install with strict status"
-kind = "implementation"
-source_plan_path = "docs/plans/production-gap-closures.md"
-source_plan_hash_sha256 = "bdb7cbbd8a51f42ef5759d9c877501a5ad8460690ba547e6c39fc679fcef721d"
-reason = "Merge currently preserves stale files that strict status rejects."
-acceptance_proof = "Behavior B-2026-05-30-merge-status-hard-cutover passes."
-created_at = "2026-05-30"
-updated_at = "2026-05-30"
-behavior_ids = ["B-2026-05-30-merge-status-hard-cutover"]
-
-[[tasks.targets]]
-file = "scripts/render-from-config.sh"
-object = "merge_stale_file_removal"
-required_change = "Remove stale legacy governance files during merge and force while keeping dry-run projection-only."
-
-[[tasks.targets]]
-file = "scripts/test-install-modes.sh"
-object = "merge_status_alignment_tests"
-required_change = "Assert merge removes stale files and never reports preserve-stale."
-
-[[tasks.targets]]
-file = "README.md"
-object = "install_mode_documentation"
-required_change = "Document merge stale removal and root-wrapper behavior."
-
-[[tasks.targets]]
-file = "examples/spectrum-arcana-overlay.md"
-object = "reference_install_mode_documentation"
-required_change = "Update reference docs to describe hard-cutover merge behavior."

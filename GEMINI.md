@@ -2,6 +2,8 @@
 
 Antigravity (`agy`) entry point. Shared repo rules: [AGENTS.md](AGENTS.md) (Codex uses that file as its primary entry).
 
+Keep it terse.Do not update the user with non-actionable items. Wait to the end of your implimentation and provide updates then. No fluff, concise and focused.[CRITICAL]
+
 ## What Antigravity reads
 
 | Asset | Path | Role |

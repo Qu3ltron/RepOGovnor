@@ -2,6 +2,8 @@
 
 Portable governance entry installed by the **agent-governance** plugin. Project-specific architecture, CI, and product rules belong in your constitution, vision, and AGENTS extensions — not in the plugin.
 
+Keep it terse.Do not update the user with non-actionable items. Wait to the end of your implimentation and provide updates then. No fluff, concise and focused.[CRITICAL]
+
 ## Governance
 
 Read before feature work:

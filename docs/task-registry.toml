@@ -14,6 +14,7 @@ status_vocabulary = [
 archive_paths = [
     "docs/task-registry/archive/completed-001.toml",
     "docs/task-registry/archive/completed-002.toml",
+    "docs/task-registry/archive/completed-003.toml",
 ]
 
 [[plans]]

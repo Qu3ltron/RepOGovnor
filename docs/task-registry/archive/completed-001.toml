@@ -4,6 +4,13 @@ archive_id = "completed-001"
 archive_authority = "docs/task-registry/archive/completed-001.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-05-31-nix-auto-update"
+plan_path = "docs/plans/nix-auto-update-2026-05-31.md"
+plan_hash_sha256 = "7dd5f95dc1fd502953fd1569b99e1a5581af159d661cb512ee6570988677f70e"
+activated_at = "2026-05-31"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-05-31-claude-cli-template-pipeline"
 plan_path = "docs/plans/claude-cli-template-pipeline-2026-05-31.md"
 plan_hash_sha256 = "6338b2c727644de355c316df3bdda1cea004ee3b860c890e5759c760a372adf5"
@@ -52,12 +59,71 @@ plan_hash_sha256 = "ad84fbf9f6187483c4ba626b35a358a2748231bdc335065ad59130fa7eff
 activated_at = "2026-05-31"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-05-31-release-executable-enforcement"
-plan_path = "docs/plans/release-executable-enforcement.md"
-plan_hash_sha256 = "3ad7520f1e9de72abd5e7e704399e4588d00628a3487ef271c337e362b4be72c"
-activated_at = "2026-05-31"
+[[tasks]]
+task_id = "TASK-2026-05-31-N01"
+plan_id = "PLAN-2026-05-31-nix-auto-update"
 status = "completed"
+title = "Create flake.nix for Governance-plugin"
+kind = "implementation"
+source_plan_path = "docs/plans/nix-auto-update-2026-05-31.md"
+source_plan_hash_sha256 = "7dd5f95dc1fd502953fd1569b99e1a5581af159d661cb512ee6570988677f70e"
+reason = "Machine services need to consume the governance plugin as a Nix flake input rather than a local clone"
+acceptance_proof = "Behavior B-001: nix flake check passes, nix build produces working binary"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-001-flake-exists",
+    "B-001b-no-hardcoded-paths",
+]
+
+[[tasks.targets]]
+file = "flake.nix"
+object = "Nix flake with package, app, devShell, formatter"
+required_change = "Create flake.nix exposing task-registry-flow package"
+
+[[tasks]]
+task_id = "TASK-2026-05-31-N02"
+plan_id = "PLAN-2026-05-31-nix-auto-update"
+status = "completed"
+title = "Create package.nix for task-registry-flow-cli"
+kind = "implementation"
+source_plan_path = "docs/plans/nix-auto-update-2026-05-31.md"
+source_plan_hash_sha256 = "7dd5f95dc1fd502953fd1569b99e1a5581af159d661cb512ee6570988677f70e"
+reason = "The Rust CLI needs a Nix build expression for buildRustPackage"
+acceptance_proof = "Behavior B-002: nix build produces binary + companion scripts"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-002-package-builds-cli",
+    "B-002b-package-includes-scripts",
+]
+
+[[tasks.targets]]
+file = "package.nix"
+object = "Rust package build expression"
+required_change = "Create package.nix with buildRustPackage, source filter, and installPhase"
+
+[[tasks]]
+task_id = "TASK-2026-05-31-N03"
+plan_id = "PLAN-2026-05-31-nix-auto-update"
+status = "completed"
+title = "Create NixOS auto-update module with systemd timer"
+kind = "implementation"
+source_plan_path = "docs/plans/nix-auto-update-2026-05-31.md"
+source_plan_hash_sha256 = "7dd5f95dc1fd502953fd1569b99e1a5581af159d661cb512ee6570988677f70e"
+reason = "Machine services need automatic updates when the plugin repo changes, without manual git pull + rebuild"
+acceptance_proof = "Behavior B-003: timer and service units are valid, dev-lock is respected"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-003-auto-update-timer",
+    "B-003b-update-respects-lock",
+]
+
+[[tasks.targets]]
+file = "modules/nixos/agent-governance-auto-update.nix"
+object = "Auto-update systemd timer + oneshot service"
+required_change = "Create module with timer that updates flake input and triggers rebuild"
 
 [[tasks]]
 task_id = "TASK-2026-05-31-C01"
@@ -798,86 +864,3 @@ required_change = "Assert prose-only tokens and reversed comment markers fail JS
 file = "scripts/test-install-modes.sh"
 object = "strict_marker_negative_cases"
 required_change = "Assert shell status rejects markerless, prose-only, and reversed-marker workspaces."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-release-executable-001"
-plan_id = "PLAN-2026-05-31-release-executable-enforcement"
-status = "completed"
-title = "Add executable release schema and runtime checks"
-kind = "implementation"
-source_plan_path = "docs/plans/release-executable-enforcement.md"
-source_plan_hash_sha256 = "3ad7520f1e9de72abd5e7e704399e4588d00628a3487ef271c337e362b4be72c"
-reason = "Release artifact presence is insufficient when scripts are not executable."
-acceptance_proof = "Behaviors B-001-executable-release-positive and B-002-executable-release-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-001-executable-release-positive",
-    "B-002-executable-release-negative",
-]
-
-[[tasks.targets]]
-file = "REQUIREMENTS.toml"
-object = "release_source.executable and check_ids"
-required_change = "Declare executable release artifacts and the release-file-executable diagnostic id."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/schema.rs"
-object = "ReleaseCheckId"
-required_change = "Add release-file-executable as a typed release check id."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/release_checks.rs"
-object = "release_check runtime"
-required_change = "Parse executable requirements and emit pass/fail executable diagnostics."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-release-executable-002"
-plan_id = "PLAN-2026-05-31-release-executable-enforcement"
-status = "completed"
-title = "Add executable migration tests"
-kind = "validation"
-source_plan_path = "docs/plans/release-executable-enforcement.md"
-source_plan_hash_sha256 = "3ad7520f1e9de72abd5e7e704399e4588d00628a3487ef271c337e362b4be72c"
-reason = "The release gate must prove both good executable state and non-executable migration failure."
-acceptance_proof = "Behaviors B-002-executable-release-negative and B-003-direct-script-validation pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-002-executable-release-negative",
-    "B-003-direct-script-validation",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/mod.rs"
-object = "release executable tests"
-required_change = "Seed executable requirements and assert chmod 0644 failures produce release-file-executable diagnostics."
-
-[[tasks.targets]]
-file = "scripts/test-release-readiness.sh"
-object = "check_executable"
-required_change = "Add positive and negative executable-mode release readiness checks."
-
-[[tasks.targets]]
-file = "scripts/test-install-modes.sh"
-object = "filesystem mode"
-required_change = "Track executable mode so direct invocation works."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-release-executable-003"
-plan_id = "PLAN-2026-05-31-release-executable-enforcement"
-status = "completed"
-title = "Document executable release runtime contract"
-kind = "documentation"
-source_plan_path = "docs/plans/release-executable-enforcement.md"
-source_plan_hash_sha256 = "3ad7520f1e9de72abd5e7e704399e4588d00628a3487ef271c337e362b4be72c"
-reason = "Release executable policy must be discoverable as schema, not loose prose."
-acceptance_proof = "Behavior B-001-executable-release-positive passes and docs/runtime-schemas.md names release_source.executable."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = ["B-001-executable-release-positive"]
-
-[[tasks.targets]]
-file = "docs/runtime-schemas.md"
-object = "Release Contract"
-required_change = "Document release_source.executable and release-file-executable diagnostics."
