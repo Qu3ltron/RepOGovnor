@@ -1,7 +1,10 @@
 use crate::model::Result;
 use crate::reports::{RuntimeFailure, RuntimeResult};
 use crate::schema::{CheckReport, Diagnostic, ReleaseCheckId, VersionFileFormat};
+#[cfg(not(unix))]
+use crate::schema::{CheckStatus, DiagnosticSeverity};
 use serde::Deserialize;
+use std::collections::BTreeSet;
 use std::fs;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
@@ -124,6 +127,8 @@ pub(crate) fn report(root: &Path, mode: Mode) -> Result<CheckReport> {
     if matches!(mode, Mode::Required | Mode::All) {
         checks.extend(required_checks(root, &requirements));
         checks.extend(executable_checks(root, &requirements));
+        checks.extend(executable_policy_checks(root, &requirements));
+        checks.extend(rust_source_policy_checks(root, &requirements));
         checks.extend(stale_absent_checks(root, &requirements));
         checks.extend(schema_checks(&requirements));
     }
@@ -179,12 +184,7 @@ fn executable_checks(root: &Path, requirements: &Requirements) -> Vec<Diagnostic
             let full_path = root.join(path);
             match fs::metadata(&full_path) {
                 Ok(metadata) if metadata.is_file() && metadata_is_executable(&metadata) => {
-                    Diagnostic::pass(
-                        ReleaseCheckId::ReleaseFileExecutable.as_str(),
-                        "release-source",
-                        path,
-                        "executable file",
-                    )
+                    executable_file_pass(path)
                 }
                 Ok(metadata) if metadata.is_file() => Diagnostic::fail(
                     ReleaseCheckId::ReleaseFileExecutable.as_str(),
@@ -221,8 +221,150 @@ fn metadata_is_executable(metadata: &fs::Metadata) -> bool {
 }
 
 #[cfg(not(unix))]
-fn metadata_is_executable(metadata: &fs::Metadata) -> bool {
-    metadata.is_file()
+fn metadata_is_executable(_metadata: &fs::Metadata) -> bool {
+    true
+}
+
+#[cfg(unix)]
+fn executable_file_pass(path: &str) -> Diagnostic {
+    Diagnostic::pass(
+        ReleaseCheckId::ReleaseFileExecutable.as_str(),
+        "release-source",
+        path,
+        "executable file",
+    )
+}
+
+#[cfg(not(unix))]
+fn executable_file_pass(path: &str) -> Diagnostic {
+    Diagnostic::pass(
+        ReleaseCheckId::ReleaseFileExecutable.as_str(),
+        "release-source",
+        path,
+        "configured executable file present; mode not enforced on this platform",
+    )
+}
+
+fn executable_policy_checks(root: &Path, requirements: &Requirements) -> Vec<Diagnostic> {
+    let executable = requirements
+        .release_source
+        .executable
+        .iter()
+        .map(String::as_str)
+        .collect::<BTreeSet<_>>();
+    let mut checks = Vec::new();
+    for path in &requirements.release_source.required {
+        if release_required_path_is_script(root, path) && !executable.contains(path.as_str()) {
+            checks.push(Diagnostic::fail(
+                ReleaseCheckId::ReleaseScriptExecutableUndeclared.as_str(),
+                "release-source",
+                path,
+                "script declared in release_source.executable",
+                "missing executable policy",
+                "add the release script to release_source.executable or remove it from release_source.required through an approved plan",
+            ));
+        }
+    }
+    checks.extend(platform_executable_checks(
+        &requirements.release_source.executable,
+    ));
+    checks
+}
+
+fn release_required_path_is_script(root: &Path, path: &str) -> bool {
+    if !path.starts_with("scripts/") {
+        return false;
+    }
+    if path.ends_with(".sh") {
+        return true;
+    }
+    let Ok(body) = fs::read_to_string(root.join(path)) else {
+        return false;
+    };
+    body.lines()
+        .next()
+        .is_some_and(|line| line.starts_with("#!"))
+}
+
+fn rust_source_policy_checks(root: &Path, requirements: &Requirements) -> Vec<Diagnostic> {
+    let required = requirements
+        .release_source
+        .required
+        .iter()
+        .map(String::as_str)
+        .collect::<BTreeSet<_>>();
+    discover_rust_sources(root)
+        .into_iter()
+        .filter(|path| !required.contains(path.as_str()))
+        .map(|path| {
+            Diagnostic::fail(
+                ReleaseCheckId::ReleaseRustSourceUndeclared.as_str(),
+                "release-source",
+                path,
+                "rust source declared in release_source.required",
+                "missing release policy",
+                "add the Rust source file to release_source.required or remove it through an approved plan",
+            )
+        })
+        .collect()
+}
+
+fn discover_rust_sources(root: &Path) -> Vec<String> {
+    let source_root = root.join("rust/task-registry-flow-cli/src");
+    let mut paths = BTreeSet::new();
+    collect_rust_sources(root, &source_root, &mut paths);
+    paths.into_iter().collect()
+}
+
+fn collect_rust_sources(root: &Path, dir: &Path, paths: &mut BTreeSet<String>) {
+    let Ok(entries) = fs::read_dir(dir) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+            collect_rust_sources(root, &path, paths);
+        } else if path.extension().is_some_and(|extension| extension == "rs")
+            && let Ok(relative) = path.strip_prefix(root)
+        {
+            paths.insert(relative.to_string_lossy().replace('\\', "/"));
+        }
+    }
+}
+
+#[cfg(unix)]
+fn platform_executable_checks(paths: &[String]) -> Vec<Diagnostic> {
+    paths
+        .iter()
+        .map(|path| {
+            Diagnostic::pass(
+                ReleaseCheckId::ReleaseExecutablePlatform.as_str(),
+                "release-source",
+                path,
+                "unix executable mode enforced",
+            )
+        })
+        .collect()
+}
+
+#[cfg(not(unix))]
+fn platform_executable_checks(paths: &[String]) -> Vec<Diagnostic> {
+    paths
+        .iter()
+        .map(|path| Diagnostic {
+            check_id: ReleaseCheckId::ReleaseExecutablePlatform
+                .as_str()
+                .to_string(),
+            surface: "release-source".to_string(),
+            path: path.clone(),
+            severity: DiagnosticSeverity::Warning,
+            status: CheckStatus::Skip,
+            expected: "unix executable mode enforced".to_string(),
+            actual: "platform does not expose unix executable mode".to_string(),
+            remediation: "run release executable-bit enforcement on Unix before publishing"
+                .to_string(),
+        })
+        .collect()
 }
 
 fn stale_absent_checks(root: &Path, requirements: &Requirements) -> Vec<Diagnostic> {

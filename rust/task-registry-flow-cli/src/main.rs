@@ -2,6 +2,7 @@ mod cli;
 mod hook_io;
 mod install;
 mod manifest;
+mod metrics;
 mod model;
 mod mutation_hook;
 mod plan_contract;

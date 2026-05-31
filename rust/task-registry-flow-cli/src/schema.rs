@@ -167,6 +167,9 @@ string_enum!(InstallAction {
 string_enum!(ReleaseCheckId {
     ReleaseFilePresent => "release-file-present",
     ReleaseFileExecutable => "release-file-executable",
+    ReleaseScriptExecutableUndeclared => "release-script-executable-undeclared",
+    ReleaseExecutablePlatform => "release-executable-platform",
+    ReleaseRustSourceUndeclared => "release-rust-source-undeclared",
     StalePathAbsent => "stale-path-absent",
     ReleaseVersionConsistent => "release-version-consistent",
     TrackedForCiPresent => "tracked-for-ci-present",
@@ -189,6 +192,10 @@ pub(crate) struct ReceiptEvent {
     pub(crate) duration_ms: u128,
     pub(crate) subject: RuntimeSubject,
     pub(crate) summary: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) previous_event_hash_sha256: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) event_hash_sha256: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub(crate) diagnostics: Vec<Diagnostic>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -213,6 +220,8 @@ impl ReceiptEvent {
             duration_ms,
             subject: RuntimeSubject::command(command),
             summary,
+            previous_event_hash_sha256: None,
+            event_hash_sha256: None,
             diagnostics: Vec::new(),
             verifier_results: Vec::new(),
             mutation_denial: None,
@@ -233,6 +242,8 @@ impl ReceiptEvent {
             duration_ms,
             subject: RuntimeSubject::path("mutation-target", path.clone()),
             summary: reason.clone(),
+            previous_event_hash_sha256: None,
+            event_hash_sha256: None,
             diagnostics: Vec::new(),
             verifier_results: Vec::new(),
             mutation_denial: Some(MutationDenial { path, reason }),

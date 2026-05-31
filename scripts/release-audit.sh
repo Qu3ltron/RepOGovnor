@@ -37,7 +37,15 @@ if [[ "${AGENT_GOVERNANCE_FORCE_MISSING_AUDIT_TOOLS:-0}" == "1" ]] || ! command 
 fi
 if [[ "$missing" -eq 1 ]]; then
   if [[ "${AGENT_GOVERNANCE_ALLOW_AUDIT_TOOL_WAIVER:-0}" == "1" ]]; then
-    echo "audit tool waiver active; cargo-audit/cargo-deny were not run" >&2
+    if [[ "${AGENT_GOVERNANCE_FINAL_RELEASE:-0}" == "1" ]]; then
+      echo "audit tool waiver forbidden in final release mode" >&2
+      exit 1
+    fi
+    if [[ -z "${AGENT_GOVERNANCE_AUDIT_TOOL_WAIVER_REASON:-}" ]]; then
+      echo "audit tool waiver requires AGENT_GOVERNANCE_AUDIT_TOOL_WAIVER_REASON" >&2
+      exit 1
+    fi
+    echo "audit tool waiver active: ${AGENT_GOVERNANCE_AUDIT_TOOL_WAIVER_REASON}" >&2
     exit 0
   fi
   echo "install cargo-audit and cargo-deny, or set AGENT_GOVERNANCE_ALLOW_AUDIT_TOOL_WAIVER=1 for a governed waiver" >&2

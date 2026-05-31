@@ -98,6 +98,12 @@ plugins/agent-governance/scripts/status.sh --strict
 `AGENTS.md` and `GEMINI.md` must each carry exactly one
 `agent-governance:begin` / `agent-governance:end` marker block. Markerless
 files are unaligned posture, even when the surrounding prose looks correct.
+`status.sh --strict` renders the Rust `status-check` diagnostics for this
+policy.
+
+Release waivers are local-only and must carry a reason. Set
+`AGENT_GOVERNANCE_FINAL_RELEASE=1` for final release validation; waiver flags
+are rejected in that mode.
 
 Fresh installs or intentional rebaselines can use `--force`. Preview the full
 write set first:

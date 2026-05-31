@@ -47,12 +47,21 @@ receipts by default.
   "outcome": "ok",
   "duration_ms": 7,
   "subject": {"kind": "plan", "id": "PLAN-...", "path": "docs/plans/x.md"},
-  "summary": "PLAN_ACTIVATE docs/plans/x.md ok"
+  "summary": "PLAN_ACTIVATE docs/plans/x.md ok",
+  "previous_event_hash_sha256": "0f...",
+  "event_hash_sha256": "5a..."
 }
 ```
 
 Schema version 1 receipt lines are legacy data and are counted as malformed by
 current metrics.
+
+New schema version 2 receipts are hash-chained locally. The event hash is
+computed from canonical event JSON with `event_hash_sha256` omitted; the
+previous hash links to the immediately preceding non-empty event line. Metrics
+report chained events, historical unchained v2 events, malformed events, and
+chain breaks. Historical unchained v2 events remain readable but are not
+treated as chained integrity evidence.
 
 ## Diagnostic Report
 
@@ -188,6 +197,25 @@ schema checks instead of owning separate file lists.
 Executable release artifacts emit `release-file-executable` diagnostics. A path
 listed in `release_source.executable` must be a file with executable mode; a
 present but non-executable script is a release failure, not a warning.
+
+Required release scripts under `scripts/` must also be declared in
+`release_source.executable`; omissions emit
+`release-script-executable-undeclared`. Unix release checks enforce executable
+mode bits. Non-Unix checks emit `release-executable-platform` diagnostics so
+callers can see when mode enforcement is not available.
+
+Rust task-registry source files under `rust/task-registry-flow-cli/src/**/*.rs`
+must be declared in `release_source.required`; omissions emit
+`release-rust-source-undeclared`. This keeps new modules and tests inside the
+release manifest instead of relying on reviewers to notice new source files.
+
+Local release waivers require a reason variable:
+
+- `AGENT_GOVERNANCE_DIRTY_RELEASE_CHECK_REASON`
+- `AGENT_GOVERNANCE_ACTIVE_RELEASE_TASKS_REASON`
+- `AGENT_GOVERNANCE_AUDIT_TOOL_WAIVER_REASON`
+
+When `AGENT_GOVERNANCE_FINAL_RELEASE=1`, release waivers are forbidden.
 
 ## Installer Actions
 

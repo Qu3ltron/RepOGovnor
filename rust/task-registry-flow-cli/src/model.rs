@@ -215,6 +215,9 @@ pub(crate) struct MetricsReport {
     pub(crate) failed_events: usize,
     pub(crate) mutation_denials: usize,
     pub(crate) malformed_events: usize,
+    pub(crate) chained_events: usize,
+    pub(crate) unchained_events: usize,
+    pub(crate) receipt_chain_breaks: usize,
 }
 
 pub(crate) type EventRecord = crate::schema::ReceiptEvent;

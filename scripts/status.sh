@@ -37,40 +37,76 @@ pass=0
 warn=0
 fail=0
 marker_installed=0
-MARKER_BEGIN='<!-- agent-governance:begin -->'
-MARKER_END='<!-- agent-governance:end -->'
+STATUS_CHECK_JSON=""
+STATUS_CHECK_RAN=0
 
 ok()   { printf '  OK   %s\n' "$1"; pass=$((pass + 1)); }
 note() { printf '  NOTE %s\n' "$1"; warn=$((warn + 1)); }
 bad()  { printf '  FAIL %s\n' "$1"; fail=$((fail + 1)); }
 
-check_markers() {
-  local file="$1"
-  if [[ ! -f "$file" ]]; then
-    bad "$file missing"
+task_registry() {
+  local wrapper="${TARGET_ROOT}/.codex/scripts/task-registry"
+  if [[ -x "$wrapper" ]]; then
+    (cd "$TARGET_ROOT" && "$wrapper" "$@")
     return
   fi
-  local begin_count end_count
-  local begin_lines=() end_lines=()
-  mapfile -t begin_lines < <(marker_lines "$file" "$MARKER_BEGIN")
-  mapfile -t end_lines < <(marker_lines "$file" "$MARKER_END")
-  begin_count="${#begin_lines[@]}"
-  end_count="${#end_lines[@]}"
-  if [[ "$begin_count" -eq 1 && "$end_count" -eq 1 && "${begin_lines[0]}" -lt "${end_lines[0]}" ]]; then
+
+  local manifest="${PLUGIN_ROOT}/rust/task-registry-flow-cli/Cargo.toml"
+  if [[ ! -f "$manifest" ]]; then
+    manifest="${TARGET_ROOT}/rust/task-registry-flow-cli/Cargo.toml"
+  fi
+  (
+    cd "$TARGET_ROOT"
+    CARGO_TARGET_DIR="${AGENT_GOVERNANCE_CARGO_TARGET_DIR:-/tmp/agent-governance-cargo-target}" \
+      cargo run --locked --quiet --manifest-path "$manifest" -- "$@"
+  )
+}
+
+check_markers() {
+  local file="$1"
+  local rel result status actual
+  rel="$(basename "$file")"
+  run_status_check_json
+  result="$(
+    STATUS_CHECK_JSON="$STATUS_CHECK_JSON" STATUS_CHECK_PATH="$rel" python3 <<'PY'
+import json
+import os
+payload = json.loads(os.environ["STATUS_CHECK_JSON"])
+path = os.environ["STATUS_CHECK_PATH"]
+for check in payload["checks"]:
+    if check["check_id"] == "governance-marker" and check["path"] == path:
+        print(f'{check["status"]}\t{check["actual"]}')
+        break
+else:
+    print("fail\tmissing status diagnostic")
+PY
+  )"
+  status="${result%%$'\t'*}"
+  actual="${result#*$'\t'}"
+  if [[ "$status" == "pass" ]]; then
     ok "$file governance markers present (single pair)"
     marker_installed=1
-  elif [[ "$begin_count" -eq 1 && "$end_count" -eq 1 ]]; then
-    bad "$file governance markers malformed (marker block out of order)"
-  elif [[ "$begin_count" -gt 0 || "$end_count" -gt 0 ]]; then
-    bad "$file governance markers malformed (begin=$begin_count end=$end_count)"
-  else
+  elif [[ "$actual" == "missing marker block" ]]; then
     bad "$file missing governance marker block"
+  else
+    bad "$file governance markers malformed (${actual})"
   fi
 }
 
-marker_lines() {
-  local file="$1" marker="$2"
-  awk -v marker="$marker" '{ sub(/\r$/, ""); if ($0 == marker) print NR }' "$file"
+run_status_check_json() {
+  if [[ "$STATUS_CHECK_RAN" -eq 1 ]]; then
+    return
+  fi
+  STATUS_CHECK_RAN=1
+  local output
+  if output="$(task_registry status-check --format json 2>/tmp/agent-governance-status-check.err)"; then
+    STATUS_CHECK_JSON="$output"
+  else
+    STATUS_CHECK_JSON="$output"
+    if [[ -z "$STATUS_CHECK_JSON" ]]; then
+      STATUS_CHECK_JSON='{"checks":[]}'
+    fi
+  fi
 }
 
 check_symlink() {
@@ -272,7 +308,7 @@ check_release_absent() {
 
 check_release_clean_git() {
   if [[ "${AGENT_GOVERNANCE_ALLOW_DIRTY_RELEASE_CHECK:-0}" == "1" ]]; then
-    note "dirty release-source check waiver active"
+    require_local_waiver "dirty release-source check" "${AGENT_GOVERNANCE_DIRTY_RELEASE_CHECK_REASON:-}"
     return
   fi
   local status
@@ -287,7 +323,7 @@ check_release_clean_git() {
 
 check_release_tracked() {
   if [[ "${AGENT_GOVERNANCE_ALLOW_DIRTY_RELEASE_CHECK:-0}" == "1" ]]; then
-    note "tracked release-source check skipped by dirty waiver"
+    require_local_waiver "tracked release-source check" "${AGENT_GOVERNANCE_DIRTY_RELEASE_CHECK_REASON:-}"
     return
   fi
   local path
@@ -298,6 +334,17 @@ check_release_tracked() {
       bad "release file not tracked in git: ${path}"
     fi
   done
+}
+
+require_local_waiver() {
+  local label="$1" reason="$2"
+  if [[ "${AGENT_GOVERNANCE_FINAL_RELEASE:-0}" == "1" ]]; then
+    bad "${label} waiver forbidden in final release mode"
+  elif [[ -z "$reason" ]]; then
+    bad "${label} waiver requires a non-empty reason"
+  else
+    note "${label} waiver active: ${reason}"
+  fi
 }
 
 run_release_source_status() {
@@ -357,30 +404,29 @@ PY
   echo ""
 
   echo "Package validation"
-  if (cd "$TARGET_ROOT" && cargo run --locked --quiet --manifest-path rust/task-registry-flow-cli/Cargo.toml -- source-limit check >/dev/null); then
+  if task_registry source-limit check >/dev/null; then
     ok "source limit check"
   else
     bad "source limit check failed"
   fi
-  if (cd "$TARGET_ROOT" && cargo run --quiet --manifest-path rust/task-registry-flow-cli/Cargo.toml -- validate >/dev/null); then
+  if task_registry validate >/dev/null; then
     ok "task registry validate"
   else
     bad "task registry validate failed"
   fi
-  if (cd "$TARGET_ROOT" \
-    && cargo run --quiet --manifest-path rust/task-registry-flow-cli/Cargo.toml -- release-check all --format json >/dev/null); then
+  if task_registry release-check all --format json >/dev/null; then
     ok "schema-backed release check"
   else
     bad "schema-backed release check failed"
   fi
   if [[ "${AGENT_GOVERNANCE_ALLOW_ACTIVE_RELEASE_TASKS:-0}" == "1" ]]; then
-    note "active release task waiver active"
-  elif (cd "$TARGET_ROOT" && cargo run --quiet --manifest-path rust/task-registry-flow-cli/Cargo.toml -- metrics | grep -q 'active=0'); then
+    require_local_waiver "active release task" "${AGENT_GOVERNANCE_ACTIVE_RELEASE_TASKS_REASON:-}"
+  elif task_registry metrics | grep -q 'active=0'; then
     ok "task registry has no active tasks"
   else
     bad "task registry still has active tasks"
   fi
-  if (cd "$TARGET_ROOT" && cargo run --quiet --manifest-path rust/task-registry-flow-cli/Cargo.toml -- metrics | grep -q 'deferred=0, blocked=0'); then
+  if task_registry metrics | grep -q 'deferred=0, blocked=0'; then
     ok "task registry has no deferred or blocked tasks"
   else
     bad "task registry has deferred or blocked tasks"

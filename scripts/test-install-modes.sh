@@ -85,6 +85,17 @@ if (cd "$TARGET_ROOT" && "$PLUGIN_ROOT/scripts/status.sh" --strict > "$OUT_DIR/n
 fi
 grep -q 'AGENTS.md missing governance marker block' "$OUT_DIR/no-marker-status.out"
 
+BAD_CARGO_TARGET="$OUT_DIR/unwritable-cargo-target"
+mkdir -p "$BAD_CARGO_TARGET"
+chmod 0555 "$BAD_CARGO_TARGET"
+if (cd "$TARGET_ROOT" && CARGO_TARGET_DIR="$BAD_CARGO_TARGET" "$PLUGIN_ROOT/scripts/status.sh" --strict > "$OUT_DIR/bad-cargo-target-status.out" 2>&1); then
+  echo "strict status unexpectedly accepted markerless AGENTS.md with inherited bad CARGO_TARGET_DIR" >&2
+  exit 1
+fi
+chmod 0755 "$BAD_CARGO_TARGET"
+grep -q 'AGENTS.md missing governance marker block' "$OUT_DIR/bad-cargo-target-status.out"
+! grep -q 'missing status diagnostic' "$OUT_DIR/bad-cargo-target-status.out"
+
 printf 'mentions agent-governance:begin and agent-governance:end in prose\n' > "$TARGET_ROOT/AGENTS.md"
 printf '<!-- agent-governance:end -->\nold\n<!-- agent-governance:begin -->\n' > "$TARGET_ROOT/GEMINI.md"
 if (cd "$TARGET_ROOT" && "$PLUGIN_ROOT/scripts/status.sh" --strict > "$OUT_DIR/malformed-marker-status.out" 2>&1); then
@@ -93,6 +104,15 @@ if (cd "$TARGET_ROOT" && "$PLUGIN_ROOT/scripts/status.sh" --strict > "$OUT_DIR/m
 fi
 grep -q 'AGENTS.md missing governance marker block' "$OUT_DIR/malformed-marker-status.out"
 grep -q 'GEMINI.md governance markers malformed (marker block out of order)' "$OUT_DIR/malformed-marker-status.out"
+
+printf '<!-- agent-governance:begin -->\nstale managed block\n<!-- agent-governance:end -->\n' > "$TARGET_ROOT/AGENTS.md"
+printf '<!-- agent-governance:begin -->\nstale managed block\n<!-- agent-governance:end -->\n' > "$TARGET_ROOT/GEMINI.md"
+if (cd "$TARGET_ROOT" && "$PLUGIN_ROOT/scripts/status.sh" --strict > "$OUT_DIR/stale-marker-status.out" 2>&1); then
+  echo "strict status unexpectedly accepted stale marker blocks" >&2
+  exit 1
+fi
+grep -q 'AGENTS.md governance markers malformed (stale marker content)' "$OUT_DIR/stale-marker-status.out"
+grep -q 'GEMINI.md governance markers malformed (stale marker content)' "$OUT_DIR/stale-marker-status.out"
 
 printf 'custom agents\n' > "$TARGET_ROOT/AGENTS.md"
 printf 'custom gemini\n<!-- agent-governance:begin -->\nold\n<!-- agent-governance:end -->\n' > "$TARGET_ROOT/GEMINI.md"

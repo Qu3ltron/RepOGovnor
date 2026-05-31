@@ -6,6 +6,8 @@ use std::path::Path;
 
 const MARKER_BEGIN: &str = "<!-- agent-governance:begin -->";
 const MARKER_END: &str = "<!-- agent-governance:end -->";
+const MARKER_HEADING: &str = "## Agent governance (portable plugin)";
+const MARKER_SOURCE_LIMIT: &str = "Source limit";
 
 pub(crate) fn run_command(root: &Path, args: &[String]) -> RuntimeResult<String> {
     let json = match args {
@@ -59,6 +61,17 @@ pub(crate) fn marker_check(root: &Path, path: &str) -> Diagnostic {
     let begin_lines = marker_lines(&body, MARKER_BEGIN);
     let end_lines = marker_lines(&body, MARKER_END);
     if begin_lines.len() == 1 && end_lines.len() == 1 && begin_lines[0] < end_lines[0] {
+        let block = marker_block(&body, begin_lines[0], end_lines[0]);
+        if !marker_content_valid(path, &block) {
+            return Diagnostic::fail(
+                "governance-marker",
+                "status",
+                path,
+                "current managed marker block",
+                "stale marker content",
+                "run install-to-workspace --merge or --force to refresh marker provenance",
+            );
+        }
         Diagnostic::pass(
             "governance-marker",
             "status",
@@ -91,6 +104,24 @@ fn marker_lines(body: &str, marker: &str) -> Vec<usize> {
             (line.trim_end_matches('\r') == marker).then_some(line_number)
         })
         .collect()
+}
+
+fn marker_block(body: &str, begin_line: usize, end_line: usize) -> String {
+    body.lines()
+        .skip(begin_line + 1)
+        .take(end_line.saturating_sub(begin_line + 1))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+fn marker_content_valid(path: &str, block: &str) -> bool {
+    block.contains(MARKER_HEADING)
+        && block.contains(MARKER_SOURCE_LIMIT)
+        && match path {
+            "AGENTS.md" => block.contains("| Registry CLI |"),
+            "GEMINI.md" => block.contains("Antigravity hook:"),
+            _ => true,
+        }
 }
 
 pub(crate) fn native_skill_check(path: &str, is_native_directory: bool) -> Diagnostic {

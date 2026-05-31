@@ -110,6 +110,16 @@ assert any(
     and check["status"] == "pass"
     for check in payload["checks"]
 )
+for required_path in (
+    "rust/task-registry-flow-cli/src/metrics.rs",
+    "rust/task-registry-flow-cli/src/tests/metrics_tests.rs",
+):
+    assert any(
+        check["check_id"] == "release-file-present"
+        and check["path"] == required_path
+        and check["status"] == "pass"
+        for check in payload["checks"]
+    ), required_path
 PY
 
   local executable_copy
@@ -141,6 +151,97 @@ assert any(
     and check["path"] == "scripts/test-install-modes.sh"
     and check["status"] == "fail"
     and check["actual"] == "not executable"
+    for check in payload["checks"]
+)
+PY
+
+  local undeclared_copy
+  undeclared_copy="$(mktemp -d)"
+  CLEANUP_PATHS+=("$undeclared_copy")
+  tar -C "$ROOT" \
+    --exclude='.git' \
+    --exclude='target' \
+    --exclude='rust/target' \
+    --exclude='.release-readiness-nested' \
+    -cf - . | tar -C "$undeclared_copy" -xf -
+  python3 - "$undeclared_copy/REQUIREMENTS.toml" <<'PY'
+from pathlib import Path
+import sys
+path = Path(sys.argv[1])
+lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
+out = []
+in_executable = False
+removed = False
+for line in lines:
+    if line == "executable = [\n":
+        in_executable = True
+    elif in_executable and line == "]\n":
+        in_executable = False
+    if in_executable and line.strip() == '"scripts/test-install-modes.sh",':
+        removed = True
+        continue
+    out.append(line)
+assert removed
+path.write_text("".join(out), encoding="utf-8")
+PY
+  if (
+    cd "$undeclared_copy"
+    cargo run --locked --quiet --manifest-path "$ROOT/rust/task-registry-flow-cli/Cargo.toml" -- \
+      release-check all --format json > /tmp/release-executable-undeclared.out 2> /tmp/release-executable-undeclared.err
+  ); then
+    echo "undeclared executable release script unexpectedly passed" >&2
+    exit 1
+  fi
+  python3 - <<'PY'
+import json
+from pathlib import Path
+payload = json.loads(Path("/tmp/release-executable-undeclared.out").read_text(encoding="utf-8"))
+assert payload["surface"] == "release-source"
+assert payload["summary"]["fail"] >= 1
+assert any(
+    check["check_id"] == "release-script-executable-undeclared"
+    and check["path"] == "scripts/test-install-modes.sh"
+    and check["status"] == "fail"
+    for check in payload["checks"]
+)
+PY
+
+  local undeclared_rust_copy
+  undeclared_rust_copy="$(mktemp -d)"
+  CLEANUP_PATHS+=("$undeclared_rust_copy")
+  tar -C "$ROOT" \
+    --exclude='.git' \
+    --exclude='target' \
+    --exclude='rust/target' \
+    --exclude='.release-readiness-nested' \
+    -cf - . | tar -C "$undeclared_rust_copy" -xf -
+  python3 - "$undeclared_rust_copy/REQUIREMENTS.toml" <<'PY'
+from pathlib import Path
+import sys
+path = Path(sys.argv[1])
+body = path.read_text(encoding="utf-8")
+needle = '  "rust/task-registry-flow-cli/src/metrics.rs",\n'
+assert needle in body
+path.write_text(body.replace(needle, "", 1), encoding="utf-8")
+PY
+  if (
+    cd "$undeclared_rust_copy"
+    cargo run --locked --quiet --manifest-path "$ROOT/rust/task-registry-flow-cli/Cargo.toml" -- \
+      release-check all --format json > /tmp/release-rust-undeclared.out 2> /tmp/release-rust-undeclared.err
+  ); then
+    echo "undeclared Rust release source unexpectedly passed" >&2
+    exit 1
+  fi
+  python3 - <<'PY'
+import json
+from pathlib import Path
+payload = json.loads(Path("/tmp/release-rust-undeclared.out").read_text(encoding="utf-8"))
+assert payload["surface"] == "release-source"
+assert payload["summary"]["fail"] >= 1
+assert any(
+    check["check_id"] == "release-rust-source-undeclared"
+    and check["path"] == "rust/task-registry-flow-cli/src/metrics.rs"
+    and check["status"] == "fail"
     for check in payload["checks"]
 )
 PY
@@ -235,7 +336,9 @@ PY
 
 check_status() {
   AGENT_GOVERNANCE_ALLOW_DIRTY_RELEASE_CHECK=1 \
+    AGENT_GOVERNANCE_DIRTY_RELEASE_CHECK_REASON="release readiness dirty fixture" \
     AGENT_GOVERNANCE_ALLOW_ACTIVE_RELEASE_TASKS=1 \
+    AGENT_GOVERNANCE_ACTIVE_RELEASE_TASKS_REASON="release readiness active-task fixture" \
     "$ROOT/scripts/status.sh" --release-source
   if "$ROOT/scripts/status.sh" --strict >/tmp/release-consumer-strict.out 2>&1; then
     grep -q '0 fail' /tmp/release-consumer-strict.out
@@ -245,7 +348,9 @@ check_status() {
 }
 
 check_audit() {
-  AGENT_GOVERNANCE_ALLOW_AUDIT_TOOL_WAIVER=1 "$ROOT/scripts/release-audit.sh"
+  AGENT_GOVERNANCE_ALLOW_AUDIT_TOOL_WAIVER=1 \
+    AGENT_GOVERNANCE_AUDIT_TOOL_WAIVER_REASON="release readiness local audit fixture" \
+    "$ROOT/scripts/release-audit.sh"
   local nested_root="$ROOT/.release-readiness-nested"
   CLEANUP_PATHS+=("$nested_root")
   mkdir -p "$nested_root/check"
@@ -253,6 +358,7 @@ check_audit() {
     cd "$nested_root/check"
     AGENT_GOVERNANCE_FORCE_MISSING_AUDIT_TOOLS=1 \
       AGENT_GOVERNANCE_ALLOW_AUDIT_TOOL_WAIVER=1 \
+      AGENT_GOVERNANCE_AUDIT_TOOL_WAIVER_REASON="nested audit fixture" \
       "$ROOT/scripts/release-audit.sh" >/tmp/release-audit-nested.out 2>&1
   )
   grep -q 'source file limit ok' /tmp/release-audit-nested.out
@@ -279,6 +385,7 @@ PY
     cd "$audit_copy/repo/nested/check"
     AGENT_GOVERNANCE_FORCE_MISSING_AUDIT_TOOLS=1 \
       AGENT_GOVERNANCE_ALLOW_AUDIT_TOOL_WAIVER=1 \
+      AGENT_GOVERNANCE_AUDIT_TOOL_WAIVER_REASON="source limit fixture" \
       ../../scripts/release-audit.sh > /tmp/release-audit-over-limit.out 2>&1
   ); then
     echo "nested release audit unexpectedly missed root source-limit violation" >&2
@@ -299,6 +406,42 @@ PY
   grep -q 'usage: release-audit.sh' /tmp/release-audit-unknown-arg.out
 }
 
+check_waivers() {
+  if AGENT_GOVERNANCE_ALLOW_DIRTY_RELEASE_CHECK=1 \
+    "$ROOT/scripts/status.sh" --release-source >/tmp/release-waiver-missing-reason.out 2>&1; then
+    echo "dirty release waiver unexpectedly passed without reason" >&2
+    exit 1
+  fi
+  grep -q 'dirty release-source check waiver requires a non-empty reason' /tmp/release-waiver-missing-reason.out
+
+  if AGENT_GOVERNANCE_ALLOW_DIRTY_RELEASE_CHECK=1 \
+    AGENT_GOVERNANCE_DIRTY_RELEASE_CHECK_REASON="local fixture" \
+    AGENT_GOVERNANCE_FINAL_RELEASE=1 \
+    "$ROOT/scripts/status.sh" --release-source >/tmp/release-waiver-final.out 2>&1; then
+    echo "dirty release waiver unexpectedly passed in final release mode" >&2
+    exit 1
+  fi
+  grep -q 'dirty release-source check waiver forbidden in final release mode' /tmp/release-waiver-final.out
+
+  if AGENT_GOVERNANCE_FORCE_MISSING_AUDIT_TOOLS=1 \
+    AGENT_GOVERNANCE_ALLOW_AUDIT_TOOL_WAIVER=1 \
+    "$ROOT/scripts/release-audit.sh" >/tmp/release-audit-waiver-missing-reason.out 2>&1; then
+    echo "audit waiver unexpectedly passed without reason" >&2
+    exit 1
+  fi
+  grep -q 'audit tool waiver requires AGENT_GOVERNANCE_AUDIT_TOOL_WAIVER_REASON' /tmp/release-audit-waiver-missing-reason.out
+
+  if AGENT_GOVERNANCE_FORCE_MISSING_AUDIT_TOOLS=1 \
+    AGENT_GOVERNANCE_ALLOW_AUDIT_TOOL_WAIVER=1 \
+    AGENT_GOVERNANCE_AUDIT_TOOL_WAIVER_REASON="local fixture" \
+    AGENT_GOVERNANCE_FINAL_RELEASE=1 \
+    "$ROOT/scripts/release-audit.sh" >/tmp/release-audit-waiver-final.out 2>&1; then
+    echo "audit waiver unexpectedly passed in final release mode" >&2
+    exit 1
+  fi
+  grep -q 'audit tool waiver forbidden in final release mode' /tmp/release-audit-waiver-final.out
+}
+
 case "$MODE" in
   all)
     check_version
@@ -307,6 +450,7 @@ case "$MODE" in
     check_installer_schema
     check_json_failure_reports
     check_status
+    check_waivers
     check_audit
     ;;
   version) check_version ;;
@@ -315,8 +459,9 @@ case "$MODE" in
   installer) check_installer_schema ;;
   json-failures) check_json_failure_reports ;;
   status) check_status ;;
+  waivers) check_waivers ;;
   audit) check_audit ;;
-  *) echo "usage: test-release-readiness.sh [all|version|artifacts|executable|installer|json-failures|status|audit]" >&2; exit 2 ;;
+  *) echo "usage: test-release-readiness.sh [all|version|artifacts|executable|installer|json-failures|status|waivers|audit]" >&2; exit 2 ;;
 esac
 
 echo "release readiness tests ok: $MODE"

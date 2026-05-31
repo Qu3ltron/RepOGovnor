@@ -12,6 +12,7 @@ use std::os::unix::fs::PermissionsExt;
 use std::str::FromStr;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+mod metrics_tests;
 mod status_check_tests;
 
 #[test]
@@ -684,6 +685,69 @@ fn release_schema_reports_executable_failures() {
 }
 
 #[test]
+fn release_schema_rejects_undeclared_executable_scripts() {
+    let root = temp_root("release-schema-undeclared-executable");
+    seed_release_repo(&root);
+    let requirements = fs::read_to_string(root.join("REQUIREMENTS.toml"))
+        .unwrap()
+        .replace(
+            "executable = [\"scripts/test-install-modes.sh\"]",
+            "executable = []",
+        );
+    fs::write(root.join("REQUIREMENTS.toml"), requirements).unwrap();
+
+    let report = release_checks::report(&root, release_checks::Mode::Required).unwrap();
+
+    assert!(report.has_failures());
+    assert!(report.checks.iter().any(|check| {
+        check.check_id == "release-script-executable-undeclared"
+            && check.path == "scripts/test-install-modes.sh"
+            && check.actual == "missing executable policy"
+    }));
+}
+
+#[test]
+fn release_schema_rejects_undeclared_rust_sources() {
+    let root = temp_root("release-schema-undeclared-rust-source");
+    seed_release_repo(&root);
+    fs::create_dir_all(root.join("rust/task-registry-flow-cli/src/tests")).unwrap();
+    fs::write(root.join("rust/task-registry-flow-cli/src/metrics.rs"), "").unwrap();
+    fs::write(
+        root.join("rust/task-registry-flow-cli/src/tests/metrics_tests.rs"),
+        "",
+    )
+    .unwrap();
+
+    let report = release_checks::report(&root, release_checks::Mode::Required).unwrap();
+
+    assert!(report.has_failures());
+    assert!(report.checks.iter().any(|check| {
+        check.check_id == "release-rust-source-undeclared"
+            && check.path == "rust/task-registry-flow-cli/src/metrics.rs"
+            && check.actual == "missing release policy"
+    }));
+    assert!(report.checks.iter().any(|check| {
+        check.check_id == "release-rust-source-undeclared"
+            && check.path == "rust/task-registry-flow-cli/src/tests/metrics_tests.rs"
+            && check.actual == "missing release policy"
+    }));
+}
+
+#[test]
+fn release_schema_reports_platform_executable_semantics() {
+    let root = temp_root("release-schema-executable-platform");
+    seed_release_repo(&root);
+
+    let report = release_checks::report(&root, release_checks::Mode::Required).unwrap();
+
+    assert!(report.checks.iter().any(|check| {
+        check.check_id == "release-executable-platform"
+            && check.path == "scripts/test-install-modes.sh"
+            && check.actual.contains("executable")
+    }));
+}
+
+#[test]
 fn release_schema_rejects_unknown_requirement_fields() {
     let root = temp_root("release-schema-unknown-field");
     seed_release_repo(&root);
@@ -865,59 +929,6 @@ fn installer_rejects_unknown_config_and_dry_run_mutation() {
     assert!(InstallAction::from_str("unknown-action").is_err());
     assert!(crate::install::assert_dry_run_unchanged("before", "before").is_ok());
     assert!(crate::install::assert_dry_run_unchanged("before", "after").is_err());
-}
-
-#[test]
-fn metrics_counts_local_receipts() {
-    let root = temp_root("metrics");
-    seed_repo(&root);
-    append_event(
-        &root,
-        EventRecord::new(
-            timestamp(),
-            CliCommand::Validate,
-            EventOutcome::Ok,
-            1,
-            "test".to_string(),
-        ),
-    )
-    .unwrap();
-
-    let report = metrics(&root).unwrap();
-
-    assert_eq!(report.events, 1);
-}
-
-#[test]
-fn metrics_counts_malformed_receipts_as_failures() {
-    let root = temp_root("metrics-malformed");
-    seed_repo(&root);
-    fs::create_dir_all(root.join("docs/task-registry")).unwrap();
-    fs::write(root.join(EVENTS_PATH), "{not json}\n").unwrap();
-
-    let report = metrics(&root).unwrap();
-
-    assert_eq!(report.events, 1);
-    assert_eq!(report.failed_events, 1);
-    assert_eq!(report.malformed_events, 1);
-}
-
-#[test]
-fn metrics_rejects_schema_v1_receipts() {
-    let root = temp_root("metrics-v1-receipt");
-    seed_repo(&root);
-    fs::create_dir_all(root.join("docs/task-registry")).unwrap();
-    fs::write(
-        root.join(EVENTS_PATH),
-        r#"{"schema_version":1,"timestamp":"2026-05-30T00:00:00Z","command":"validate","outcome":"ok","duration_ms":1,"detail":"legacy"}"#,
-    )
-    .unwrap();
-
-    let report = metrics(&root).unwrap();
-
-    assert_eq!(report.events, 1);
-    assert_eq!(report.failed_events, 1);
-    assert_eq!(report.malformed_events, 1);
 }
 
 #[test]
@@ -1481,7 +1492,7 @@ version = "2.0.0"
 required = ["VERSION", "README.md", "plugin.json", "MANIFEST.toml", "rust/task-registry-flow-cli/Cargo.toml", "scripts/test-install-modes.sh"]
 executable = ["scripts/test-install-modes.sh"]
 stale_absent = ["hooks.json"]
-check_ids = ["release-file-present", "release-file-executable", "stale-path-absent", "release-version-consistent"]
+check_ids = ["release-file-present", "release-file-executable", "release-script-executable-undeclared", "release-executable-platform", "release-rust-source-undeclared", "stale-path-absent", "release-version-consistent"]
 
 [[release_source.version_files]]
 path = "VERSION"

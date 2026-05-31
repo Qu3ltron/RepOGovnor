@@ -170,6 +170,39 @@ fn status_check_json_rejects_non_block_marker_tokens() {
 }
 
 #[test]
+fn status_check_json_rejects_stale_marker_content() {
+    let root = temp_root("status-json-stale-marker-failure");
+    fs::create_dir_all(root.join(".agents/skills/task-registry-flow")).unwrap();
+    let stale =
+        "<!-- agent-governance:begin -->\nold managed block\n<!-- agent-governance:end -->\n";
+    fs::write(root.join("AGENTS.md"), stale).unwrap();
+    fs::write(root.join("GEMINI.md"), stale).unwrap();
+    let args = vec!["--format".to_string(), "json".to_string()];
+
+    let error = crate::status_checks::run_command(&root, &args)
+        .expect_err("stale marker content must fail JSON status");
+
+    let crate::reports::RuntimeFailure::Json(output) = error else {
+        panic!("status marker JSON failure must preserve raw JSON");
+    };
+    let value = serde_json::from_str::<serde_json::Value>(&output).unwrap();
+    assert_eq!(value["surface"], "status");
+    assert_eq!(value["summary"]["fail"], 2);
+    assert!(value["checks"].as_array().unwrap().iter().any(|check| {
+        check["check_id"] == "governance-marker"
+            && check["path"] == "AGENTS.md"
+            && check["actual"] == "stale marker content"
+            && check["status"] == "fail"
+    }));
+    assert!(value["checks"].as_array().unwrap().iter().any(|check| {
+        check["check_id"] == "governance-marker"
+            && check["path"] == "GEMINI.md"
+            && check["actual"] == "stale marker content"
+            && check["status"] == "fail"
+    }));
+}
+
+#[test]
 fn status_check_fails_missing_native_skill_projection() {
     let report = crate::status_checks::report(
         "status",
@@ -185,7 +218,8 @@ fn status_check_fails_missing_native_skill_projection() {
 }
 
 fn write_marker_docs(root: &Path) {
-    let body = "<!-- agent-governance:begin -->\nmanaged\n<!-- agent-governance:end -->\n";
-    fs::write(root.join("AGENTS.md"), body).unwrap();
-    fs::write(root.join("GEMINI.md"), body).unwrap();
+    let agents = "<!-- agent-governance:begin -->\n## Agent governance (portable plugin)\n| Registry CLI | `.codex/scripts/task-registry` |\n| Source limit | 1600 lines |\n<!-- agent-governance:end -->\n";
+    let gemini = "<!-- agent-governance:begin -->\n## Agent governance (portable plugin)\n- Antigravity hook: `.agents/hooks.json`\n- Source limit: 1600 lines\n<!-- agent-governance:end -->\n";
+    fs::write(root.join("AGENTS.md"), agents).unwrap();
+    fs::write(root.join("GEMINI.md"), gemini).unwrap();
 }

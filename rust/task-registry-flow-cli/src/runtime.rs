@@ -3,11 +3,12 @@ use chrono::Local;
 #[path = "tests/mod.rs"]
 mod tests;
 
+use crate::metrics::{format_metrics, metrics, receipt_value_hash};
 use crate::model::*;
 use crate::mutation_hook::verify_mutation_hook;
 use crate::reports::RuntimeResult;
 use crate::schema::{
-    BehaviorVerifier, CheckStatus, CliCommand, EventOutcome, HookFormat, MutationScope, TaskStatus,
+    BehaviorVerifier, CheckStatus, CliCommand, HookFormat, MutationScope, TaskStatus,
 };
 use crate::{
     install, manifest, plan_contract, policy, release_checks, source_limit, status_checks,
@@ -101,8 +102,13 @@ pub(crate) fn run(mut args: Vec<String>) -> RuntimeResult<String> {
             };
             let report = metrics(root)?;
             if json {
-                Ok(serde_json::to_string_pretty(&report)
-                    .map_err(|error| format!("serialize metrics report: {error}"))?)
+                let output = serde_json::to_string_pretty(&report)
+                    .map_err(|error| format!("serialize metrics report: {error}"))?;
+                if report.receipt_chain_breaks > 0 {
+                    Err(crate::reports::RuntimeFailure::json(output))
+                } else {
+                    Ok(output)
+                }
             } else {
                 Ok(format_metrics(&report))
             }
@@ -383,78 +389,6 @@ fn parse_hook_format(args: &[String]) -> Result<HookFormat> {
         return HookFormat::from_str(&args[1]);
     }
     Err(usage())
-}
-
-fn metrics(root: &Path) -> Result<MetricsReport> {
-    let registry = load_registry(root)?;
-    let manifests = discover_manifests(root)?;
-    let mut report = MetricsReport {
-        plans: registry.plans.len(),
-        tasks: registry.tasks.len(),
-        planned: 0,
-        active: 0,
-        blocked: 0,
-        deferred: 0,
-        completed: 0,
-        cancelled: 0,
-        manifests: manifests.len(),
-        events: 0,
-        failed_events: 0,
-        mutation_denials: 0,
-        malformed_events: 0,
-    };
-    for task in &registry.tasks {
-        match task.status {
-            TaskStatus::Planned => report.planned += 1,
-            TaskStatus::Active => report.active += 1,
-            TaskStatus::Blocked => report.blocked += 1,
-            TaskStatus::Deferred => report.deferred += 1,
-            TaskStatus::Completed => report.completed += 1,
-            TaskStatus::Cancelled => report.cancelled += 1,
-        }
-    }
-    let events_path = root.join(EVENTS_PATH);
-    if events_path.is_file() {
-        let body = fs::read_to_string(&events_path)
-            .map_err(|error| format!("read {}: {error}", events_path.display()))?;
-        for line in body.lines().filter(|line| !line.trim().is_empty()) {
-            report.events += 1;
-            match serde_json::from_str::<EventRecord>(line) {
-                Ok(event) => {
-                    if event.outcome == EventOutcome::Error {
-                        report.failed_events += 1;
-                    }
-                    if event.outcome == EventOutcome::MutationDenied {
-                        report.mutation_denials += 1;
-                    }
-                }
-                Err(_) => {
-                    report.malformed_events += 1;
-                    report.failed_events += 1;
-                }
-            }
-        }
-    }
-    Ok(report)
-}
-
-fn format_metrics(report: &MetricsReport) -> String {
-    format!(
-        "Task registry metrics: plans={}, tasks={}, manifests={}, planned={}, active={}, completed={}, deferred={}, blocked={}, cancelled={}, events={}, failed_events={}, mutation_denials={}, malformed_events={}",
-        report.plans,
-        report.tasks,
-        report.manifests,
-        report.planned,
-        report.active,
-        report.completed,
-        report.deferred,
-        report.blocked,
-        report.cancelled,
-        report.events,
-        report.failed_events,
-        report.mutation_denials,
-        report.malformed_events
-    )
 }
 
 pub(crate) fn load_registry(root: &Path) -> Result<TaskRegistry> {
@@ -1122,7 +1056,7 @@ fn derive_plan_status(tasks: &[RegistryTask]) -> TaskStatus {
     }
 }
 
-fn discover_manifests(root: &Path) -> Result<Vec<ActivatedManifest>> {
+pub(crate) fn discover_manifests(root: &Path) -> Result<Vec<ActivatedManifest>> {
     let mut manifests = Vec::new();
     let plans_root = root.join(PLAN_DIR);
     if !plans_root.exists() {
@@ -1370,12 +1304,17 @@ pub(crate) fn normalize_relative_path(path: &str) -> Result<String> {
     Ok(parts.join("/"))
 }
 
-pub(crate) fn append_event(root: &Path, event: EventRecord) -> Result<()> {
+pub(crate) fn append_event(root: &Path, mut event: EventRecord) -> Result<()> {
     let path = root.join(EVENTS_PATH);
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent)
             .map_err(|error| format!("create {}: {error}", parent.display()))?;
     }
+    event.previous_event_hash_sha256 = previous_receipt_hash(&path)?;
+    event.event_hash_sha256 = None;
+    let value = serde_json::to_value(&event)
+        .map_err(|error| format!("serialize event for hash: {error}"))?;
+    event.event_hash_sha256 = Some(receipt_value_hash(&value)?);
     let mut file = OpenOptions::new()
         .create(true)
         .append(true)
@@ -1384,6 +1323,20 @@ pub(crate) fn append_event(root: &Path, event: EventRecord) -> Result<()> {
     let line =
         serde_json::to_string(&event).map_err(|error| format!("serialize event: {error}"))?;
     writeln!(file, "{line}").map_err(|error| format!("write {}: {error}", path.display()))
+}
+
+fn previous_receipt_hash(path: &Path) -> Result<Option<String>> {
+    if !path.is_file() {
+        return Ok(None);
+    }
+    let body =
+        fs::read_to_string(path).map_err(|error| format!("read {}: {error}", path.display()))?;
+    let Some(line) = body.lines().rev().find(|line| !line.trim().is_empty()) else {
+        return Ok(None);
+    };
+    let value = serde_json::from_str::<Value>(line)
+        .map_err(|error| format!("parse previous receipt for hash: {error}"))?;
+    receipt_value_hash(&value).map(Some)
 }
 
 fn normalized_file_hash(path: &Path) -> Result<String> {
