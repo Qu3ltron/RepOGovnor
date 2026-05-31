@@ -56,7 +56,14 @@ allowed_config = {
         "agents_path",
         "design_docs_path",
     },
-    "task_registry": {"cli_command", "registry_id", "registry_path", "plans_path", "archive_dir"},
+    "task_registry": {
+        "cli_command",
+        "registry_id",
+        "registry_path",
+        "plans_path",
+        "archive_dir",
+        "verify_landing_command",
+    },
     "mutation_gate": {"verify_hook_command", "hook_script_path"},
     "validation": {"focused", "full"},
     "environments": {
@@ -117,6 +124,7 @@ canonical_task_registry = {
     "registry_path": "docs/task-registry.toml",
     "plans_path": "docs/plans",
     "archive_dir": "docs/task-registry/archive",
+    "verify_landing_command": ".codex/scripts/task-registry verify-landing --plan-id <plan_id> --changed-files <paths>",
 }
 for key, expected in canonical_task_registry.items():
     actual = task_registry.get(key, expected)

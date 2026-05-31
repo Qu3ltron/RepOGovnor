@@ -6,7 +6,7 @@ fn activation_terminal_allows_idempotent_reactivation() {
     seed_repo(&root);
     fs::write(root.join("docs/plans/sample.md"), sample_plan("true")).unwrap();
     activate_plan(&root, "docs/plans/sample.md").unwrap();
-    update_task_status(&root, "TASK-2026-05-30-sample-001", "completed").unwrap();
+    crate::landing::run_command(&root, &changed_files_args(&["src/lib.rs"])).unwrap();
     let before = load_registry(&root).unwrap().tasks.remove(0);
 
     activate_plan(&root, "docs/plans/sample.md").unwrap();
@@ -26,7 +26,7 @@ fn activation_terminal_rejects_completed_task_manifest_rewrite() {
     seed_repo(&root);
     fs::write(root.join("docs/plans/sample.md"), sample_plan("true")).unwrap();
     activate_plan(&root, "docs/plans/sample.md").unwrap();
-    update_task_status(&root, "TASK-2026-05-30-sample-001", "completed").unwrap();
+    crate::landing::run_command(&root, &changed_files_args(&["src/lib.rs"])).unwrap();
     let rewritten = sample_plan("true").replace(
         "acceptance_proof = \"Behavior B-001-sample: true\"",
         "acceptance_proof = \"Behavior B-001-sample rewritten: true\"",

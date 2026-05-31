@@ -58,6 +58,7 @@ string_enum!(CliCommand {
     Report => "report",
     ArchiveCompleted => "archive-completed",
     VerifyBehaviors => "verify-behaviors",
+    VerifyLanding => "verify-landing",
     VerifyChain => "verify-chain",
     VerifyMutationHook => "verify-mutation-hook",
     Metrics => "metrics",

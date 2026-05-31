@@ -86,6 +86,12 @@ pub(crate) struct RegistryTask {
     pub(crate) reactivation_condition: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) closure_plan_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) completion_verified_by: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) completion_verified_at: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub(crate) completion_changed_files: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub(crate) targets: Vec<TaskTarget>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]

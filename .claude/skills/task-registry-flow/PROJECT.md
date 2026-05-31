@@ -17,6 +17,7 @@ Optional. Copy to `PROJECT.md` beside the installed skill and edit for your repo
 | `TASK_REPORT` | `<cli> report <plan_id>` |
 | `TASK_VALIDATE` | `<cli> validate` |
 | `TASK_VERIFY_BEHAVIORS` | `<cli> verify-behaviors <plan_id-or-task_id>` |
+| `TASK_VERIFY_LANDING` | `<cli> verify-landing --plan-id <plan_id> --changed-files <paths>` |
 | `TASK_METRICS` | `<cli> metrics` |
 
 ## Project-specific rules

@@ -31,10 +31,10 @@ After user-approved gap closure:
 
 1. Load `$gap-closure-contract` and write `docs/plans/<slug>.md` with the full phased structure: Approved Scope, Phased Required Change Checklist, Per-Gap Success Criteria, Validation Plan, Walkthrough Evidence, and `schema_version = 2` Task Manifest.
 2. `$task-registry-flow` → `.codex/scripts/task-registry activate docs/plans/<file>.md` before code edits.
-3. Mark tasks `completed` only after linked typed behavior verifiers pass.
+3. Complete tasks only through `.codex/scripts/task-registry verify-landing --plan-id <plan_id> --changed-files <paths>` after linked typed behavior verifiers pass.
 4. Final handoff: `.codex/scripts/task-registry report <plan_id>` and `.codex/scripts/task-registry metrics`; archive completed history with `.codex/scripts/task-registry archive-completed`.
 
-Registry work uses the plugin-owned Rust CLI at `.codex/scripts/task-registry`. Typed TOML validation, behavior verification, mutation checks, and local metrics are canonical there. New activations require Task Manifest schema v2, behavior `gap_id`, behavior `polarity`, typed verifiers, and positive plus negative behavior coverage for each implementation gap. `TASK_DEFER` requires `deferral_governance_basis` and `reactivation_condition`.
+Registry work uses the plugin-owned Rust CLI at `.codex/scripts/task-registry`. Typed TOML validation, behavior verification, landing verification, mutation checks, and local metrics are canonical there. New activations require Task Manifest schema v2, behavior `gap_id`, behavior `polarity`, typed verifiers, and positive plus negative behavior coverage for each implementation gap. `TASK_DEFER` requires `deferral_governance_basis` and `reactivation_condition`. Direct `TASK_STATUS completed` is forbidden; `TASK_VERIFY_LANDING` owns completed status.
 
 
 ## Production hardening rules

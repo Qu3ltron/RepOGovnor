@@ -42,15 +42,16 @@ After user-approved gap closure:
 3. `{{TASK_REGISTRY_CLI}} activate docs/plans/<short-slug>.md`
 4. Confirm tasks in `docs/task-registry.toml` with matching `source_plan_hash_sha256`.
 5. Only then edit implementation files listed in active task targets.
+6. Complete tasks only through `{{TASK_REGISTRY_CLI}} verify-landing --plan-id <plan_id> --changed-files <paths>`.
 
 **Hard gate:** `.agents/hooks.json` calls `.codex/scripts/task-registry verify-mutation-hook` and blocks unbound implementation writes outside governance files or active/planned task targets.
 
-Handoff: `{{TASK_REGISTRY_CLI}} report <plan_id>`; archive completed when supported.
+Handoff: `{{TASK_REGISTRY_CLI}} verify-landing --plan-id <plan_id> --changed-files <paths>`, then `{{TASK_REGISTRY_CLI}} report <plan_id>`; archive completed when supported.
 
 ## Governance reminders
 
 - **Spec authority:** {{AUTHORITY_ORDER}}. On conflict, ask.
-- **Registry:** use only `{{TASK_REGISTRY_CLI}}` opcodes; typed validation via `validate`; new activations require Task Manifest schema v2, exact targets, positive and negative gap behavior, and no placeholders.
+- **Registry:** use only `{{TASK_REGISTRY_CLI}}` opcodes; typed validation via `validate`; new activations require Task Manifest schema v2, exact targets, positive and negative gap behavior, and no placeholders. `verify-landing` owns completed status; direct `TASK_STATUS completed` is forbidden.
 - **Deferrals:** `TASK_DEFER` via registry CLI `defer`; requires `deferral_governance_basis` + `reactivation_condition`.
 - **Source file limit:** 1600 lines is a hard design-time budget for source/governance files. Run `{{TASK_REGISTRY_CLI}} source-limit check`; use `{{TASK_REGISTRY_CLI}} source-limit plan --path <file>` before splitting existing violations.
 - **Production hardening:** use exact active or planned task targets; ambiguous shell redirections, compact redirects, and inline write calls without a deterministic path fail closed.

@@ -4,6 +4,20 @@ archive_id = "completed-002"
 archive_authority = "docs/task-registry/archive/completed-002.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-05-31-claude-cli-template-pipeline"
+plan_path = "docs/plans/claude-cli-template-pipeline-2026-05-31.md"
+plan_hash_sha256 = "6338b2c727644de355c316df3bdda1cea004ee3b860c890e5759c760a372adf5"
+activated_at = "2026-05-31"
+status = "completed"
+
+[[plans]]
+plan_id = "verify-chain-hardening-batch-2-2026-05-31"
+plan_path = "docs/plans/verify-chain-hardening-batch-2-2026-05-31.md"
+plan_hash_sha256 = "fc8c802ee2e7a6cfbaf5e85a1050ab7c449916ff3812b0ea606cb1d60ddbe8d2"
+activated_at = "2026-05-31"
+status = "completed"
+
+[[plans]]
 plan_id = "verify-chain-hardening-2026-05-31"
 plan_path = "docs/plans/verify-chain-hardening-2026-05-31.md"
 plan_hash_sha256 = "3002c6daddc69a7250637febd77b03cb7c14c5852000c468193ebe63601a3522"
@@ -45,19 +59,184 @@ plan_hash_sha256 = "3ad7520f1e9de72abd5e7e704399e4588d00628a3487ef271c337e362b4b
 activated_at = "2026-05-31"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-05-31-governance-marker-enforcement"
-plan_path = "docs/plans/governance-marker-enforcement.md"
-plan_hash_sha256 = "00627806a424bcd1f90d37b58017e7e6b684c9810cd16769bbfdb26afcd68b36"
-activated_at = "2026-05-31"
+[[tasks]]
+task_id = "TASK-2026-05-31-C01"
+plan_id = "PLAN-2026-05-31-claude-cli-template-pipeline"
 status = "completed"
+title = "Create templates/CLAUDE.md.template"
+kind = "implementation"
+source_plan_path = "docs/plans/claude-cli-template-pipeline-2026-05-31.md"
+source_plan_hash_sha256 = "6338b2c727644de355c316df3bdda1cea004ee3b860c890e5759c760a372adf5"
+reason = "Consumer repos need a Claude Code entry-point template for the render pipeline"
+acceptance_proof = "Behavior B-001: template exists with all required placeholders"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-001-claude-md-template-exists",
+    "B-001b-no-stale-agents-refs",
+]
 
-[[plans]]
-plan_id = "PLAN-2026-05-31-json-failure-semantics"
-plan_path = "docs/plans/json-failure-semantics-gap-closure.md"
-plan_hash_sha256 = "ff964ad41e4ecdbeb73838404e940caf899ab1a2faf6f7e7679ef94f95cf421b"
-activated_at = "2026-05-30"
+[[tasks.targets]]
+file = "templates/CLAUDE.md.template"
+object = "Full Claude Code entry-point template"
+required_change = "Create template with all standard placeholders, Claude Code agent paths"
+
+[[tasks]]
+task_id = "TASK-2026-05-31-C02"
+plan_id = "PLAN-2026-05-31-claude-cli-template-pipeline"
 status = "completed"
+title = "Create templates/CLAUDE.overlay.md.template"
+kind = "implementation"
+source_plan_path = "docs/plans/claude-cli-template-pipeline-2026-05-31.md"
+source_plan_hash_sha256 = "6338b2c727644de355c316df3bdda1cea004ee3b860c890e5759c760a372adf5"
+reason = "Merge mode needs an overlay to update the agent-governance block in existing CLAUDE.md files"
+acceptance_proof = "Behavior B-002: overlay template exists with agent-governance block markers"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-002-overlay-template-exists",
+    "B-002b-overlay-not-empty",
+]
+
+[[tasks.targets]]
+file = "templates/CLAUDE.overlay.md.template"
+object = "Claude Code merge-block overlay"
+required_change = "Create overlay template with agent-governance block content"
+
+[[tasks]]
+task_id = "TASK-2026-05-31-C03"
+plan_id = "PLAN-2026-05-31-claude-cli-template-pipeline"
+status = "completed"
+title = "Add CLAUDE.md render entries to MANIFEST.toml"
+kind = "implementation"
+source_plan_path = "docs/plans/claude-cli-template-pipeline-2026-05-31.md"
+source_plan_hash_sha256 = "6338b2c727644de355c316df3bdda1cea004ee3b860c890e5759c760a372adf5"
+reason = "MANIFEST.toml must declare CLAUDE.md render entries so install plan discovers them"
+acceptance_proof = "Behavior B-003: MANIFEST.toml has [[render]] entries for both CLAUDE.md templates"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-003-manifest-has-claude-render",
+    "B-003b-no-non-existent-template-ref",
+]
+
+[[tasks.targets]]
+file = "MANIFEST.toml"
+object = "[[render]] entries for CLAUDE.md"
+required_change = "Add full and overlay render entries for CLAUDE.md templates"
+
+[[tasks]]
+task_id = "TASK-2026-05-31-C04"
+plan_id = "PLAN-2026-05-31-claude-cli-template-pipeline"
+status = "completed"
+title = "Add CLAUDE.md rendering to render-from-config.sh"
+kind = "implementation"
+source_plan_path = "docs/plans/claude-cli-template-pipeline-2026-05-31.md"
+source_plan_hash_sha256 = "6338b2c727644de355c316df3bdda1cea004ee3b860c890e5759c760a372adf5"
+reason = "render-from-config.sh must handle CLAUDE.md alongside AGENTS.md/GEMINI.md in both modes"
+acceptance_proof = "Behavior B-004: render-from-config.sh includes CLAUDE.md in merge and force modes"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-004-render-script-claude-support",
+    "B-004b-dry-run-includes-claude",
+]
+
+[[tasks.targets]]
+file = "scripts/render-from-config.sh"
+object = "CLAUDE.md rendering logic"
+required_change = "Add CLAUDE.md template rendering in merge and force mode blocks"
+
+[[tasks]]
+task_id = "TASK-2026-05-31-VH2-001"
+plan_id = "verify-chain-hardening-batch-2-2026-05-31"
+status = "completed"
+title = "Fix repair_chain truncation hazard — use truncate(false)"
+kind = "implementation"
+source_plan_path = "docs/plans/verify-chain-hardening-batch-2-2026-05-31.md"
+source_plan_hash_sha256 = "fc8c802ee2e7a6cfbaf5e85a1050ab7c449916ff3812b0ea606cb1d60ddbe8d2"
+reason = "repair_chain opens the events file with truncate(true) before acquiring the lock, creating a data-loss hazard if any step before the atomic rename fails"
+acceptance_proof = "Behavior B-H1: repair_chain OpenOptions uses truncate(false); events file survives lock-contention error paths intact"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-H1-repair-does-not-truncate-before-lock",
+    "B-H1-repair-preserves-on-lock-failure-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/verify_chain.rs"
+object = "repair_chain OpenOptions"
+required_change = "change truncate(true) to truncate(false) so the events file is not zeroed before the atomic rename"
+
+[[tasks]]
+task_id = "TASK-2026-05-31-VH2-002"
+plan_id = "verify-chain-hardening-batch-2-2026-05-31"
+status = "completed"
+title = "Reject duplicate flags and fix Option debug in error messages"
+kind = "implementation"
+source_plan_path = "docs/plans/verify-chain-hardening-batch-2-2026-05-31.md"
+source_plan_hash_sha256 = "fc8c802ee2e7a6cfbaf5e85a1050ab7c449916ff3812b0ea606cb1d60ddbe8d2"
+reason = "parse_verify_chain_args silently accepts duplicate --repair/--format and leaks Rust Option debug formatting in error messages"
+acceptance_proof = "Behavior B-H2: --repair --repair exits 1 with duplicate flag error; Behavior B-H3: error messages use user-friendly phrasing without Some()/None"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-H2-rejects-duplicate-repair-flag",
+    "B-H2-rejects-duplicate-format-flag",
+    "B-H2-single-flags-still-accepted-negative",
+    "B-H3-no-option-debug-in-errors",
+    "B-H3-valid-format-still-accepted-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/verify_chain.rs"
+object = "parse_verify_chain_args"
+required_change = "detect duplicate --repair and --format flags; format error messages without Option debug representation"
+
+[[tasks]]
+task_id = "TASK-2026-05-31-VH2-003"
+plan_id = "verify-chain-hardening-batch-2-2026-05-31"
+status = "completed"
+title = "Render pass diagnostics in format_chain_report text output"
+kind = "implementation"
+source_plan_path = "docs/plans/verify-chain-hardening-batch-2-2026-05-31.md"
+source_plan_hash_sha256 = "fc8c802ee2e7a6cfbaf5e85a1050ab7c449916ff3812b0ea606cb1d60ddbe8d2"
+reason = "After --repair, format_chain_report ignores pass diagnostics, so users never see what lines were fixed"
+acceptance_proof = "Behavior B-H4: repair output includes repair count and per-line details"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-H4-repair-output-shows-pass-diagnostics",
+    "B-H4-no-spurious-pass-on-intact-chain-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/verify_chain.rs"
+object = "format_chain_report"
+required_change = "render pass diagnostics when summary.pass > 0, showing repair count and per-line details"
+
+[[tasks]]
+task_id = "TASK-2026-05-31-VH2-004"
+plan_id = "verify-chain-hardening-batch-2-2026-05-31"
+status = "completed"
+title = "Clean up orphaned temp file on sync failure in repair_chain"
+kind = "implementation"
+source_plan_path = "docs/plans/verify-chain-hardening-batch-2-2026-05-31.md"
+source_plan_hash_sha256 = "fc8c802ee2e7a6cfbaf5e85a1050ab7c449916ff3812b0ea606cb1d60ddbe8d2"
+reason = "If sync_all fails after a successful fs::write of the temp file, the events.jsonl.tmp file is left on disk"
+acceptance_proof = "Behavior B-H5: successful repair leaves no .tmp file; error path cleans up"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-H5-no-orphaned-tmp-after-repair",
+    "B-H5-tmp-file-cleaned-on-error-path-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/verify_chain.rs"
+object = "repair_chain error handling"
+required_change = "add fs::remove_file(&tmp_path) cleanup on the sync_all error path"
 
 [[tasks]]
 task_id = "TASK-2026-05-31-VC-001"
@@ -702,258 +881,3 @@ behavior_ids = ["B-001-executable-release-positive"]
 file = "docs/runtime-schemas.md"
 object = "Release Contract"
 required_change = "Document release_source.executable and release-file-executable diagnostics."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-marker-enforcement-001"
-plan_id = "PLAN-2026-05-31-governance-marker-enforcement"
-status = "completed"
-title = "Fail status on markerless governance docs"
-kind = "diagnostics"
-source_plan_path = "docs/plans/governance-marker-enforcement.md"
-source_plan_hash_sha256 = "00627806a424bcd1f90d37b58017e7e6b684c9810cd16769bbfdb26afcd68b36"
-reason = "Markerless AGENTS/GEMINI files currently pass status as notes."
-acceptance_proof = "Behaviors B-2026-05-31-marker-status-positive and B-2026-05-31-marker-status-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-2026-05-31-marker-status-positive",
-    "B-2026-05-31-marker-status-negative",
-]
-
-[[tasks.targets]]
-file = "scripts/status.sh"
-object = "check_markers"
-required_change = "Report missing governance marker blocks as failures."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/status_checks.rs"
-object = "marker_check"
-required_change = "Add typed marker diagnostics for AGENTS.md and GEMINI.md."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/mod.rs"
-object = "status_marker_tests"
-required_change = "Declare focused status-check test module without exceeding the source limit."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/status_check_tests.rs"
-object = "status_marker_tests"
-required_change = "Assert marker-bearing success and missing/malformed marker failures."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-marker-enforcement-002"
-plan_id = "PLAN-2026-05-31-governance-marker-enforcement"
-status = "completed"
-title = "Install marker-bearing full projections"
-kind = "migration"
-source_plan_path = "docs/plans/governance-marker-enforcement.md"
-source_plan_hash_sha256 = "00627806a424bcd1f90d37b58017e7e6b684c9810cd16769bbfdb26afcd68b36"
-reason = "Force projections can currently produce governance docs without marker provenance."
-acceptance_proof = "Behaviors B-2026-05-31-marker-template-positive and B-2026-05-31-marker-template-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-2026-05-31-marker-template-positive",
-    "B-2026-05-31-marker-template-negative",
-]
-
-[[tasks.targets]]
-file = "templates/AGENTS.md.template"
-object = "marker_block"
-required_change = "Add exactly one agent-governance marker block to full AGENTS projections."
-
-[[tasks.targets]]
-file = "templates/GEMINI.md.template"
-object = "marker_block"
-required_change = "Add exactly one agent-governance marker block to full GEMINI projections."
-
-[[tasks.targets]]
-file = "AGENTS.md"
-object = "self_projection"
-required_change = "Refresh self projection with marker block."
-
-[[tasks.targets]]
-file = "GEMINI.md"
-object = "self_projection"
-required_change = "Refresh self projection with marker block."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-marker-enforcement-003"
-plan_id = "PLAN-2026-05-31-governance-marker-enforcement"
-status = "completed"
-title = "Cover marker enforcement in migration and release gates"
-kind = "test"
-source_plan_path = "docs/plans/governance-marker-enforcement.md"
-source_plan_hash_sha256 = "00627806a424bcd1f90d37b58017e7e6b684c9810cd16769bbfdb26afcd68b36"
-reason = "Negative migration and release checks must prevent markerless regression."
-acceptance_proof = "Behavior B-2026-05-31-marker-validation passes."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = ["B-2026-05-31-marker-validation"]
-
-[[tasks.targets]]
-file = "scripts/test-install-modes.sh"
-object = "markerless_workspace_negative"
-required_change = "Assert strict status fails markerless workspaces and install modes repair markers."
-
-[[tasks.targets]]
-file = "scripts/test-release-readiness.sh"
-object = "marker_release_checks"
-required_change = "Assert release templates and self docs include governance marker blocks."
-
-[[tasks.targets]]
-file = "README.md"
-object = "status_contract"
-required_change = "Document markerless governance docs as unaligned posture."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-json-failure-001"
-plan_id = "PLAN-2026-05-31-json-failure-semantics"
-status = "completed"
-title = "Make status-check JSON failures exit nonzero"
-kind = "diagnostics"
-source_plan_path = "docs/plans/json-failure-semantics-gap-closure.md"
-source_plan_hash_sha256 = "ff964ad41e4ecdbeb73838404e940caf899ab1a2faf6f7e7679ef94f95cf421b"
-reason = "Failed status diagnostic JSON can currently pass with exit 0."
-acceptance_proof = "Behaviors B-2026-05-31-json-G01-positive and B-2026-05-31-json-G01-negative pass."
-created_at = "2026-05-30"
-updated_at = "2026-05-30"
-behavior_ids = [
-    "B-2026-05-31-json-G01-positive",
-    "B-2026-05-31-json-G01-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/runtime.rs"
-object = "status_check_command"
-required_change = "Return nonzero on failed JSON reports while preserving JSON."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/status_checks.rs"
-object = "status_check_api"
-required_change = "Own JSON-aware status-check behavior."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/mod.rs"
-object = "status_check_json_tests"
-required_change = "Add positive and negative JSON exit assertions."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-json-failure-002"
-plan_id = "PLAN-2026-05-31-json-failure-semantics"
-status = "completed"
-title = "Preserve source-limit JSON diagnostics on failure"
-kind = "diagnostics"
-source_plan_path = "docs/plans/json-failure-semantics-gap-closure.md"
-source_plan_hash_sha256 = "ff964ad41e4ecdbeb73838404e940caf899ab1a2faf6f7e7679ef94f95cf421b"
-reason = "Source-limit JSON failure currently loses per-file diagnostics."
-acceptance_proof = "Behaviors B-2026-05-31-json-G02-positive and B-2026-05-31-json-G02-negative pass."
-created_at = "2026-05-30"
-updated_at = "2026-05-30"
-behavior_ids = [
-    "B-2026-05-31-json-G02-positive",
-    "B-2026-05-31-json-G02-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/source_limit.rs"
-object = "json_failure_report"
-required_change = "Return full CheckReport JSON and nonzero status on failed JSON checks."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/mod.rs"
-object = "source_limit_json_tests"
-required_change = "Assert over-limit JSON includes failed path diagnostics."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-json-failure-003"
-plan_id = "PLAN-2026-05-31-json-failure-semantics"
-status = "completed"
-title = "Preserve release-check JSON reports on failure"
-kind = "diagnostics"
-source_plan_path = "docs/plans/json-failure-semantics-gap-closure.md"
-source_plan_hash_sha256 = "ff964ad41e4ecdbeb73838404e940caf899ab1a2faf6f7e7679ef94f95cf421b"
-reason = "Release-check JSON failure can be prefixed as human text."
-acceptance_proof = "Behaviors B-2026-05-31-json-G03-positive and B-2026-05-31-json-G03-negative pass."
-created_at = "2026-05-30"
-updated_at = "2026-05-30"
-behavior_ids = [
-    "B-2026-05-31-json-G03-positive",
-    "B-2026-05-31-json-G03-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/release_checks.rs"
-object = "json_failure_report"
-required_change = "Return full CheckReport JSON and nonzero status on failed JSON checks."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/cli.rs"
-object = "raw_json_error_rendering"
-required_change = "Render raw JSON diagnostic failures without human prefix."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/mod.rs"
-object = "release_check_json_tests"
-required_change = "Assert failing release JSON is parseable raw JSON."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-json-failure-004"
-plan_id = "PLAN-2026-05-31-json-failure-semantics"
-status = "completed"
-title = "Report actual CLI command and receipt state"
-kind = "schema"
-source_plan_path = "docs/plans/json-failure-semantics-gap-closure.md"
-source_plan_hash_sha256 = "ff964ad41e4ecdbeb73838404e940caf899ab1a2faf6f7e7679ef94f95cf421b"
-reason = "Global JSON failure envelope hard-codes usage and receipt false."
-acceptance_proof = "Behaviors B-2026-05-31-json-G04-positive and B-2026-05-31-json-G04-negative pass."
-created_at = "2026-05-30"
-updated_at = "2026-05-30"
-behavior_ids = [
-    "B-2026-05-31-json-G04-positive",
-    "B-2026-05-31-json-G04-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/cli.rs"
-object = "failure_envelope"
-required_change = "Render parsed command and computed receipt state on failures."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/reports.rs"
-object = "failure_report_helpers"
-required_change = "Support command-specific failure envelopes."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/mod.rs"
-object = "cli_json_error_tests"
-required_change = "Assert actual command and receipt state in JSON failures."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-json-failure-005"
-plan_id = "PLAN-2026-05-31-json-failure-semantics"
-status = "completed"
-title = "Add shell migration coverage and docs"
-kind = "test"
-source_plan_path = "docs/plans/json-failure-semantics-gap-closure.md"
-source_plan_hash_sha256 = "ff964ad41e4ecdbeb73838404e940caf899ab1a2faf6f7e7679ef94f95cf421b"
-reason = "Release shell migration must prove JSON failures stay machine-readable."
-acceptance_proof = "Behavior B-2026-05-31-json-failure-validation passes."
-created_at = "2026-05-30"
-updated_at = "2026-05-30"
-behavior_ids = ["B-2026-05-31-json-failure-validation"]
-
-[[tasks.targets]]
-file = "scripts/test-release-readiness.sh"
-object = "json_failure_migration_suite"
-required_change = "Parse failing release/source JSON and assert nonzero exits."
-
-[[tasks.targets]]
-file = "docs/runtime-schemas.md"
-object = "json_failure_contract"
-required_change = "Document command-local raw JSON failures and global failure envelopes."
-
-[[tasks.targets]]
-file = "README.md"
-object = "json_failure_examples"
-required_change = "Keep user examples aligned with real JSON semantics."

@@ -169,12 +169,16 @@ nix flake check --no-build --all-systems
 
 5. Work only inside the activated task targets.
 6. Run focused validation from the plan.
-7. Mark tasks complete only after behavior checks pass:
+7. Land completion through changed-file verification:
 
 ```bash
-.codex/scripts/task-registry status TASK-YYYY-MM-DD-example-001 completed
+.codex/scripts/task-registry verify-landing --plan-id PLAN-YYYY-MM-DD-example --changed-files src/example.rs
 .codex/scripts/task-registry report PLAN-YYYY-MM-DD-example
 ```
+
+Direct completed-status writes are rejected; `verify-landing` owns completion
+after it binds changed files to active task targets and runs typed behavior
+verifiers.
 
 The hook layer is designed to keep this honest. It permits plan bootstrap work,
 such as writing or activating plans, and denies implementation or runtime

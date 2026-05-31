@@ -4,13 +4,12 @@ use std::path::Path;
 use crate::model::{ActivatedManifest, ManifestTask, RegistryPlan, RegistryTask, Result};
 use crate::plan_contract;
 use crate::registry_io::{load_registry, save_registry};
-use crate::runtime::{discover_manifests, load_manifest, today};
+use crate::runtime::{discover_manifests, load_manifest, timestamp, today};
 use crate::schema::TaskStatus;
 use crate::validation::{
     parse_status, reject_empty, validate_deferred_task, validate_manifest_for_activation,
     validate_registry_root, validate_registry_with_manifests, validate_transition,
 };
-use crate::verifiers::verify_behaviors;
 
 pub(crate) fn activate_plan(root: &Path, plan_path: &str) -> Result<()> {
     let manifest = load_manifest(root, plan_path)?;
@@ -109,7 +108,10 @@ pub(crate) fn update_task_status(root: &Path, task_id: &str, status: &str) -> Re
         return Err("use TASK_DEFER instead of TASK_STATUS for deferred tasks".to_string());
     }
     if status == TaskStatus::Completed {
-        verify_behaviors(root, Some(task_id))?;
+        return Err(
+            "completed status is verify-landing-owned; use TASK_VERIFY_LANDING instead of TASK_STATUS"
+                .to_string(),
+        );
     }
     let mut registry = load_registry(root)?;
     let plan_id = {
@@ -124,6 +126,39 @@ pub(crate) fn update_task_status(root: &Path, task_id: &str, status: &str) -> Re
         task.plan_id.clone()
     };
     refresh_plan_status(&mut registry, &plan_id);
+    validate_registry_with_manifests(root, &registry, &discover_manifests(root)?)?;
+    save_registry(root, &registry)
+}
+
+pub(crate) fn complete_tasks_from_landing(
+    root: &Path,
+    task_ids: &[String],
+    changed_files: &[String],
+) -> Result<()> {
+    if task_ids.is_empty() {
+        return Err("verify-landing selected no tasks to complete".to_string());
+    }
+    let mut registry = load_registry(root)?;
+    let mut plan_ids = BTreeSet::new();
+    let now = timestamp();
+    let today = today();
+    for task_id in task_ids {
+        let task = registry
+            .tasks
+            .iter_mut()
+            .find(|task| task.task_id == *task_id)
+            .ok_or_else(|| format!("missing task_id {task_id}"))?;
+        validate_transition(task.status, TaskStatus::Completed)?;
+        task.status = TaskStatus::Completed;
+        task.updated_at = today.clone();
+        task.completion_verified_by = Some("verify-landing".to_string());
+        task.completion_verified_at = Some(now.clone());
+        task.completion_changed_files = changed_files.to_vec();
+        plan_ids.insert(task.plan_id.clone());
+    }
+    for plan_id in plan_ids {
+        refresh_plan_status(&mut registry, &plan_id);
+    }
     validate_registry_with_manifests(root, &registry, &discover_manifests(root)?)?;
     save_registry(root, &registry)
 }
@@ -188,6 +223,11 @@ fn build_registry_task(
             .clone()
             .or_else(|| existing.and_then(|task| task.reactivation_condition.clone())),
         closure_plan_id: existing.and_then(|task| task.closure_plan_id.clone()),
+        completion_verified_by: existing.and_then(|task| task.completion_verified_by.clone()),
+        completion_verified_at: existing.and_then(|task| task.completion_verified_at.clone()),
+        completion_changed_files: existing
+            .map(|task| task.completion_changed_files.clone())
+            .unwrap_or_default(),
         targets: task.targets.clone(),
         blockers: if task.blockers.is_empty() {
             existing
@@ -239,6 +279,9 @@ fn terminal_task_provenance_matches(existing: &RegistryTask, candidate: &Registr
         && existing.deferral_governance_basis == candidate.deferral_governance_basis
         && existing.reactivation_condition == candidate.reactivation_condition
         && existing.closure_plan_id == candidate.closure_plan_id
+        && existing.completion_verified_by == candidate.completion_verified_by
+        && existing.completion_verified_at == candidate.completion_verified_at
+        && existing.completion_changed_files == candidate.completion_changed_files
         && existing.targets == candidate.targets
         && existing.blockers == candidate.blockers
         && existing.projected_steps == candidate.projected_steps

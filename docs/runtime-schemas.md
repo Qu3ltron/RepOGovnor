@@ -84,6 +84,8 @@ Runtime checks fail closed when provenance cannot be proven:
 - Completed and cancelled tasks are terminal task states. Unchanged
   reactivation is idempotent; changing terminal task provenance requires a new
   task id.
+- `verify-landing` owns new completed-status writes. It rejects registry-only
+  changed-file sets and changed files that do not bind to active task targets.
 - Release-source gates are manifest-backed through `REQUIREMENTS.toml`.
   Required files must be native files, not symlinks.
 - Final release mode forbids local waiver variables.
@@ -208,6 +210,20 @@ Completed and cancelled tasks are terminal. Reactivating an unchanged plan is
 idempotent, but activation cannot rewrite terminal task provenance, including
 title, kind, source hash, acceptance proof, behavior IDs, targets, blockers, or
 projected steps. Changed follow-up work requires a new `task_id`.
+
+## Landing Completion Contract
+
+`verify-landing --plan-id <plan_id> --changed-files <paths>` is the only runtime
+path that writes `completed` status for new task rows. The command validates the
+registry and active manifests, maps each non-registry changed file to exactly one
+active task target, runs the selected task behavior verifiers, then writes
+completion evidence onto the task row. Direct `status TASK-ID completed` fails
+closed.
+
+Registry-generated files such as `docs/task-registry.toml`,
+`docs/task-registry/events.jsonl`, and completed-task archives never satisfy
+landing by themselves. They may accompany a landing, but at least one changed
+file must bind to a task target.
 
 ## Release Contract
 

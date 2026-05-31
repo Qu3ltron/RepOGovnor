@@ -62,6 +62,7 @@ cli_binary = "task-registry"
 cli_command = ".codex/scripts/task-registry"
 typed_validation_command = ".codex/scripts/task-registry validate"
 verify_behaviors_command = ".codex/scripts/task-registry verify-behaviors"
+verify_landing_command = ".codex/scripts/task-registry verify-landing --plan-id <plan_id> --changed-files <paths>"
 verify_mutation_hook_command = ".codex/scripts/task-registry verify-mutation-hook"
 registry_authoritative_after_activation = true
 activation_required_before_implementation = true
@@ -79,7 +80,7 @@ behavior_polarity = ["positive", "negative", "validation"]
 required_task_fields = ["task_id", "plan_id", "status", "title", "kind", "reason", "acceptance_proof", "source_plan_path", "source_plan_hash_sha256", "behavior_ids", "targets.file", "targets.object", "targets.required_change"]
 required_deferred_task_fields = ["deferral_governance_basis", "reactivation_condition"]
 hash_algorithm = "sha256 of normalized plan text: CRLF/CR converted to LF, trailing whitespace stripped from each line, exactly one final newline"
-design_rule = "Use only .codex/scripts/task-registry for activate, status, defer, report, validate, archive-completed, verify-behaviors, verify-mutation-hook, metrics, and source-limit. Project-native task_registry executors are noncanonical."
+design_rule = "Use only .codex/scripts/task-registry for activate, status, defer, report, validate, archive-completed, verify-behaviors, verify-landing, verify-mutation-hook, metrics, and source-limit. Project-native task_registry executors are noncanonical. Direct TASK_STATUS completed is forbidden; verify-landing owns completed status."
 
 [task_registry.metrics]
 events_path = "docs/task-registry/events.jsonl"

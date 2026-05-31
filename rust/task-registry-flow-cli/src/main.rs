@@ -2,6 +2,7 @@ mod activation;
 mod cli;
 mod hook_io;
 mod install;
+mod landing;
 mod manifest;
 mod metrics;
 mod model;

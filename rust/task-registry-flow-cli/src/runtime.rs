@@ -8,7 +8,7 @@ use crate::model::*;
 use crate::mutation_hook::verify_mutation_hook;
 use crate::reports::RuntimeResult;
 use crate::schema::{CliCommand, HookFormat, TaskStatus};
-use crate::{install, policy, release_checks, source_limit, status_checks};
+use crate::{install, landing, policy, release_checks, source_limit, status_checks};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
@@ -98,6 +98,7 @@ pub(crate) fn run(mut args: Vec<String>) -> RuntimeResult<String> {
             let count = verify_behaviors(root, filter)?;
             Ok(format!("TASK_VERIFY_BEHAVIORS ok: {count} confirmations"))
         }
+        CliCommand::VerifyLanding => Ok(landing::run_command(root, &args)?),
         CliCommand::VerifyChain => crate::verify_chain::run_verify_chain(root, &args),
         CliCommand::VerifyMutationHook => {
             let format = parse_hook_format(&args)?;
@@ -132,7 +133,7 @@ pub(crate) fn run(mut args: Vec<String>) -> RuntimeResult<String> {
 }
 
 fn usage() -> String {
-    "usage: task-registry-flow {validate|activate <docs/plans/file.md>|status <task_id> <status>|defer <task_id> <basis> <reactivation>|report <plan_id>|archive-completed|verify-behaviors [plan_id|task_id]|verify-chain [--format json] [--repair]|verify-mutation-hook [--format codex|antigravity|cursor|claude]|metrics|source-limit check|source-limit plan|release-check {required|version|tracked|all} [--format json]|install plan [--format json]|status-check [--format json]}".to_string()
+    "usage: task-registry-flow {validate|activate <docs/plans/file.md>|status <task_id> <status>|defer <task_id> <basis> <reactivation>|report <plan_id>|archive-completed|verify-behaviors [plan_id|task_id]|verify-landing [--plan-id <plan_id>] --changed-files <path>...|verify-chain [--format json] [--repair]|verify-mutation-hook [--format codex|antigravity|cursor|claude]|metrics|source-limit check|source-limit plan|release-check {required|version|tracked|all} [--format json]|install plan [--format json]|status-check [--format json]}".to_string()
 }
 
 fn install_command(root: &Path, args: &[String]) -> RuntimeResult<String> {

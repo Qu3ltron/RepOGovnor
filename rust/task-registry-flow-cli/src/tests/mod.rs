@@ -14,6 +14,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 mod activation_terminal_tests;
 mod hook_command_tests;
+mod landing_tests;
 mod metrics_tests;
 mod receipt_chain_tests;
 mod release_source_tests;
@@ -22,13 +23,13 @@ mod status_check_tests;
 mod verify_chain_tests;
 
 #[test]
-fn activates_and_completes_behavior_backed_task() {
+fn activates_and_lands_behavior_backed_task() {
     let root = temp_root("activate");
     seed_repo(&root);
     fs::write(root.join("docs/plans/sample.md"), sample_plan("true")).unwrap();
 
     activate_plan(&root, "docs/plans/sample.md").unwrap();
-    update_task_status(&root, "TASK-2026-05-30-sample-001", "completed").unwrap();
+    crate::landing::run_command(&root, &changed_files_args(&["src/lib.rs"])).unwrap();
     let report = report_plan(&root, "PLAN-2026-05-30-sample").unwrap();
 
     assert_eq!(report.completed, 1);
@@ -128,14 +129,15 @@ fn activation_rejects_broad_or_wildcard_targets() {
 }
 
 #[test]
-fn completion_runs_behavior_confirmation() {
+fn landing_runs_behavior_confirmation() {
     let root = temp_root("confirm-fail");
     seed_repo(&root);
     fs::write(root.join("docs/plans/sample.md"), sample_plan("false")).unwrap();
     activate_plan(&root, "docs/plans/sample.md").unwrap();
+    update_task_status(&root, "TASK-2026-05-30-sample-001", "active").unwrap();
 
-    let error = update_task_status(&root, "TASK-2026-05-30-sample-001", "completed")
-        .expect_err("completion must fail");
+    let error = crate::landing::run_command(&root, &changed_files_args(&["src/lib.rs"]))
+        .expect_err("landing must fail");
 
     assert!(error.contains("confirmation failed"), "{error}");
 }
@@ -1011,7 +1013,7 @@ fn module_split_preserves_registry_behaviors() {
     fs::write(root.join("docs/plans/sample.md"), sample_plan("true")).unwrap();
 
     activate_plan(&root, "docs/plans/sample.md").unwrap();
-    update_task_status(&root, "TASK-2026-05-30-sample-001", "completed").unwrap();
+    crate::landing::run_command(&root, &changed_files_args(&["src/lib.rs"])).unwrap();
 
     assert_eq!(
         report_plan(&root, "PLAN-2026-05-30-sample")
@@ -1274,6 +1276,12 @@ tasks = []
 "#,
     )
     .unwrap();
+}
+
+fn changed_files_args(paths: &[&str]) -> Vec<String> {
+    let mut args = vec!["--changed-files".to_string()];
+    args.extend(paths.iter().map(|path| path.to_string()));
+    args
 }
 
 fn sample_plan(command: &str) -> String {

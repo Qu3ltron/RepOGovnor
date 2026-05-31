@@ -10,6 +10,7 @@ pub(crate) fn should_record(command: CliCommand, explicit: bool) -> bool {
             CliCommand::Activate
                 | CliCommand::Status
                 | CliCommand::Defer
+                | CliCommand::VerifyLanding
                 | CliCommand::ArchiveCompleted
         )
 }
