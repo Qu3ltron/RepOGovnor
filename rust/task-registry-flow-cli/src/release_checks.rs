@@ -3,6 +3,8 @@ use crate::reports::{RuntimeFailure, RuntimeResult};
 use crate::schema::{CheckReport, Diagnostic, ReleaseCheckId, VersionFileFormat};
 use serde::Deserialize;
 use std::fs;
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::str::FromStr;
 
@@ -33,6 +35,8 @@ struct ReleaseSource {
     #[serde(default)]
     audit_command: Option<String>,
     required: Vec<String>,
+    #[serde(default)]
+    executable: Vec<String>,
     #[serde(default)]
     stale_absent: Vec<String>,
     #[serde(default)]
@@ -119,6 +123,7 @@ pub(crate) fn report(root: &Path, mode: Mode) -> Result<CheckReport> {
     let mut checks = Vec::new();
     if matches!(mode, Mode::Required | Mode::All) {
         checks.extend(required_checks(root, &requirements));
+        checks.extend(executable_checks(root, &requirements));
         checks.extend(stale_absent_checks(root, &requirements));
         checks.extend(schema_checks(&requirements));
     }
@@ -163,6 +168,61 @@ fn required_checks(root: &Path, requirements: &Requirements) -> Vec<Diagnostic> 
             }
         })
         .collect()
+}
+
+fn executable_checks(root: &Path, requirements: &Requirements) -> Vec<Diagnostic> {
+    requirements
+        .release_source
+        .executable
+        .iter()
+        .map(|path| {
+            let full_path = root.join(path);
+            match fs::metadata(&full_path) {
+                Ok(metadata) if metadata.is_file() && metadata_is_executable(&metadata) => {
+                    Diagnostic::pass(
+                        ReleaseCheckId::ReleaseFileExecutable.as_str(),
+                        "release-source",
+                        path,
+                        "executable file",
+                    )
+                }
+                Ok(metadata) if metadata.is_file() => Diagnostic::fail(
+                    ReleaseCheckId::ReleaseFileExecutable.as_str(),
+                    "release-source",
+                    path,
+                    "executable file",
+                    "not executable",
+                    "chmod +x the release script or remove it from release_source.executable through an approved plan",
+                ),
+                Ok(_) => Diagnostic::fail(
+                    ReleaseCheckId::ReleaseFileExecutable.as_str(),
+                    "release-source",
+                    path,
+                    "executable file",
+                    "not a file",
+                    "replace the path with an executable file or update REQUIREMENTS.toml through an approved plan",
+                ),
+                Err(_) => Diagnostic::fail(
+                    ReleaseCheckId::ReleaseFileExecutable.as_str(),
+                    "release-source",
+                    path,
+                    "executable file",
+                    "missing",
+                    "restore the executable release artifact or update REQUIREMENTS.toml through an approved plan",
+                ),
+            }
+        })
+        .collect()
+}
+
+#[cfg(unix)]
+fn metadata_is_executable(metadata: &fs::Metadata) -> bool {
+    metadata.permissions().mode() & 0o111 != 0
+}
+
+#[cfg(not(unix))]
+fn metadata_is_executable(metadata: &fs::Metadata) -> bool {
+    metadata.is_file()
 }
 
 fn stale_absent_checks(root: &Path, requirements: &Requirements) -> Vec<Diagnostic> {

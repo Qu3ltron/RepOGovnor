@@ -175,6 +175,7 @@ implementation closure only to validation behavior.
 `REQUIREMENTS.toml` owns release-source policy:
 
 - `release_source.required`
+- `release_source.executable`
 - `release_source.stale_absent`
 - `release_source.check_ids`
 - `release_source.version_files`
@@ -183,6 +184,10 @@ implementation closure only to validation behavior.
 `scripts/status.sh --release-source`, `scripts/release-version-check.sh`, and
 `scripts/release-audit.sh` delegate release/version validation to the Rust
 schema checks instead of owning separate file lists.
+
+Executable release artifacts emit `release-file-executable` diagnostics. A path
+listed in `release_source.executable` must be a file with executable mode; a
+present but non-executable script is a release failure, not a warning.
 
 ## Installer Actions
 

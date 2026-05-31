@@ -7,8 +7,12 @@ use crate::schema::{
     EventOutcome, HookFormat, InstallAction, MutationScope, TaskKind, VerifierType,
 };
 use std::env;
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
 use std::str::FromStr;
 use std::time::{SystemTime, UNIX_EPOCH};
+
+mod status_check_tests;
 
 #[test]
 fn activates_and_completes_behavior_backed_task() {
@@ -661,6 +665,24 @@ fn release_schema_rejects_unknown_check_id() {
     );
 }
 
+#[cfg(unix)]
+#[test]
+fn release_schema_reports_executable_failures() {
+    let root = temp_root("release-schema-executable");
+    seed_release_repo(&root);
+    set_executable(&root.join("scripts/test-install-modes.sh"), false);
+
+    let report = release_checks::report(&root, release_checks::Mode::Required).unwrap();
+
+    assert!(report.has_failures());
+    assert!(report.checks.iter().any(|check| {
+        check.check_id == "release-file-executable"
+            && check.path == "scripts/test-install-modes.sh"
+            && check.status == CheckStatus::Fail
+            && check.actual == "not executable"
+    }));
+}
+
 #[test]
 fn release_schema_rejects_unknown_requirement_fields() {
     let root = temp_root("release-schema-unknown-field");
@@ -820,101 +842,6 @@ fn hook_rejects_format_mismatch_and_uncertain_paths() {
         "{mismatch_error}"
     );
     assert!(HookFormat::from_str("legacy").is_err());
-}
-
-#[test]
-fn status_check_reports_marker_skill_hook_ci_facts() {
-    let report = crate::status_checks::report(
-        "status",
-        vec![
-            Diagnostic::pass(
-                "marker-present",
-                "status",
-                "AGENTS.md",
-                "single marker pair",
-            ),
-            crate::status_checks::native_skill_check(".agents/skills/task-registry-flow", true),
-        ],
-    )
-    .unwrap();
-
-    assert_eq!(report.summary.pass, 2);
-    assert!(!report.has_failures());
-}
-
-#[test]
-fn status_check_json_success_exits_zero() {
-    let root = temp_root("status-json-success");
-    fs::create_dir_all(root.join(".agents/skills/task-registry-flow")).unwrap();
-    let args = vec!["--format".to_string(), "json".to_string()];
-
-    let output = crate::status_checks::run_command(&root, &args).unwrap();
-    let value = serde_json::from_str::<serde_json::Value>(&output).unwrap();
-
-    assert_eq!(value["surface"], "status");
-    assert_eq!(value["summary"]["fail"], 0);
-    assert_eq!(value["checks"][0]["check_id"], "native-skill");
-}
-
-#[test]
-fn status_check_json_failure_exits_nonzero() {
-    let root = temp_root("status-json-failure");
-    let args = vec!["--format".to_string(), "json".to_string()];
-
-    let error = crate::status_checks::run_command(&root, &args)
-        .expect_err("missing native skill must fail JSON status");
-
-    let crate::reports::RuntimeFailure::Json(output) = error else {
-        panic!("status JSON failure must preserve raw JSON");
-    };
-    let value = serde_json::from_str::<serde_json::Value>(&output).unwrap();
-    assert_eq!(value["surface"], "status");
-    assert_eq!(value["summary"]["fail"], 1);
-    assert_eq!(value["checks"][0]["check_id"], "native-skill");
-    assert_eq!(value["checks"][0]["status"], "fail");
-}
-
-#[cfg(unix)]
-#[test]
-fn status_check_json_symlink_failure_exits_nonzero() {
-    let root = temp_root("status-json-symlink-failure");
-    let target = root.join(".cursor/skills/task-registry-flow");
-    fs::create_dir_all(&target).unwrap();
-    let link = root.join(".agents/skills/task-registry-flow");
-    fs::create_dir_all(link.parent().unwrap()).unwrap();
-    std::os::unix::fs::symlink(&target, &link).unwrap();
-    let args = vec!["--format".to_string(), "json".to_string()];
-
-    let error = crate::status_checks::run_command(&root, &args)
-        .expect_err("legacy skill symlink must fail JSON status");
-
-    let crate::reports::RuntimeFailure::Json(output) = error else {
-        panic!("status symlink JSON failure must preserve raw JSON");
-    };
-    let value = serde_json::from_str::<serde_json::Value>(&output).unwrap();
-    assert_eq!(value["surface"], "status");
-    assert_eq!(value["summary"]["fail"], 1);
-    assert_eq!(value["checks"][0]["check_id"], "native-skill");
-    assert_eq!(
-        value["checks"][0]["path"],
-        ".agents/skills/task-registry-flow"
-    );
-    assert_eq!(value["checks"][0]["status"], "fail");
-}
-
-#[test]
-fn status_check_fails_missing_native_skill_projection() {
-    let report = crate::status_checks::report(
-        "status",
-        vec![crate::status_checks::native_skill_check(
-            ".agents/skills/task-registry-flow",
-            false,
-        )],
-    )
-    .unwrap();
-
-    assert!(report.has_failures());
-    assert_eq!(report.checks[0].check_id, "native-skill");
 }
 
 #[test]
@@ -1533,6 +1460,13 @@ version = "2.0.0"
 "#,
     )
     .unwrap();
+    fs::create_dir_all(root.join("scripts")).unwrap();
+    fs::write(
+        root.join("scripts/test-install-modes.sh"),
+        "#!/usr/bin/env bash\n",
+    )
+    .unwrap();
+    set_executable(&root.join("scripts/test-install-modes.sh"), true);
     fs::write(
         root.join("REQUIREMENTS.toml"),
         r#"
@@ -1544,9 +1478,10 @@ required = ["README.md"]
 
 [release_source]
 version = "2.0.0"
-required = ["VERSION", "README.md", "plugin.json", "MANIFEST.toml", "rust/task-registry-flow-cli/Cargo.toml"]
+required = ["VERSION", "README.md", "plugin.json", "MANIFEST.toml", "rust/task-registry-flow-cli/Cargo.toml", "scripts/test-install-modes.sh"]
+executable = ["scripts/test-install-modes.sh"]
 stale_absent = ["hooks.json"]
-check_ids = ["release-file-present", "stale-path-absent", "release-version-consistent"]
+check_ids = ["release-file-present", "release-file-executable", "stale-path-absent", "release-version-consistent"]
 
 [[release_source.version_files]]
 path = "VERSION"
@@ -1570,6 +1505,23 @@ key = "package.version"
     )
     .unwrap();
 }
+
+#[cfg(unix)]
+fn set_executable(path: &Path, executable: bool) {
+    let metadata = fs::metadata(path).unwrap();
+    let mut permissions = metadata.permissions();
+    let mut mode = permissions.mode();
+    if executable {
+        mode |= 0o755;
+    } else {
+        mode &= !0o111;
+    }
+    permissions.set_mode(mode);
+    fs::set_permissions(path, permissions).unwrap();
+}
+
+#[cfg(not(unix))]
+fn set_executable(_path: &Path, _executable: bool) {}
 
 fn temp_root(label: &str) -> PathBuf {
     let unique = SystemTime::now()

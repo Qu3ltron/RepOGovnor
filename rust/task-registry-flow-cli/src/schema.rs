@@ -166,6 +166,7 @@ string_enum!(InstallAction {
 
 string_enum!(ReleaseCheckId {
     ReleaseFilePresent => "release-file-present",
+    ReleaseFileExecutable => "release-file-executable",
     StalePathAbsent => "stale-path-absent",
     ReleaseVersionConsistent => "release-version-consistent",
     TrackedForCiPresent => "tracked-for-ci-present",

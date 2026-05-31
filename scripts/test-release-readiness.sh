@@ -80,6 +80,70 @@ check_artifacts() {
   grep -q 'Primary users' "$ROOT/VISION.md"
   grep -q 'Known gaps' "$ROOT/ROADMAP.md"
   grep -q 'Runtime Schemas' "$ROOT/docs/runtime-schemas.md"
+  grep -q 'agent-governance:begin' "$ROOT/templates/AGENTS.md.template"
+  grep -q 'agent-governance:end' "$ROOT/templates/AGENTS.md.template"
+  grep -q 'agent-governance:begin' "$ROOT/templates/GEMINI.md.template"
+  grep -q 'agent-governance:end' "$ROOT/templates/GEMINI.md.template"
+  grep -q 'agent-governance:begin' "$ROOT/AGENTS.md"
+  grep -q 'agent-governance:begin' "$ROOT/GEMINI.md"
+}
+
+check_executable() {
+  test -x "$ROOT/scripts/install-to-workspace.sh"
+  test -x "$ROOT/scripts/render-from-config.sh"
+  test -x "$ROOT/scripts/status.sh"
+  test -x "$ROOT/scripts/test-install-modes.sh"
+  test -x "$ROOT/scripts/release-version-check.sh"
+  test -x "$ROOT/scripts/release-audit.sh"
+  test -x "$ROOT/scripts/test-release-readiness.sh"
+
+  "$ROOT/.codex/scripts/task-registry" release-check all --format json >/tmp/release-executable-positive.out
+  python3 - <<'PY'
+import json
+from pathlib import Path
+payload = json.loads(Path("/tmp/release-executable-positive.out").read_text(encoding="utf-8"))
+assert payload["surface"] == "release-source"
+assert payload["summary"]["fail"] == 0
+assert any(
+    check["check_id"] == "release-file-executable"
+    and check["path"] == "scripts/test-install-modes.sh"
+    and check["status"] == "pass"
+    for check in payload["checks"]
+)
+PY
+
+  local executable_copy
+  executable_copy="$(mktemp -d)"
+  CLEANUP_PATHS+=("$executable_copy")
+  tar -C "$ROOT" \
+    --exclude='.git' \
+    --exclude='target' \
+    --exclude='rust/target' \
+    --exclude='.release-readiness-nested' \
+    -cf - . | tar -C "$executable_copy" -xf -
+  chmod 0644 "$executable_copy/scripts/test-install-modes.sh"
+  if (
+    cd "$executable_copy"
+    cargo run --locked --quiet --manifest-path "$ROOT/rust/task-registry-flow-cli/Cargo.toml" -- \
+      release-check all --format json > /tmp/release-executable-negative.out 2> /tmp/release-executable-negative.err
+  ); then
+    echo "non-executable release script unexpectedly passed" >&2
+    exit 1
+  fi
+  python3 - <<'PY'
+import json
+from pathlib import Path
+payload = json.loads(Path("/tmp/release-executable-negative.out").read_text(encoding="utf-8"))
+assert payload["surface"] == "release-source"
+assert payload["summary"]["fail"] >= 1
+assert any(
+    check["check_id"] == "release-file-executable"
+    and check["path"] == "scripts/test-install-modes.sh"
+    and check["status"] == "fail"
+    and check["actual"] == "not executable"
+    for check in payload["checks"]
+)
+PY
 }
 
 check_installer_schema() {
@@ -239,6 +303,7 @@ case "$MODE" in
   all)
     check_version
     check_artifacts
+    check_executable
     check_installer_schema
     check_json_failure_reports
     check_status
@@ -246,11 +311,12 @@ case "$MODE" in
     ;;
   version) check_version ;;
   artifacts) check_artifacts ;;
+  executable) check_executable ;;
   installer) check_installer_schema ;;
   json-failures) check_json_failure_reports ;;
   status) check_status ;;
   audit) check_audit ;;
-  *) echo "usage: test-release-readiness.sh [all|version|artifacts|installer|json-failures|status|audit]" >&2; exit 2 ;;
+  *) echo "usage: test-release-readiness.sh [all|version|artifacts|executable|installer|json-failures|status|audit]" >&2; exit 2 ;;
 esac
 
 echo "release readiness tests ok: $MODE"

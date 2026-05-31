@@ -11,4 +11,7 @@ status_vocabulary = [
     "completed",
     "cancelled",
 ]
-archive_paths = ["docs/task-registry/archive/completed-001.toml"]
+archive_paths = [
+    "docs/task-registry/archive/completed-001.toml",
+    "docs/task-registry/archive/completed-002.toml",
+]

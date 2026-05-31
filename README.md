@@ -95,6 +95,10 @@ Then validate the install:
 plugins/agent-governance/scripts/status.sh --strict
 ```
 
+`AGENTS.md` and `GEMINI.md` must each carry exactly one
+`agent-governance:begin` / `agent-governance:end` marker block. Markerless
+files are unaligned posture, even when the surrounding prose looks correct.
+
 Fresh installs or intentional rebaselines can use `--force`. Preview the full
 write set first:
 

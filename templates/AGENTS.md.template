@@ -56,3 +56,23 @@ Run the smallest honest subset that proves the approved scope; broaden when shar
 - **Repo root:** `{{REPO_ROOT}}`
 - **Scratch:** `{{SCRATCH_ROOT}}/<short-slug>/`
 - Confirm `git rev-parse --show-toplevel` matches repo root before mutating files.
+
+<!-- agent-governance:begin -->
+## Agent governance (portable plugin)
+
+Maintained by [plugins/agent-governance/](plugins/agent-governance/). **Workflow authority:** the main sections above in this file — not this block.
+
+| Item | Location |
+|------|----------|
+| Reference config | `plugins/agent-governance/examples/spectrum-arcana.project.config.toml` |
+| Posture check | `plugins/agent-governance/scripts/status.sh` |
+| Refresh overlay | `plugins/agent-governance/scripts/install-to-workspace.sh --config plugins/agent-governance/examples/spectrum-arcana.project.config.toml --merge` |
+| Registry CLI | `{{TASK_REGISTRY_CLI}}` |
+| Mutation verify | `{{VERIFY_HOOK_COMMAND}}` |
+| Hook script | `{{MUTATION_HOOK_SCRIPT}}` |
+| Codex hooks | `.codex/hooks.json` -> canonical gate (`PreToolUse`) |
+| Antigravity hooks | `.agents/hooks.json` -> canonical gate (`run_command` / file edit tools) |
+| Cursor hooks | `.cursor/hooks.json` + `.cursor/hooks/gap-closure-gate.sh` |
+| Skills | `.agents/skills/*`, `.agents/skills/*.md`, `.cursor/skills/*` |
+| Source limit | 1600 lines; check `{{TASK_REGISTRY_CLI}} source-limit check`; split plan `{{TASK_REGISTRY_CLI}} source-limit plan --path <file>` |
+<!-- agent-governance:end -->

@@ -37,6 +37,8 @@ pass=0
 warn=0
 fail=0
 marker_installed=0
+MARKER_BEGIN='<!-- agent-governance:begin -->'
+MARKER_END='<!-- agent-governance:end -->'
 
 ok()   { printf '  OK   %s\n' "$1"; pass=$((pass + 1)); }
 note() { printf '  NOTE %s\n' "$1"; warn=$((warn + 1)); }
@@ -49,16 +51,26 @@ check_markers() {
     return
   fi
   local begin_count end_count
-  begin_count="$(grep -c 'agent-governance:begin' "$file" || true)"
-  end_count="$(grep -c 'agent-governance:end' "$file" || true)"
-  if [[ "$begin_count" -eq 1 && "$end_count" -eq 1 ]]; then
+  local begin_lines=() end_lines=()
+  mapfile -t begin_lines < <(marker_lines "$file" "$MARKER_BEGIN")
+  mapfile -t end_lines < <(marker_lines "$file" "$MARKER_END")
+  begin_count="${#begin_lines[@]}"
+  end_count="${#end_lines[@]}"
+  if [[ "$begin_count" -eq 1 && "$end_count" -eq 1 && "${begin_lines[0]}" -lt "${end_lines[0]}" ]]; then
     ok "$file governance markers present (single pair)"
     marker_installed=1
+  elif [[ "$begin_count" -eq 1 && "$end_count" -eq 1 ]]; then
+    bad "$file governance markers malformed (marker block out of order)"
   elif [[ "$begin_count" -gt 0 || "$end_count" -gt 0 ]]; then
     bad "$file governance markers malformed (begin=$begin_count end=$end_count)"
   else
-    note "$file has no agent-governance markers"
+    bad "$file missing governance marker block"
   fi
+}
+
+marker_lines() {
+  local file="$1" marker="$2"
+  awk -v marker="$marker" '{ sub(/\r$/, ""); if ($0 == marker) print NR }' "$file"
 }
 
 check_symlink() {

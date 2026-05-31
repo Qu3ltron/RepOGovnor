@@ -55,3 +55,15 @@ Handoff: `.codex/scripts/task-registry report <plan_id>`; archive completed when
 ## Verify in Antigravity
 
 Run `agy --version` and require 1.0.3 or newer. Run `agy` in this repo, then `/skills` — expect `gap-closure-contract` and `task-registry-flow`. Hooks load from `.agents/hooks.json`; plugin package validation must show hooks processed with `agy plugin validate plugins/agent-governance`.
+
+<!-- agent-governance:begin -->
+## Agent governance (portable plugin)
+
+Plugin: [plugins/agent-governance/](plugins/agent-governance/). **Policy and workflow:** [AGENTS.md](AGENTS.md) and sections above — this block is install posture only.
+
+- Posture: `plugins/agent-governance/scripts/status.sh`
+- Skills: `.agents/skills/*.md` for AGY, `.agents/skills/<skill>/` for Codex, `.cursor/skills/<skill>/` for Cursor
+- Antigravity hook: `.agents/hooks.json` -> `tools/agent-governance/pre-tool-use-gap-closure.sh` via `.codex/scripts/task-registry verify-mutation-hook`
+- Cursor hook: `.cursor/hooks.json` + `.cursor/hooks/gap-closure-gate.sh`
+- Source limit: 1600 lines; check `.codex/scripts/task-registry source-limit check`; split existing violations with `.codex/scripts/task-registry source-limit plan --path <file>`
+<!-- agent-governance:end -->

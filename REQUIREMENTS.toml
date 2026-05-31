@@ -104,6 +104,7 @@ required = [
   "rust/task-registry-flow-cli/src/source_limit.rs",
   "rust/task-registry-flow-cli/src/status_checks.rs",
   "rust/task-registry-flow-cli/src/tests/mod.rs",
+  "rust/task-registry-flow-cli/src/tests/status_check_tests.rs",
   "rust/task-registry-flow-cli/src/verifiers.rs",
   "scripts/install-to-workspace.sh",
   "scripts/render-from-config.sh",
@@ -115,6 +116,15 @@ required = [
   "templates/.codex/scripts/task-registry.template",
   "templates/tools/agent-governance/pre-tool-use-gap-closure.sh.template",
 ]
+executable = [
+  "scripts/install-to-workspace.sh",
+  "scripts/render-from-config.sh",
+  "scripts/status.sh",
+  "scripts/test-install-modes.sh",
+  "scripts/release-version-check.sh",
+  "scripts/release-audit.sh",
+  "scripts/test-release-readiness.sh",
+]
 stale_absent = [
   "hooks.json",
   "templates/.codex/settings.toml.template",
@@ -124,6 +134,7 @@ stale_absent = [
 ]
 check_ids = [
   "release-file-present",
+  "release-file-executable",
   "stale-path-absent",
   "release-version-consistent",
   "tracked-for-ci-present",
