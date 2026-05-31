@@ -47,16 +47,23 @@ the terms in [LICENSE](LICENSE).
 - Native skills for plan closure and task-registry flow.
 - Local mutation gates that allow governance repair paths but block unbound
   implementation writes.
+- Fail-closed command inspection for shell redirections and inline write calls
+  when the target path is not deterministic.
 - Schema-backed diagnostics for release checks, source limits, behavior
   verifiers, installer dry-runs, and mutation denials.
 - JSON command reports with `--format json`, and explicit receipt recording for
   read-only commands with `--record-receipt`.
+- Schema version 2 receipt chains with locked appends and `verify-chain`
+  integrity checks.
 - Strict v2 plan activation: phased checklists, exact file targets, behavior
   `gap_id`, behavior `polarity`, typed verifiers, and required positive plus
   negative behavior coverage before implementation work.
+- Terminal task protection: completed and cancelled tasks are immutable; changed
+  follow-up work needs a new task id.
 - Install modes for real upgrades: `--dry-run`, `--merge`, and `--force`.
 - Release checks for version consistency, dependency audit, source limits,
-  plugin layout, and tracked release artifacts.
+  plugin layout, Nix package assets, native required files, and tracked release
+  artifacts.
 
 Important limits:
 
@@ -91,6 +98,7 @@ Then validate the install:
 ```bash
 .codex/scripts/task-registry validate
 .codex/scripts/task-registry source-limit check
+.codex/scripts/task-registry verify-chain --format json
 .codex/scripts/task-registry metrics
 plugins/agent-governance/scripts/status.sh --strict
 ```
@@ -138,6 +146,12 @@ The package installs runtime assets under
 docs. Consumers should use this packaged asset root instead of reading from a
 mutable checkout.
 
+Validate Nix-facing release changes with:
+
+```bash
+nix flake check --no-build --all-systems
+```
+
 ## Daily workflow
 
 1. Draft a plan in `docs/plans/<name>.md`.
@@ -165,6 +179,12 @@ mutable checkout.
 The hook layer is designed to keep this honest. It permits plan bootstrap work,
 such as writing or activating plans, and denies implementation or runtime
 governance edits that are not tied to an active or planned task target.
+Command inspection fails closed for ambiguous shell redirections, compact
+redirect syntax, and inline write calls whose target cannot be proven.
+
+Completed and cancelled tasks are terminal. Reactivating an unchanged plan is
+idempotent, but changing title, kind, source hash, acceptance proof, behavior
+ids, targets, blockers, or projected steps requires a new task id.
 
 Runtime failures are schema-backed. A failed check should name the check id,
 path, expected state, actual state, and remediation. See
@@ -222,13 +242,24 @@ For release verification of this plugin itself:
 
 ## Current release checks
 
+Production readiness is clean-tree and manifest-backed. `REQUIREMENTS.toml`
+owns required release-source paths, executable release scripts, stale path
+denials, version files, and CI-tracked governance artifacts. Required release
+files must be native files, not symlinks.
+
 For this plugin source repo:
 
 ```bash
 scripts/status.sh --release-source
 scripts/release-version-check.sh
 scripts/release-audit.sh
+bash scripts/test-release-readiness.sh all
+nix flake check --no-build --all-systems
 ```
+
+`scripts/status.sh --release-source` must run from a clean worktree for
+production release. Local waiver variables are for development diagnostics only;
+`AGENT_GOVERNANCE_FINAL_RELEASE=1` rejects them.
 
 For a consumer repo after install:
 

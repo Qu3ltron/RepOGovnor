@@ -56,8 +56,7 @@ check_output() {
   fi
 }
 
-# Pass if the command exits 0 OR prints the expected substring (allows known
-# non-zero exits, e.g. status.sh failing on untracked governance files).
+# Pass if the command exits 0 OR prints the expected substring.
 check_any() {
   local label="$1" expected="$2"; shift 2
   printf "  %-50s " "$label ..."
@@ -96,7 +95,7 @@ fi
 
 echo ""
 echo "--- Tests ---"
-check "cargo test (95 tests)" cargo test --locked --manifest-path "$CARGO_MANIFEST"
+check "cargo test" cargo test --locked --manifest-path "$CARGO_MANIFEST"
 
 echo ""
 echo "--- CLI subcommands ---"

@@ -69,6 +69,25 @@ and sync the receipt, the mutating command fails instead of reporting success.
 Receipt appends take an exclusive file lock and compute the next hash while that
 lock is held.
 
+## Production Runtime Invariants
+
+Runtime checks fail closed when provenance cannot be proven:
+
+- Mutating commands must append and sync a schema version 2 receipt before the
+  command reports success.
+- Receipt chain verification treats malformed, unchained, or tampered events as
+  failures; `verify-chain --repair` is limited to parseable schema version 2
+  receipts.
+- Mutation hooks must extract deterministic write targets. Ambiguous compact
+  shell redirections, variable redirects, and inline write calls without a
+  provable path are denied before task target matching.
+- Completed and cancelled tasks are terminal task states. Unchanged
+  reactivation is idempotent; changing terminal task provenance requires a new
+  task id.
+- Release-source gates are manifest-backed through `REQUIREMENTS.toml`.
+  Required files must be native files, not symlinks.
+- Final release mode forbids local waiver variables.
+
 ## Diagnostic Report
 
 JSON reports use this shape:

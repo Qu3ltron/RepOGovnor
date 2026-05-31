@@ -45,15 +45,17 @@ Add `--quick` for a debug build.
 
 What it checks:
 - Release (or debug) build succeeds
-- `cargo test` (95 tests) passes
-- All 14 CLI subcommands exit 0 with expected output:
+- `cargo test` passes without hardcoded count assumptions
+- Read-only CLI subcommands exit 0 with expected output:
   `validate`, `metrics`, `source-limit check`, `source-limit plan`,
   `status-check`, `verify-mutation-hook` (×3 formats), `install plan`,
-  `verify-chain`, `release-check all`
-- `scripts/status.sh --strict` runs (may warn on untracked governance files)
+  `verify-chain`, `verify-chain --format json`, `release-check all`, and
+  `release-check all --format json`
+- `scripts/status.sh --strict` exits 0
 - `scripts/test-install-modes.sh` passes
 - `MODE=merge DRY_RUN=1 scripts/render-from-config.sh` succeeds
 - Wrapper `.codex/scripts/task-registry validate` works
+- The local receipt chain stays valid through `verify-chain`
 
 Exit code 0 = all clear.
 
@@ -90,23 +92,23 @@ First run compiles from source (~35 s); subsequent runs are faster.
 cargo test --locked --manifest-path rust/task-registry-flow-cli/Cargo.toml
 ```
 
-All 95 tests should pass in under 0.1 s.
+All tests should pass without relying on a fixed test count. In other words,
+cargo test passes without hardcoded count assumptions.
 
 ## Gotchas
 
 - **`set -e` + `((var++))`**: `((pass++))` returns 1 when `pass=0`, killing the
   script under `set -e`. Use `pass=$((pass + 1))` instead.
-- **`status.sh --strict` exits 1**: untracked `.claude/` governance files cause
-  CI-tracked-file failures. This is expected while integrating Claude Code
-  support — the check is correct, not broken.
+- **`status.sh --strict` exits 1**: treat this as a real posture failure. Read
+  the failed diagnostic and fix the missing, stale, or noncanonical governance
+  artifact.
 - **`render-from-config.sh`** reads `MODE` and `DRY_RUN` from the environment,
   not positional args. Use `env MODE=merge DRY_RUN=1 bash ...`.
 - **`--help` is not a flag**: the CLI shows usage on any unknown argument, not
   via `--help`. Omit it.
-- **The wrapper script at `.codex/scripts/task-registry`** looks for the
-  Cargo manifest at two paths — `plugins/agent-governance/rust/...` (consumer
-  repo layout) and the hardcoded development path. It works from this repo
-  because the second path matches.
+- **The wrapper script at `.codex/scripts/task-registry`** resolves the repo
+  root and delegates to the plugin-owned Rust CLI. Run it from a tracked repo
+  with the plugin checkout present.
 
 ## Troubleshooting
 

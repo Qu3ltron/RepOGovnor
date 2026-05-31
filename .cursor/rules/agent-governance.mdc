@@ -10,3 +10,7 @@ Use the plugin-owned registry only: `.codex/scripts/task-registry validate`, `st
 Keep source, scripts, configs, docs, templates, and governance files at or below 1600 lines. Treat this as a design-time rule. Before adding behavior to a violating file, run `.codex/scripts/task-registry source-limit plan --path <file>` and split first.
 
 Cursor hooks live in `.cursor/hooks.json`; they are runtime guardrails, not the source of truth. CI and `.codex/scripts/task-registry source-limit check` are authoritative.
+
+Use exact active or planned task targets. Ambiguous shell redirections, compact redirects, and inline write calls without deterministic paths fail closed. A terminal task is immutable after `completed` or `cancelled`; changed follow-up work needs a new `task_id`.
+
+Keep the local receipt chain intact and run `.codex/scripts/task-registry verify-chain --format json` before production handoff. Release-source required files are native files, not symlinks, and final release validation forbids local waiver variables.

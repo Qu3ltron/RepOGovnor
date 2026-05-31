@@ -15,7 +15,9 @@ Keep it terse.Do not update the user with non-actionable items. Wait to the end 
 | Workspace skills | [.agents/skills/](.agents/skills/) | AGY markdown skills plus Codex-compatible skill folders |
 | User CLI settings | `~/.gemini/antigravity-cli/settings.json` | Model, permissions, trusted workspaces |
 
-Antigravity CLI does **not** read `.codex/config.toml`, `.codex/hooks.json`, `.codex/agent-governance.toml`, or repo-local `.gemini/settings.json`. Do not create workspace `.gemini/settings.json`.
+Antigravity CLI does **not** read `.codex/config.toml`, `.codex/hooks.json`,
+`.codex/agent-governance.toml`, or repo-local Gemini settings. Do not create a
+repo-local Gemini settings file.
 
 ## Codebase policy
 
@@ -53,6 +55,11 @@ Handoff: `.codex/scripts/task-registry report <plan_id>`; archive completed when
 - **Registry:** use only `.codex/scripts/task-registry` opcodes; typed validation via `validate`; new activations require Task Manifest schema v2, exact targets, positive and negative gap behavior, and no placeholders.
 - **Deferrals:** `TASK_DEFER` via registry CLI `defer`; requires `deferral_governance_basis` + `reactivation_condition`.
 - **Source file limit:** 1600 lines is a hard design-time budget for source/governance files. Run `.codex/scripts/task-registry source-limit check`; use `.codex/scripts/task-registry source-limit plan --path <file>` before splitting existing violations.
+- **Production hardening:** use exact active or planned task targets; ambiguous shell redirections, compact redirects, and inline write calls without a deterministic path fail closed.
+- **Terminal task rule:** `completed` and `cancelled` are immutable. Changed follow-up work needs a new `task_id`; do not rewrite terminal provenance.
+- **Receipt chain:** keep local receipts intact and run `.codex/scripts/task-registry verify-chain --format json` before production handoff.
+- **Release source:** required files are native files, not symlinks, and final release validation forbids local waiver variables.
+- **Zero backwards compatibility:** do not add legacy shims, old hook paths, or settings compatibility.
 
 ## Verify in Antigravity
 

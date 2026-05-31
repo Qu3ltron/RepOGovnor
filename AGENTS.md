@@ -37,6 +37,22 @@ After user-approved gap closure:
 Registry work uses the plugin-owned Rust CLI at `.codex/scripts/task-registry`. Typed TOML validation, behavior verification, mutation checks, and local metrics are canonical there. New activations require Task Manifest schema v2, behavior `gap_id`, behavior `polarity`, typed verifiers, and positive plus negative behavior coverage for each implementation gap. `TASK_DEFER` requires `deferral_governance_basis` and `reactivation_condition`.
 
 
+## Production hardening rules
+
+- Use exact active or planned task targets. Ambiguous shell redirections,
+  compact redirects, and inline write calls without a deterministic path fail
+  closed.
+- A terminal task (`completed` or `cancelled`) is immutable. Changed follow-up
+  work needs a new `task_id`; do not rewrite terminal provenance.
+- Keep the local receipt chain intact. Run `.codex/scripts/task-registry
+  verify-chain --format json` before production handoff.
+- Release-source required files are native files, not symlinks, and must be
+  declared in `REQUIREMENTS.toml`.
+- Final release validation forbids local waiver variables; use
+  `AGENT_GOVERNANCE_FINAL_RELEASE=1` for release posture checks.
+- Zero backwards compatibility: do not add legacy shims, old hook paths, or
+  workspace settings compatibility.
+
 
 ## Architecture
 

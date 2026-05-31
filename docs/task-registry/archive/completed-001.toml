@@ -4,6 +4,20 @@ archive_id = "completed-001"
 archive_authority = "docs/task-registry/archive/completed-001.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-05-31-claude-runbook-doc-sync"
+plan_path = "docs/plans/claude-runbook-doc-sync-2026-05-31.md"
+plan_hash_sha256 = "42ca1674087d6e1bc74e9d8109b7569d51b671a42ed2edb00b34d29008ebb0f9"
+activated_at = "2026-05-31"
+status = "completed"
+
+[[plans]]
+plan_id = "PLAN-2026-05-31-documentation-sync"
+plan_path = "docs/plans/documentation-sync-2026-05-31.md"
+plan_hash_sha256 = "3117f1306aa73aae251ec6a9476b395ba53c61048395acdf479f8d81373baf52"
+activated_at = "2026-05-31"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-05-31-secondary-hardening"
 plan_path = "docs/plans/secondary-hardening-2026-05-31.md"
 plan_hash_sha256 = "d2d2f67837a23e7c786c9d4bff81e697318556741cde726a079bd1dcf223450f"
@@ -45,19 +59,178 @@ plan_hash_sha256 = "fc8c802ee2e7a6cfbaf5e85a1050ab7c449916ff3812b0ea606cb1d60ddb
 activated_at = "2026-05-31"
 status = "completed"
 
-[[plans]]
-plan_id = "verify-chain-hardening-2026-05-31"
-plan_path = "docs/plans/verify-chain-hardening-2026-05-31.md"
-plan_hash_sha256 = "3002c6daddc69a7250637febd77b03cb7c14c5852000c468193ebe63601a3522"
-activated_at = "2026-05-31"
+[[tasks]]
+task_id = "TASK-2026-05-31-CRD01"
+plan_id = "PLAN-2026-05-31-claude-runbook-doc-sync"
 status = "completed"
+title = "Refresh Claude runbook smoke documentation"
+kind = "governance"
+source_plan_path = "docs/plans/claude-runbook-doc-sync-2026-05-31.md"
+source_plan_hash_sha256 = "42ca1674087d6e1bc74e9d8109b7569d51b671a42ed2edb00b34d29008ebb0f9"
+reason = "Claude-facing runbook documentation must not lag current release gates."
+acceptance_proof = "Behaviors B-CRD01-positive, B-CRD01-negative, and B-CRD01-validation pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-CRD01-positive",
+    "B-CRD01-negative",
+    "B-CRD01-validation",
+]
 
-[[plans]]
-plan_id = "PLAN-2026-05-31-gap-closure-batch-2"
-plan_path = "docs/plans/gap-closure-batch-2-2026-05-31.md"
-plan_hash_sha256 = "1c224e86b5cce474f1d457c0f390eb15d70d450213e440e0d6e9ad6eef1a85fa"
-activated_at = "2026-05-31"
+[[tasks.targets]]
+file = ".claude/skills/run-governance-plugin/SKILL.md"
+object = "runbook_current_gates"
+required_change = "Document current count-free smoke coverage and strict status behavior."
+
+[[tasks.targets]]
+file = ".claude/skills/run-governance-plugin/smoke.sh"
+object = "count_free_labels"
+required_change = "Remove stale hardcoded count labels and obsolete known-nonzero status wording."
+
+[[tasks]]
+task_id = "TASK-2026-05-31-DOC01"
+plan_id = "PLAN-2026-05-31-documentation-sync"
 status = "completed"
+title = "Update README and system docs"
+kind = "governance"
+source_plan_path = "docs/plans/documentation-sync-2026-05-31.md"
+source_plan_hash_sha256 = "3117f1306aa73aae251ec6a9476b395ba53c61048395acdf479f8d81373baf52"
+reason = "Production-facing docs must match the current hardened runtime before release."
+acceptance_proof = "Behaviors B-DOC01-positive and B-DOC01-negative pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-DOC01-positive",
+    "B-DOC01-negative",
+]
+
+[[tasks.targets]]
+file = "README.md"
+object = "production_contract"
+required_change = "Document clean-tree release readiness, manifest-backed source tracking, native files, receipt chains, terminal task immutability, and Nix verification."
+
+[[tasks.targets]]
+file = "docs/runtime-schemas.md"
+object = "runtime_invariants"
+required_change = "Add runtime invariants for receipts, mutation target parsing, terminal task immutability, release source, and final release waivers."
+
+[[tasks.targets]]
+file = "docs/releases/v2.md"
+object = "release_checklist"
+required_change = "Use REQUIREMENTS.toml as artifact authority and list current final release gates."
+
+[[tasks.targets]]
+file = "docs/agent-environment-matrix.md"
+object = "environment_matrix"
+required_change = "Add Claude Code and shared hardening rules across agent environments."
+
+[[tasks]]
+task_id = "TASK-2026-05-31-DOC02"
+plan_id = "PLAN-2026-05-31-documentation-sync"
+status = "completed"
+title = "Update agent-facing docs and skill projections"
+kind = "governance"
+source_plan_path = "docs/plans/documentation-sync-2026-05-31.md"
+source_plan_hash_sha256 = "3117f1306aa73aae251ec6a9476b395ba53c61048395acdf479f8d81373baf52"
+reason = "All agent-facing docs, templates, and skill projections must reinforce the same canonical rules."
+acceptance_proof = "Behaviors B-DOC02-positive, B-DOC02-negative, and B-DOC02-projection pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-DOC02-positive",
+    "B-DOC02-negative",
+    "B-DOC02-projection",
+]
+
+[[tasks.targets]]
+file = "AGENTS.md"
+object = "agent_hardening_rules"
+required_change = "Add shared production hardening rules for agents."
+
+[[tasks.targets]]
+file = "CLAUDE.md"
+object = "agent_hardening_rules"
+required_change = "Keep Claude Code instructions aligned with shared hardening rules."
+
+[[tasks.targets]]
+file = "GEMINI.md"
+object = "agent_hardening_rules"
+required_change = "Keep Antigravity instructions aligned with shared hardening rules."
+
+[[tasks.targets]]
+file = ".cursor/rules/agent-governance.mdc"
+object = "cursor_hardening_rules"
+required_change = "State Cursor-specific production hardening expectations."
+
+[[tasks.targets]]
+file = "templates/AGENTS.md.template"
+object = "agent_hardening_rules_template"
+required_change = "Render shared hardening rules for future Codex installs."
+
+[[tasks.targets]]
+file = "templates/CLAUDE.md.template"
+object = "agent_hardening_rules_template"
+required_change = "Render shared hardening rules for future Claude Code installs."
+
+[[tasks.targets]]
+file = "templates/GEMINI.md.template"
+object = "agent_hardening_rules_template"
+required_change = "Render shared hardening rules for future Antigravity installs."
+
+[[tasks.targets]]
+file = "templates/.cursor/rules/agent-governance.mdc.template"
+object = "cursor_hardening_rules_template"
+required_change = "Render Cursor hardening rules for future installs."
+
+[[tasks.targets]]
+file = "skills/gap-closure-contract/SKILL.md"
+object = "contract_requirements"
+required_change = "Include documentation sync, terminal task, receipt-chain, and release-source requirements."
+
+[[tasks.targets]]
+file = "skills/task-registry-flow/SKILL.md"
+object = "registry_flow_requirements"
+required_change = "Include terminal immutability and receipt-chain handoff requirements."
+
+[[tasks.targets]]
+file = ".agents/skills/gap-closure-contract/SKILL.md"
+object = "codex_projection"
+required_change = "Mirror canonical gap-closure-contract skill source."
+
+[[tasks.targets]]
+file = ".agents/skills/gap-closure-contract.md"
+object = "antigravity_markdown_projection"
+required_change = "Mirror canonical gap-closure-contract skill source."
+
+[[tasks.targets]]
+file = ".cursor/skills/gap-closure-contract/SKILL.md"
+object = "cursor_projection"
+required_change = "Mirror canonical gap-closure-contract skill source."
+
+[[tasks.targets]]
+file = ".claude/skills/gap-closure-contract/SKILL.md"
+object = "claude_projection"
+required_change = "Mirror canonical gap-closure-contract skill source."
+
+[[tasks.targets]]
+file = ".agents/skills/task-registry-flow/SKILL.md"
+object = "codex_projection"
+required_change = "Mirror canonical task-registry-flow skill source."
+
+[[tasks.targets]]
+file = ".agents/skills/task-registry-flow.md"
+object = "antigravity_markdown_projection"
+required_change = "Mirror canonical task-registry-flow skill source."
+
+[[tasks.targets]]
+file = ".cursor/skills/task-registry-flow/SKILL.md"
+object = "cursor_projection"
+required_change = "Mirror canonical task-registry-flow skill source."
+
+[[tasks.targets]]
+file = ".claude/skills/task-registry-flow/SKILL.md"
+object = "claude_projection"
+required_change = "Mirror canonical task-registry-flow skill source."
 
 [[tasks]]
 task_id = "TASK-2026-05-31-SH01"
@@ -744,211 +917,3 @@ behavior_ids = [
 file = "rust/task-registry-flow-cli/src/verify_chain.rs"
 object = "repair_chain error handling"
 required_change = "add fs::remove_file(&tmp_path) cleanup on the sync_all error path"
-
-[[tasks]]
-task_id = "TASK-2026-05-31-VC-001"
-plan_id = "verify-chain-hardening-2026-05-31"
-status = "completed"
-title = "Add new Rust source files to REQUIREMENTS.toml release_source.required"
-kind = "implementation"
-source_plan_path = "docs/plans/verify-chain-hardening-2026-05-31.md"
-source_plan_hash_sha256 = "3002c6daddc69a7250637febd77b03cb7c14c5852000c468193ebe63601a3522"
-reason = "Six new source files from the runtime.rs module split are undeclared, causing release-check required failures"
-acceptance_proof = "Behavior B-004: .codex/scripts/task-registry release-check required → 0 release-rust-source-undeclared failures"
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-004-release-check-zero-undeclared",
-    "B-004-release-check-fails-missing-source-negative",
-]
-
-[[tasks.targets]]
-file = "REQUIREMENTS.toml"
-object = "release_source.required"
-required_change = "add six new source files: activation.rs, registry_io.rs, validation.rs, verify_chain.rs, state_transition_tests.rs, verify_chain_tests.rs"
-
-[[tasks]]
-task_id = "TASK-2026-05-31-VC-002"
-plan_id = "verify-chain-hardening-2026-05-31"
-status = "completed"
-title = "Add strict arg validation to verify-chain command"
-kind = "implementation"
-source_plan_path = "docs/plans/verify-chain-hardening-2026-05-31.md"
-source_plan_hash_sha256 = "3002c6daddc69a7250637febd77b03cb7c14c5852000c468193ebe63601a3522"
-reason = "Silent any() arg parsing in run_verify_chain allows unknown args to silently succeed instead of erroring with usage"
-acceptance_proof = "Behavior B-001: verify-chain BAD_ARG → exit 1 with usage"
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-001-verify-chain-rejects-unknown-args",
-    "B-001-verify-chain-accepts-valid-args-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/verify_chain.rs"
-object = "run_verify_chain"
-required_change = "replace silent any() arg parsing with strict validation that rejects unknown args"
-
-[[tasks]]
-task_id = "TASK-2026-05-31-VC-003"
-plan_id = "verify-chain-hardening-2026-05-31"
-status = "completed"
-title = "Surface warnings in verify-chain text mode output"
-kind = "implementation"
-source_plan_path = "docs/plans/verify-chain-hardening-2026-05-31.md"
-source_plan_hash_sha256 = "3002c6daddc69a7250637febd77b03cb7c14c5852000c468193ebe63601a3522"
-reason = "format_chain_report only renders Fail diagnostics; Warn diagnostics are invisible in text mode while JSON mode shows them"
-acceptance_proof = "Behavior B-003: verify-chain text output includes warning count"
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-003-text-mode-surfaces-warnings",
-    "B-003-warnings-dont-break-exit-code-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/verify_chain.rs"
-object = "format_chain_report"
-required_change = "surface warning count and warning details when no failures present"
-
-[[tasks]]
-task_id = "TASK-2026-05-31-VC-004"
-plan_id = "verify-chain-hardening-2026-05-31"
-status = "completed"
-title = "Make temp_root directories reliably unique for parallel test execution"
-kind = "implementation"
-source_plan_path = "docs/plans/verify-chain-hardening-2026-05-31.md"
-source_plan_hash_sha256 = "3002c6daddc69a7250637febd77b03cb7c14c5852000c468193ebe63601a3522"
-reason = "Nanosecond-precision timestamp is insufficient for parallel test uniqueness, exposed by new try_lock_exclusive in append_event"
-acceptance_proof = "Behavior B-002: cargo test -- --test-threads=4 → 95 passed, 0 lock contention failures"
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-002-parallel-tests-no-contention",
-    "B-002-temp-root-unique-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/mod.rs"
-object = "temp_root"
-required_change = "add process-level atomic counter to guarantee unique directories across parallel tests"
-
-[[tasks]]
-task_id = "TASK-2026-05-31-006"
-plan_id = "PLAN-2026-05-31-gap-closure-batch-2"
-status = "completed"
-title = "Use _broken report to skip intact prefix in repair_chain"
-kind = "implementation"
-source_plan_path = "docs/plans/gap-closure-batch-2-2026-05-31.md"
-source_plan_hash_sha256 = "1c224e86b5cce474f1d457c0f390eb15d70d450213e440e0d6e9ad6eef1a85fa"
-reason = "repair_chain ignores the broken report; targeted repair skips intact prefix lines for efficiency"
-acceptance_proof = "Behavior B-006: cargo test passes, repair_chain uses first break position"
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-006-repair-uses-broken",
-    "B-006b-intact-prefix-preserved",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/verify_chain.rs"
-object = "repair_chain"
-required_change = "Extract first broken line from _broken, copy intact prefix verbatim, recompute only from break point"
-
-[[tasks]]
-task_id = "TASK-2026-05-31-007"
-plan_id = "PLAN-2026-05-31-gap-closure-batch-2"
-status = "completed"
-title = "Switch bash -lc to bash -c in verifiers and hook gate"
-kind = "implementation"
-source_plan_path = "docs/plans/gap-closure-batch-2-2026-05-31.md"
-source_plan_hash_sha256 = "1c224e86b5cce474f1d457c0f390eb15d70d450213e440e0d6e9ad6eef1a85fa"
-reason = "bash -lc sources user shell profiles, making verification environment-dependent"
-acceptance_proof = "Behavior B-007: no bash -lc in verifiers.rs or pre-tool-use-gap-closure.sh"
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-007-bash-no-login",
-    "B-007b-no-login-shell-in-source",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/verifiers.rs"
-object = "run_confirmation"
-required_change = "Change bash -lc to bash -c"
-
-[[tasks.targets]]
-file = "tools/agent-governance/pre-tool-use-gap-closure.sh"
-object = "verify_cmd execution"
-required_change = "Change bash -lc to bash -c"
-
-[[tasks]]
-task_id = "TASK-2026-05-31-008"
-plan_id = "PLAN-2026-05-31-gap-closure-batch-2"
-status = "completed"
-title = "Add VERIFY_CHAIN opcode to skill and config template"
-kind = "documentation"
-source_plan_path = "docs/plans/gap-closure-batch-2-2026-05-31.md"
-source_plan_hash_sha256 = "1c224e86b5cce474f1d457c0f390eb15d70d450213e440e0d6e9ad6eef1a85fa"
-reason = "VERIFY_CHAIN opcode is missing from skill docs; agents cannot discover the verify-chain command"
-acceptance_proof = "Behavior B-008: VERIFY_CHAIN appears in SKILL.md opcode table and agent-governance.toml.template"
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-008-verify-chain-opcode",
-    "B-008b-no-missing-opcode",
-]
-
-[[tasks.targets]]
-file = "skills/task-registry-flow/SKILL.md"
-object = "Required Opcodes table"
-required_change = "Add VERIFY_CHAIN row with description"
-
-[[tasks.targets]]
-file = "templates/.codex/agent-governance.toml.template"
-object = "[task_registry] section"
-required_change = "Add verify_chain_opcode field"
-
-[[tasks]]
-task_id = "TASK-2026-05-31-009"
-plan_id = "PLAN-2026-05-31-gap-closure-batch-2"
-status = "completed"
-title = "Document REPO_SLUG derivation in example config"
-kind = "documentation"
-source_plan_path = "docs/plans/gap-closure-batch-2-2026-05-31.md"
-source_plan_hash_sha256 = "1c224e86b5cce474f1d457c0f390eb15d70d450213e440e0d6e9ad6eef1a85fa"
-reason = "{{REPO_SLUG}} is auto-derived from repo_name but undocumented; users don't know it exists"
-acceptance_proof = "Behavior B-009: REPO_SLUG mentioned in project.config.example.toml"
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-009-repo-slug-documented",
-    "B-009b-no-hidden-substitution",
-]
-
-[[tasks.targets]]
-file = "project.config.example.toml"
-object = "project section comment"
-required_change = "Add comment documenting that REPO_SLUG is auto-derived from repo_name"
-
-[[tasks]]
-task_id = "TASK-2026-05-31-010"
-plan_id = "PLAN-2026-05-31-gap-closure-batch-2"
-status = "completed"
-title = "Use mktemp in status.sh for stderr capture"
-kind = "implementation"
-source_plan_path = "docs/plans/gap-closure-batch-2-2026-05-31.md"
-source_plan_hash_sha256 = "1c224e86b5cce474f1d457c0f390eb15d70d450213e440e0d6e9ad6eef1a85fa"
-reason = "Hardcoded /tmp path causes collisions between concurrent status.sh invocations"
-acceptance_proof = "Behavior B-010: status.sh uses mktemp, no hardcoded /tmp path"
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-010-mktemp-status",
-    "B-010b-no-hardcoded-tmp",
-]
-
-[[tasks.targets]]
-file = "scripts/status.sh"
-object = "run_status_check_json"
-required_change = "Replace hardcoded /tmp/agent-governance-status-check.err with mktemp"

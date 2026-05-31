@@ -44,6 +44,9 @@ Do not set `deferred` via `TASK_STATUS`. Use `TASK_DEFER` only with governed bas
 - Duplicate `plan_id` in registry or across manifests fails validation.
 - Every task row must carry matching `plan_id`, `source_plan_path`, `source_plan_hash_sha256`.
 - Completed history may live in `docs/task-registry/archive/*.toml`; the plugin CLI supports `archive-completed`.
+- Completed and cancelled tasks are terminal task states. Reactivating an
+  unchanged plan is idempotent, but changed provenance, behavior ids, targets,
+  blockers, or projected steps require a new `task_id`.
 
 ## Task Requirements
 
@@ -79,6 +82,10 @@ Task registry: <completed> completed, <deferred> deferred, <blocked> blocked for
 List every `deferred` and `blocked` task with `task_id`, title, and reason. Do not claim full closure while tasks remain `planned`, `active`, `blocked`, or `deferred` unless the user explicitly accepts that state.
 
 Run `.codex/scripts/task-registry metrics` after substantial implementation work to capture local efficacy evidence from `docs/task-registry/events.jsonl`. Receipts are local only; do not send telemetry.
+
+Run `.codex/scripts/task-registry verify-chain --format json` before production
+handoff when registry state changed. The receipt chain must remain intact;
+malformed, unchained, or tampered events are release blockers.
 
 Run `.codex/scripts/task-registry source-limit check` before marking implementation tasks complete. If it fails, run `.codex/scripts/task-registry source-limit plan --path <file>` and split the file through an approved contract.
 

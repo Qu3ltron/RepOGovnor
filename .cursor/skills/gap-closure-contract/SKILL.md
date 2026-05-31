@@ -44,6 +44,15 @@ Mandatory after gap analysis plus user approval, before implementation. Scope is
 - Respect architecture and product rules defined in project docs — not in this skill.
 - Keep source/config/docs/script files at or below 1600 lines. This is a hard plugin rule, not an optional project preference.
 - Protect unrelated dirty worktree changes.
+- When a closure changes runtime behavior, release posture, or governance rules,
+  update README, system docs, agent-facing docs, install templates, and skill
+  projections in the same scope.
+- Completed and cancelled registry rows are terminal task states. Do not rewrite
+  their provenance; changed follow-up work requires a new `task_id`.
+- Release-source required files must be native files, not symlinks, and new
+  governed files must be declared in `REQUIREMENTS.toml`.
+- Mutating task-registry commands must leave an intact receipt chain; include
+  `verify-chain` evidence in handoff when registry state changed.
 
 ## Contract Requirements
 
@@ -54,9 +63,13 @@ Every contract must include:
 3. **Per-Gap Success Criteria** — each `###` gap must include current failure, good behavior, forbidden behavior, files involved, positive test, negative test, data/schema/provenance criteria, and runtime criteria or honest `N/A` with reason.
 4. **Behavioral Contract (Task Manifest)** — every new active plan manifest must use `schema_version = 2`, declare typed `[[behaviors]]` rows with `gap_id` and `polarity = "positive"|"negative"|"validation"`, and include at least one typed `[[behaviors.verifiers]]` entry per behavior. Each implementation gap must have both positive and negative behavior coverage. `confirmation` remains human-readable context; verifiers are the executable contract. `acceptance_proof` must cite the behavior and verifier command or assertion, not documentation alone.
 5. **Validation Plan** — exact runnable commands; focused vs full gates.
-6. **Source File Limit** — state expected line-budget impact and include `.codex/scripts/task-registry source-limit check`; if any file is already over 1600 lines, run `.codex/scripts/task-registry source-limit plan --path <file>` and split before adding more behavior.
-7. **Walkthrough Evidence** — proof to capture after implementation (command output, not doc edits).
-8. **Task Manifest** — fenced `toml` with `schema_version = 2`, `plan_id`, `[[behaviors]]` with `gap_id` and `polarity`, typed `[[behaviors.verifiers]]`, `[[tasks]]` with `behavior_ids`, and diffable `[[tasks.targets]]`. Implementation, schema, authorization, migration, release, and governance tasks must link positive or negative gap behavior, not only validation behavior.
+6. **Documentation and release sync** — when behavior, release posture, or
+   agent workflow changes, list every README, system doc, agent doc, template,
+   and skill projection that must change; include negative checks for stale
+   claims.
+7. **Source File Limit** — state expected line-budget impact and include `.codex/scripts/task-registry source-limit check`; if any file is already over 1600 lines, run `.codex/scripts/task-registry source-limit plan --path <file>` and split before adding more behavior.
+8. **Walkthrough Evidence** — proof to capture after implementation (command output, not doc edits), including receipt chain verification when registry receipts changed.
+9. **Task Manifest** — fenced `toml` with `schema_version = 2`, `plan_id`, `[[behaviors]]` with `gap_id` and `polarity`, typed `[[behaviors.verifiers]]`, `[[tasks]]` with `behavior_ids`, and diffable `[[tasks.targets]]`. Implementation, schema, authorization, migration, release, and governance tasks must link positive or negative gap behavior, not only validation behavior.
 
 ## Closure Workflow
 
@@ -157,3 +170,8 @@ Use the smallest honest subset from the contract Validation Plan. Prefer command
 - Missing negative behavior coverage for any implementation gap.
 - Behavioral criteria that cite documentation instead of typed verifiers.
 - Treating the 1600-line source limit as a final cleanup item instead of a design-time split constraint.
+- Updating runtime behavior without synchronizing README, system docs,
+  agent-facing docs, templates, and skill projections.
+- Reusing completed or cancelled task ids for changed follow-up work.
+- Accepting symlinked required release-source files or final-release waiver
+  flags as production-ready.
