@@ -74,9 +74,7 @@ fn parse_verify_chain_args(args: &[String]) -> Result<(bool, bool)> {
                         ));
                     }
                     None => {
-                        return Err(
-                            "--format requires a value (json), got: (nothing)".to_string()
-                        );
+                        return Err("--format requires a value (json), got: (nothing)".to_string());
                     }
                 }
             }

@@ -20,7 +20,7 @@
 - [ ] `[MODIFY]` `rust/task-registry-flow-cli/src/runtime.rs` — `append_event`: add `sync_all()` after writeln before file drop
 - [ ] `[MODIFY]` `rust/task-registry-flow-cli/src/cli.rs` — replace 3 `.unwrap()` calls with fallback error handling
 - [ ] `[MODIFY]` `tools/agent-governance/pre-tool-use-gap-closure.sh` — `emit_json`: replace fragile sed escaping with proper JSON construction
-- [ ] `[MODIFY]` `CLAUDE.md` — fix `render-from-config.sh` line count from "~24k lines" to "641 lines"
+- [ ] `[MODIFY]` `CLAUDE.md` — fix `render-from-config.sh` line count from "~24k lines" to "655 lines"
 - [ ] `[MODIFY]` `rust/task-registry-flow-cli/src/source_limit.rs` — remove duplicate `normalize_relative_path`, import from `runtime`
 - [ ] `[VERIFY]` `cargo test --locked --manifest-path rust/task-registry-flow-cli/Cargo.toml`
 - [ ] `[VERIFY]` `cargo fmt --manifest-path rust/task-registry-flow-cli/Cargo.toml -- --check`
@@ -57,11 +57,11 @@
 - **Negative test**: Feed a reason string with tabs and newlines; verify output is valid JSON
 
 ### Gap 4: CLAUDE.md line count inaccuracy
-- **Current failure**: CLAUDE.md says `render-from-config.sh` is "~24k lines". It is 641 lines.
-- **Good behavior**: CLAUDE.md accurately describes `render-from-config.sh` as "641 lines".
+- **Current failure**: CLAUDE.md says `render-from-config.sh` is "~24k lines". It is 655 lines.
+- **Good behavior**: CLAUDE.md accurately describes `render-from-config.sh` as "655 lines".
 - **Forbidden behavior**: Inaccurate documentation that misleads capacity planning.
 - **Files involved**: `CLAUDE.md`
-- **Positive test**: `wc -l scripts/render-from-config.sh` returns 641
+- **Positive test**: `wc -l scripts/render-from-config.sh` returns 655
 - **Negative test**: N/A
 
 ### Gap 5: `normalize_relative_path` duplicated
@@ -199,12 +199,12 @@ polarity = "positive"
 title = "CLAUDE.md accurately describes render-from-config.sh line count"
 given = "CLAUDE.md documentation"
 when = "a reader checks the line count of render-from-config.sh"
-then = "it matches the actual file (641 lines)"
+then = "it matches the actual file (655 lines)"
 confirmation = "wc -l scripts/render-from-config.sh"
 
 [[behaviors.verifiers]]
 type = "command"
-command = "bash -c 'lines=$(wc -l < scripts/render-from-config.sh); test \"$lines\" -eq 641'"
+command = "bash -c 'lines=$(wc -l < scripts/render-from-config.sh); test \"$lines\" -eq 655'"
 expected_exit = 0
 
 [[behaviors]]
@@ -308,15 +308,15 @@ required_change = "Replace fragile sed escaping with python3 json.dumps (+ tab/C
 task_id = "TASK-2026-05-31-004"
 status = "planned"
 kind = "documentation"
-reason = "CLAUDE.md overstates render-from-config.sh at ~24k lines; actual is 641, eroding doc trust"
+reason = "CLAUDE.md overstates render-from-config.sh at ~24k lines; actual is 655, eroding doc trust"
 behavior_ids = ["B-004-claude-md-accurate"]
 title = "Fix CLAUDE.md line count for render-from-config.sh"
-acceptance_proof = "Behavior B-004: CLAUDE.md says 641 lines, matches wc -l"
+acceptance_proof = "Behavior B-004: CLAUDE.md says 655 lines, matches wc -l"
 
 [[tasks.targets]]
 file = "CLAUDE.md"
 object = "render-from-config.sh description"
-required_change = "Change ~24k lines to 641 lines"
+required_change = "Change ~24k lines to 655 lines"
 
 [[tasks]]
 task_id = "TASK-2026-05-31-005"

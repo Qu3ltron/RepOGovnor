@@ -4,6 +4,13 @@ archive_id = "completed-001"
 archive_authority = "docs/task-registry/archive/completed-001.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-05-31-gap-closure-batch-1"
+plan_path = "docs/plans/gap-closure-2026-05-31.md"
+plan_hash_sha256 = "c36ad94618699298f2e99c4d5a0be22c0c7eadcfef7ae5a4881569e3e1c1039e"
+activated_at = "2026-05-31"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-05-31-nix-auto-update"
 plan_path = "docs/plans/nix-auto-update-2026-05-31.md"
 plan_hash_sha256 = "7dd5f95dc1fd502953fd1569b99e1a5581af159d661cb512ee6570988677f70e"
@@ -52,12 +59,113 @@ plan_hash_sha256 = "e80365453e837a7b1fa6f8c56e2127c3def82279d3a064de7ab811f183b0
 activated_at = "2026-05-31"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-05-31-strict-marker-block-validation"
-plan_path = "docs/plans/strict-marker-block-validation.md"
-plan_hash_sha256 = "ad84fbf9f6187483c4ba626b35a358a2748231bdc335065ad59130fa7eff4277"
-activated_at = "2026-05-31"
+[[tasks]]
+task_id = "TASK-2026-05-31-001"
+plan_id = "PLAN-2026-05-31-gap-closure-batch-1"
 status = "completed"
+title = "Add fsync to atomic writes in registry_io, verify_chain, runtime"
+kind = "implementation"
+source_plan_path = "docs/plans/gap-closure-2026-05-31.md"
+source_plan_hash_sha256 = "c36ad94618699298f2e99c4d5a0be22c0c7eadcfef7ae5a4881569e3e1c1039e"
+reason = "Temp file writes without fsync risk zero-length or partial registry/events after OS crash"
+acceptance_proof = "Behavior B-001: cargo test passes, sync_all() calls present after temp file writes"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = ["B-001-fsync-atomic-writes"]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/registry_io.rs"
+object = "save_registry"
+required_change = "Add sync_all() after temp file write before rename"
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/verify_chain.rs"
+object = "repair_chain"
+required_change = "Add sync_all() after temp file write before rename"
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/runtime.rs"
+object = "append_event"
+required_change = "Add sync_all() after writeln before file drop"
+
+[[tasks]]
+task_id = "TASK-2026-05-31-002"
+plan_id = "PLAN-2026-05-31-gap-closure-batch-1"
+status = "completed"
+title = "Replace .unwrap() in CLI output with fallback error handling"
+kind = "implementation"
+source_plan_path = "docs/plans/gap-closure-2026-05-31.md"
+source_plan_hash_sha256 = "c36ad94618699298f2e99c4d5a0be22c0c7eadcfef7ae5a4881569e3e1c1039e"
+reason = ".unwrap() in CLI output path could panic on serialization failure"
+acceptance_proof = "Behavior B-002: zero .unwrap() calls in cli.rs output path, tests pass"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = ["B-002-no-unwrap-cli"]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/cli.rs"
+object = "main_entry and render_error"
+required_change = "Replace 3 .unwrap() calls with .unwrap_or_else() fallback error handling"
+
+[[tasks]]
+task_id = "TASK-2026-05-31-003"
+plan_id = "PLAN-2026-05-31-gap-closure-batch-1"
+status = "completed"
+title = "Fix JSON injection in hook gate emit_json function"
+kind = "implementation"
+source_plan_path = "docs/plans/gap-closure-2026-05-31.md"
+source_plan_hash_sha256 = "c36ad94618699298f2e99c4d5a0be22c0c7eadcfef7ae5a4881569e3e1c1039e"
+reason = "Fragile sed escaping in hook gate can produce malformed JSON with control characters"
+acceptance_proof = "Behavior B-003: shell syntax check passes, JSON escaping handles control characters"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = ["B-003-json-safe-hook"]
+
+[[tasks.targets]]
+file = "tools/agent-governance/pre-tool-use-gap-closure.sh"
+object = "emit_json"
+required_change = "Replace fragile sed escaping with python3 json.dumps (+ tab/CR sed fallback)"
+
+[[tasks]]
+task_id = "TASK-2026-05-31-004"
+plan_id = "PLAN-2026-05-31-gap-closure-batch-1"
+status = "completed"
+title = "Fix CLAUDE.md line count for render-from-config.sh"
+kind = "documentation"
+source_plan_path = "docs/plans/gap-closure-2026-05-31.md"
+source_plan_hash_sha256 = "c36ad94618699298f2e99c4d5a0be22c0c7eadcfef7ae5a4881569e3e1c1039e"
+reason = "CLAUDE.md overstates render-from-config.sh at ~24k lines; actual is 655, eroding doc trust"
+acceptance_proof = "Behavior B-004: CLAUDE.md says 655 lines, matches wc -l"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = ["B-004-claude-md-accurate"]
+
+[[tasks.targets]]
+file = "CLAUDE.md"
+object = "render-from-config.sh description"
+required_change = "Change ~24k lines to 655 lines"
+
+[[tasks]]
+task_id = "TASK-2026-05-31-005"
+plan_id = "PLAN-2026-05-31-gap-closure-batch-1"
+status = "completed"
+title = "Deduplicate normalize_relative_path from source_limit.rs"
+kind = "implementation"
+source_plan_path = "docs/plans/gap-closure-2026-05-31.md"
+source_plan_hash_sha256 = "c36ad94618699298f2e99c4d5a0be22c0c7eadcfef7ae5a4881569e3e1c1039e"
+reason = "Identical normalize_relative_path logic in source_limit.rs and runtime.rs wastes the 1600-line budget"
+acceptance_proof = "Behavior B-005: single definition in runtime.rs, tests pass, no duplicate in source_limit.rs"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-005-dedup-normalize-path",
+    "B-005b-no-duplicate-def",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/source_limit.rs"
+object = "normalize_relative_path"
+required_change = "Remove duplicate fn, import from crate::runtime instead"
 
 [[tasks]]
 task_id = "TASK-2026-05-31-N01"
@@ -810,57 +918,3 @@ required_change = "Document status, release executable completeness, waiver, pla
 file = "README.md"
 object = "v2_hardening_note"
 required_change = "Document user-facing waiver/status behavior changes."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-strict-marker-block-001"
-plan_id = "PLAN-2026-05-31-strict-marker-block-validation"
-status = "completed"
-title = "Enforce exact ordered marker blocks"
-kind = "implementation"
-source_plan_path = "docs/plans/strict-marker-block-validation.md"
-source_plan_hash_sha256 = "ad84fbf9f6187483c4ba626b35a358a2748231bdc335065ad59130fa7eff4277"
-reason = "Count-only marker validation accepts prose-only and reversed marker tokens."
-acceptance_proof = "Behaviors B-001-marker-block-positive and B-002-marker-block-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-001-marker-block-positive",
-    "B-002-marker-block-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/status_checks.rs"
-object = "marker_check"
-required_change = "Validate exact ordered HTML comment marker lines."
-
-[[tasks.targets]]
-file = "scripts/status.sh"
-object = "check_markers"
-required_change = "Reject prose-only tokens and end-before-begin marker order."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-strict-marker-block-002"
-plan_id = "PLAN-2026-05-31-strict-marker-block-validation"
-status = "completed"
-title = "Add strict marker negative tests"
-kind = "validation"
-source_plan_path = "docs/plans/strict-marker-block-validation.md"
-source_plan_hash_sha256 = "ad84fbf9f6187483c4ba626b35a358a2748231bdc335065ad59130fa7eff4277"
-reason = "Malformed marker bypasses must be locked by behavioral tests."
-acceptance_proof = "Behaviors B-002-marker-block-negative and B-003-shell-marker-block-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-002-marker-block-negative",
-    "B-003-shell-marker-block-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/status_check_tests.rs"
-object = "status_check_json_rejects_non_block_marker_tokens"
-required_change = "Assert prose-only tokens and reversed comment markers fail JSON status."
-
-[[tasks.targets]]
-file = "scripts/test-install-modes.sh"
-object = "strict_marker_negative_cases"
-required_change = "Assert shell status rejects markerless, prose-only, and reversed-marker workspaces."
