@@ -15,9 +15,11 @@ Status: shipped in `2.0.0`.
 - Add release-source checks, dependency audit, and version consistency checks.
 - Add schema-backed diagnostics for runtime receipts, mutation scopes, release
   checks, behavior verifiers, and installer dry-runs.
-- Require typed behavior verifiers for new task manifests while preserving
-  completed legacy evidence.
+- Require typed behavior verifiers for all runtime task manifests; completed
+  historical manifests are migrated instead of accepted through v1 compatibility.
 - Bind runtime governance writes to task targets except for plan bootstrap.
+- Make read-only receipt recording explicit and keep schema version 1 receipt
+  lines out of the current runtime ledger.
 
 ## Next: adoption quality
 
@@ -29,8 +31,8 @@ Target: v2.x.
   -> validate -> complete workflow.
 - Add config validation with direct messages for missing or stale settings.
 - Improve `status.sh --strict` output so remediation steps are easier to follow.
-- Move the remaining status rendering surfaces directly onto structured
-  diagnostics.
+- Keep thinning status and installer wrappers so user entrypoints render typed
+  runtime diagnostics without owning policy.
 
 ## Next: reviewer experience
 
@@ -50,8 +52,7 @@ Target: v2.x.
 
 - Add more upgrade fixtures for older workspace layouts.
 - Detect common stale symlink and hook layouts before install writes files.
-- Continue moving installer rendering from shell/Python into the Rust runtime
-  API.
+- Continue reducing shell wrapper policy to Rust-owned schema APIs.
 - Add an uninstall or rebaseline guide for teams that need to reset governance
   surfaces deliberately.
 

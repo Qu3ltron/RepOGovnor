@@ -3,6 +3,57 @@
 Agent Governance treats runtime policy as typed data. Human output is only a
 rendering layer; production gates should be debuggable from structured facts.
 
+## Command Report
+
+Core commands support a JSON command envelope with `--format json` before the
+command:
+
+```json
+{
+  "schema_version": 2,
+  "command": "metrics",
+  "status": "pass",
+  "summary": "Task registry metrics: plans=1"
+}
+```
+
+Human text is a rendering layer over the command result.
+
+Command-specific JSON is also available where the command owns a richer
+diagnostic payload:
+
+```bash
+.codex/scripts/task-registry metrics --format json
+.codex/scripts/task-registry install plan --format json
+.codex/scripts/task-registry status-check --format json
+```
+
+For command-specific diagnostic JSON, failures still emit the raw diagnostic
+report and exit nonzero. The output is not wrapped in `task-registry-flow
+error:`. For global `--format json` failures, the CLI emits a schema version 2
+`CommandReport` with the parsed command and whether a receipt was recorded.
+
+## Receipt Event
+
+Receipts use schema version 2. Read-only commands do not append receipts unless
+`--record-receipt` is passed before the command. Mutating commands record local
+receipts by default.
+
+```json
+{
+  "schema_version": 2,
+  "timestamp": "2026-05-31T00:00:00-04:00",
+  "command": "activate",
+  "outcome": "ok",
+  "duration_ms": 7,
+  "subject": {"kind": "plan", "id": "PLAN-...", "path": "docs/plans/x.md"},
+  "summary": "PLAN_ACTIVATE docs/plans/x.md ok"
+}
+```
+
+Schema version 1 receipt lines are legacy data and are counted as malformed by
+current metrics.
+
 ## Diagnostic Report
 
 JSON reports use this shape:
@@ -99,9 +150,8 @@ content, and JSON checks use typed runtime assertions. `json_valid` parses JSON.
 `json_schema` requires both `path` and `schema_path` and validates the JSON
 instance against that schema.
 
-Completed legacy `schema_version = 1` manifests may remain as historical
-evidence when the registry plan is completed or cancelled. New activations must
-use schema version 2.
+All runtime Task Manifests must use `schema_version = 2`. Completed historical
+plans are migrated to v2 rather than accepted through a compatibility path.
 
 ## Activation Plan Contract
 
@@ -159,5 +209,6 @@ or noncanonical values fail during rendering instead of being silently ignored.
 ## Historical Evidence
 
 Historical task plans and archives are evidence, not live user docs. Stale
-historical prose is not silently rewritten. Any archive rewrite needs an
+historical prose is not silently rewritten, but runtime manifests and registry
+hashes are migrated when schema policy changes. Any archive rewrite needs an
 approved registry-aware migration plan.

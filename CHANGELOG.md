@@ -12,6 +12,11 @@
   `schema_version = 2` with typed behavior verifiers, runtime governance writes
   are task-bound, release/version wrappers delegate to Rust schema checks, and
   installer config rejects noncanonical runtime keys.
+- Hard-cut runtime Task Manifests and local receipts to schema version 2;
+  read-only commands no longer append receipts unless `--record-receipt` is
+  passed before the command.
+- Added JSON command envelopes for core CLI inspection with `--format json`
+  before the command.
 - Hardened activation plans: new v2 plans require phased checklists,
   behavior `gap_id`, behavior `polarity`, typed positive and negative
   verifier coverage, exact task targets, and placeholder-free plan text.

@@ -1,5 +1,6 @@
+use crate::hook_io;
 use crate::model::*;
-use crate::schema::{CliCommand, EventOutcome, HookFormat, MutationScope};
+use crate::schema::{HookFormat, MutationScope};
 use crate::{append_event, load_registry, normalize_relative_path, timestamp, truncate_detail};
 use serde_json::Value;
 use std::env;
@@ -26,21 +27,36 @@ impl HookInspection {
     }
 }
 
-pub(crate) fn verify_mutation_hook(root: &Path, _format: HookFormat) -> Result<()> {
+pub(crate) fn verify_mutation_hook(root: &Path, format: HookFormat) -> Result<()> {
     let mut stdin = String::new();
     io::stdin()
         .read_to_string(&mut stdin)
         .map_err(|error| format!("read hook stdin: {error}"))?;
-    verify_mutation_payload(root, &stdin)
+    verify_mutation_payload_for_format(root, format, &stdin)
 }
 
-pub(crate) fn verify_mutation_payload(root: &Path, stdin: &str) -> Result<()> {
+pub(crate) fn verify_mutation_payload_for_format(
+    root: &Path,
+    format: HookFormat,
+    stdin: &str,
+) -> Result<()> {
+    verify_mutation_payload_inner(root, Some(format), stdin)
+}
+
+fn verify_mutation_payload_inner(
+    root: &Path,
+    format: Option<HookFormat>,
+    stdin: &str,
+) -> Result<()> {
     if stdin.trim().is_empty() {
         return Ok(());
     }
 
     let value = serde_json::from_str::<Value>(stdin)
         .map_err(|error| format!("parse hook JSON: {error}"))?;
+    if let Some(format) = format {
+        hook_io::validate_payload_shape(format, &value)?;
+    }
     let inspection = inspect_hook_payload(&value);
     if inspection.uncertain_write() {
         return Err(
@@ -77,12 +93,13 @@ pub(crate) fn verify_mutation_payload(root: &Path, stdin: &str) -> Result<()> {
         }
         let _ = append_event(
             root,
-            EventRecord::new(
+            EventRecord::mutation_denied(
                 timestamp(),
-                CliCommand::VerifyMutationHook,
-                EventOutcome::MutationDenied,
                 0,
-                truncate_detail(&path),
+                path.clone(),
+                truncate_detail(&format!(
+                    "{path} is not bound to an active registry task target"
+                )),
             ),
         );
         return Err(format!(

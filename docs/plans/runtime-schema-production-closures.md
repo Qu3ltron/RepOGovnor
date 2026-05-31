@@ -197,72 +197,128 @@ Capture:
 ## Task Manifest
 
 ```toml
-schema_version = 1
+schema_version = 2
 plan_id = "PLAN-2026-05-30-runtime-schema-production-closures"
 
 [[behaviors]]
 behavior_id = "B-2026-05-30-runtime-schema-core"
+gap_id = "GAP-2026-05-30-runtime-schema-core"
+polarity = "positive"
 title = "Runtime uses typed schema values"
 given = "The task-registry CLI receives valid and invalid runtime API inputs"
 when = "Commands, hook formats, events, diagnostics, and verifiers are parsed"
 then = "Known values execute and unknown values fail with structured validation errors"
 confirmation = "cargo test --locked --manifest-path rust/task-registry-flow-cli/Cargo.toml schema_"
 
+[[behaviors.verifiers]]
+type = "command"
+command = "cargo test --locked --manifest-path rust/task-registry-flow-cli/Cargo.toml schema_"
+expected_exit = 0
+
 [[behaviors]]
 behavior_id = "B-2026-05-30-mutation-scope-authorization"
+gap_id = "GAP-2026-05-30-mutation-scope-authorization"
+polarity = "positive"
 title = "Mutation authorization uses typed scopes"
 given = "A registry with exact file, directory tree, generated artifact, and governance repair scopes"
 when = "The mutation hook evaluates allowed and forbidden write paths"
 then = "Only declared scopes pass and broad, traversal, prefix-collision, or undeclared paths fail"
 confirmation = "cargo test --locked --manifest-path rust/task-registry-flow-cli/Cargo.toml mutation_scope_"
 
+[[behaviors.verifiers]]
+type = "command"
+command = "cargo test --locked --manifest-path rust/task-registry-flow-cli/Cargo.toml mutation_scope_"
+expected_exit = 0
+
 [[behaviors]]
 behavior_id = "B-2026-05-30-behavior-verifier-schema"
+gap_id = "GAP-2026-05-30-behavior-verifier-schema"
+polarity = "positive"
 title = "Behavior verification is schema-backed"
 given = "Plan behaviors with typed command, file, content, and JSON verifiers"
 when = "verify-behaviors runs"
 then = "Valid verifier outcomes pass and invalid verifier declarations or failed assertions return structured errors"
 confirmation = "cargo test --locked --manifest-path rust/task-registry-flow-cli/Cargo.toml verifier_"
 
+[[behaviors.verifiers]]
+type = "command"
+command = "cargo test --locked --manifest-path rust/task-registry-flow-cli/Cargo.toml verifier_"
+expected_exit = 0
+
 [[behaviors]]
 behavior_id = "B-2026-05-30-installer-action-schema"
+gap_id = "GAP-2026-05-30-installer-action-schema"
+polarity = "positive"
 title = "Installer actions are enumerated and reportable"
 given = "Fresh, merge, force, dry-run, and legacy-symlink install scenarios"
 when = "The renderer validates config and computes install actions"
 then = "Only known action values are emitted and forbidden symlink/alignment states fail tests"
 confirmation = "bash scripts/test-release-readiness.sh all"
 
+[[behaviors.verifiers]]
+type = "command"
+command = "bash scripts/test-release-readiness.sh all"
+expected_exit = 0
+
 [[behaviors]]
 behavior_id = "B-2026-05-30-release-status-schema"
+gap_id = "GAP-2026-05-30-release-status-schema"
+polarity = "positive"
 title = "Release and status checks consume one release schema"
 given = "The plugin release source contract in REQUIREMENTS.toml"
 when = "status, version check, and release audit run from root and nested directories"
 then = "All gates use the same required file and version-bearing path schema"
 confirmation = "bash scripts/test-release-readiness.sh all"
 
+[[behaviors.verifiers]]
+type = "command"
+command = "bash scripts/test-release-readiness.sh all"
+expected_exit = 0
+
 [[behaviors]]
 behavior_id = "B-2026-05-30-structured-diagnostics"
+gap_id = "GAP-2026-05-30-structured-diagnostics"
+polarity = "positive"
 title = "Production gates emit structured diagnostics"
 given = "Passing and failing validation, release, source-limit, and installer dry-run scenarios"
 when = "JSON report mode is requested"
 then = "Reports include check id, surface, path, severity, status, expected, actual, remediation, and summary counts"
 confirmation = "cargo test --locked --manifest-path rust/task-registry-flow-cli/Cargo.toml diagnostics_"
 
+[[behaviors.verifiers]]
+type = "command"
+command = "cargo test --locked --manifest-path rust/task-registry-flow-cli/Cargo.toml diagnostics_"
+expected_exit = 0
+
 [[behaviors]]
 behavior_id = "B-2026-05-30-clean-verifier-api"
+gap_id = "GAP-2026-05-30-clean-verifier-api"
+polarity = "positive"
 title = "Shell execution is explicit verifier behavior"
 given = "A behavior manifest with command and non-command verifier declarations"
 when = "The verifier runner evaluates the behavior"
 then = "Only command verifiers execute shell and non-command verifiers evaluate typed assertions"
 confirmation = "cargo test --locked --manifest-path rust/task-registry-flow-cli/Cargo.toml verifier_"
 
+[[behaviors.verifiers]]
+type = "command"
+command = "cargo test --locked --manifest-path rust/task-registry-flow-cli/Cargo.toml verifier_"
+expected_exit = 0
+
 [[behaviors]]
 behavior_id = "B-2026-05-30-live-license-docs"
+gap_id = "GAP-2026-05-30-live-license-docs"
+polarity = "positive"
 title = "Live docs describe MIT/free-use terms without rewriting historical evidence"
 given = "The live README, release docs, vision, roadmap, and historical task archive"
 when = "Release readiness checks scan live artifacts"
 then = "Live docs avoid stale all-rights-reserved terms and historical archives are left untouched"
 confirmation = "bash scripts/test-release-readiness.sh artifacts"
+
+[[behaviors.verifiers]]
+type = "command"
+command = "bash scripts/test-release-readiness.sh artifacts"
+expected_exit = 0
 
 [[tasks]]
 task_id = "TASK-2026-05-30-runtime-schema-001"

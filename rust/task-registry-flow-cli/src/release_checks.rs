@@ -1,4 +1,5 @@
 use crate::model::Result;
+use crate::reports::{RuntimeFailure, RuntimeResult};
 use crate::schema::{CheckReport, Diagnostic, ReleaseCheckId, VersionFileFormat};
 use serde::Deserialize;
 use std::fs;
@@ -70,16 +71,16 @@ pub(crate) enum Mode {
     All,
 }
 
-pub(crate) fn run_command(root: &Path, args: &[String]) -> Result<String> {
+pub(crate) fn run_command(root: &Path, args: &[String]) -> RuntimeResult<String> {
     let Some(mode) = args.first().map(String::as_str) else {
-        return Err(release_usage());
+        return Err(release_usage().into());
     };
     let mode = match mode {
         "required" => Mode::Required,
         "version" => Mode::Version,
         "tracked" => Mode::Tracked,
         "all" => Mode::All,
-        _ => return Err(release_usage()),
+        _ => return Err(release_usage().into()),
     };
     let mut json = false;
     let mut index = 1usize;
@@ -88,25 +89,29 @@ pub(crate) fn run_command(root: &Path, args: &[String]) -> Result<String> {
             "--format" => {
                 index += 1;
                 if args.get(index).map(String::as_str) != Some("json") {
-                    return Err(release_usage());
+                    return Err(release_usage().into());
                 }
                 json = true;
             }
-            _ => return Err(release_usage()),
+            _ => return Err(release_usage().into()),
         }
         index += 1;
     }
 
     let report = report(root, mode)?;
     if json {
-        println!("{}", report.to_json()?);
+        let output = report.to_json()?;
+        if report.has_failures() {
+            return Err(RuntimeFailure::json(output));
+        }
+        Ok(output)
     } else {
-        print_human(&report);
+        let output = format_human(&report);
+        if report.has_failures() {
+            return Err(output.into());
+        }
+        Ok(output)
     }
-    if report.has_failures() {
-        return Err("release check failed".to_string());
-    }
-    Ok(format!("release-check {}", mode_name(mode)))
 }
 
 pub(crate) fn report(root: &Path, mode: Mode) -> Result<CheckReport> {
@@ -359,26 +364,19 @@ fn toml_key<'a>(value: &'a toml::Value, key: &str) -> Option<&'a toml::Value> {
     Some(current)
 }
 
-fn print_human(report: &CheckReport) {
+fn format_human(report: &CheckReport) -> String {
+    let mut lines = Vec::new();
     for check in &report.checks {
-        println!(
+        lines.push(format!(
             "{} {} {}: expected {}, actual {}",
             check.status, check.check_id, check.path, check.expected, check.actual
-        );
+        ));
     }
-    println!(
+    lines.push(format!(
         "release check summary: {} pass, {} warn, {} fail, {} skip",
         report.summary.pass, report.summary.warn, report.summary.fail, report.summary.skip
-    );
-}
-
-fn mode_name(mode: Mode) -> &'static str {
-    match mode {
-        Mode::Required => "required",
-        Mode::Version => "version",
-        Mode::Tracked => "tracked",
-        Mode::All => "all",
-    }
+    ));
+    lines.join("\n")
 }
 
 fn release_usage() -> String {

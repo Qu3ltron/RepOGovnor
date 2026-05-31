@@ -117,6 +117,58 @@ PY
   grep -q 'noncanonical project.config.toml' /tmp/installer-noncanonical-config.out
 }
 
+check_json_failure_reports() {
+  local source_root
+  source_root="$(mktemp -d)"
+  CLEANUP_PATHS+=("$source_root")
+  mkdir -p "$source_root/src"
+  python3 - "$source_root/src/too-large.rs" <<'PY'
+from pathlib import Path
+import sys
+Path(sys.argv[1]).write_text("fn item() {}\n" * 1601, encoding="utf-8")
+PY
+  if (
+    cd "$source_root"
+    cargo run --locked --quiet --manifest-path "$ROOT/rust/task-registry-flow-cli/Cargo.toml" -- \
+      source-limit check --format json > /tmp/source-limit-json-fail.out 2> /tmp/source-limit-json-fail.err
+  ); then
+    echo "source-limit JSON failure unexpectedly exited zero" >&2
+    exit 1
+  fi
+  python3 - <<'PY'
+import json
+from pathlib import Path
+body = Path("/tmp/source-limit-json-fail.out").read_text(encoding="utf-8")
+payload = json.loads(body)
+assert payload["surface"] == "source-limit"
+assert payload["summary"]["fail"] >= 1
+assert any(check["path"] == "src/too-large.rs" and check["status"] == "fail" for check in payload["checks"])
+PY
+
+  local release_root
+  release_root="$(tmp_copy)"
+  CLEANUP_PATHS+=("$release_root")
+  rm "$release_root/VERSION"
+  if (
+    cd "$release_root"
+    cargo run --locked --quiet --manifest-path "$ROOT/rust/task-registry-flow-cli/Cargo.toml" -- \
+      release-check all --format json > /tmp/release-json-fail.out 2> /tmp/release-json-fail.err
+  ); then
+    echo "release-check JSON failure unexpectedly exited zero" >&2
+    exit 1
+  fi
+  python3 - <<'PY'
+import json
+from pathlib import Path
+body = Path("/tmp/release-json-fail.out").read_text(encoding="utf-8")
+assert not body.startswith("task-registry-flow error:")
+payload = json.loads(body)
+assert payload["surface"] == "release-source"
+assert payload["summary"]["fail"] >= 1
+assert any(check["check_id"] == "release-file-present" and check["path"] == "VERSION" and check["status"] == "fail" for check in payload["checks"])
+PY
+}
+
 check_status() {
   AGENT_GOVERNANCE_ALLOW_DIRTY_RELEASE_CHECK=1 \
     AGENT_GOVERNANCE_ALLOW_ACTIVE_RELEASE_TASKS=1 \
@@ -188,15 +240,17 @@ case "$MODE" in
     check_version
     check_artifacts
     check_installer_schema
+    check_json_failure_reports
     check_status
     check_audit
     ;;
   version) check_version ;;
   artifacts) check_artifacts ;;
   installer) check_installer_schema ;;
+  json-failures) check_json_failure_reports ;;
   status) check_status ;;
   audit) check_audit ;;
-  *) echo "usage: test-release-readiness.sh [all|version|artifacts|installer|status|audit]" >&2; exit 2 ;;
+  *) echo "usage: test-release-readiness.sh [all|version|artifacts|installer|json-failures|status|audit]" >&2; exit 2 ;;
 esac
 
 echo "release readiness tests ok: $MODE"

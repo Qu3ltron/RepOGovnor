@@ -62,6 +62,8 @@ string_enum!(CliCommand {
     Metrics => "metrics",
     SourceLimit => "source-limit",
     ReleaseCheck => "release-check",
+    Install => "install",
+    StatusCheck => "status-check",
     Usage => "usage",
 });
 
@@ -110,6 +112,11 @@ string_enum!(CheckStatus {
     Warn => "warn",
     Fail => "fail",
     Skip => "skip",
+});
+
+string_enum!(CommandStatus {
+    Pass => "pass",
+    Fail => "fail",
 });
 
 string_enum!(VerifierType {
@@ -179,7 +186,14 @@ pub(crate) struct ReceiptEvent {
     pub(crate) command: CliCommand,
     pub(crate) outcome: EventOutcome,
     pub(crate) duration_ms: u128,
-    pub(crate) detail: String,
+    pub(crate) subject: RuntimeSubject,
+    pub(crate) summary: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub(crate) diagnostics: Vec<Diagnostic>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub(crate) verifier_results: Vec<VerifierResult>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) mutation_denial: Option<MutationDenial>,
 }
 
 impl ReceiptEvent {
@@ -188,17 +202,149 @@ impl ReceiptEvent {
         command: CliCommand,
         outcome: EventOutcome,
         duration_ms: u128,
-        detail: String,
+        summary: String,
     ) -> Self {
         Self {
-            schema_version: 1,
+            schema_version: 2,
             timestamp,
             command,
             outcome,
             duration_ms,
-            detail,
+            subject: RuntimeSubject::command(command),
+            summary,
+            diagnostics: Vec::new(),
+            verifier_results: Vec::new(),
+            mutation_denial: None,
         }
     }
+
+    pub(crate) fn mutation_denied(
+        timestamp: String,
+        duration_ms: u128,
+        path: String,
+        reason: String,
+    ) -> Self {
+        Self {
+            schema_version: 2,
+            timestamp,
+            command: CliCommand::VerifyMutationHook,
+            outcome: EventOutcome::MutationDenied,
+            duration_ms,
+            subject: RuntimeSubject::path("mutation-target", path.clone()),
+            summary: reason.clone(),
+            diagnostics: Vec::new(),
+            verifier_results: Vec::new(),
+            mutation_denial: Some(MutationDenial { path, reason }),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct RuntimeSubject {
+    pub(crate) kind: String,
+    pub(crate) id: String,
+    pub(crate) path: String,
+}
+
+impl RuntimeSubject {
+    pub(crate) fn command(command: CliCommand) -> Self {
+        Self {
+            kind: "command".to_string(),
+            id: command.as_str().to_string(),
+            path: ".".to_string(),
+        }
+    }
+
+    pub(crate) fn path(kind: impl Into<String>, path: impl Into<String>) -> Self {
+        let path = path.into();
+        Self {
+            kind: kind.into(),
+            id: path.clone(),
+            path,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct VerifierResult {
+    pub(crate) behavior_id: String,
+    pub(crate) verifier_type: VerifierType,
+    pub(crate) status: CheckStatus,
+    pub(crate) subject: RuntimeSubject,
+    pub(crate) expected: String,
+    pub(crate) actual: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct MutationDenial {
+    pub(crate) path: String,
+    pub(crate) reason: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct CommandReport {
+    pub(crate) schema_version: i64,
+    pub(crate) command: CliCommand,
+    pub(crate) status: CommandStatus,
+    pub(crate) summary: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub(crate) diagnostics: Vec<Diagnostic>,
+    pub(crate) receipt_recorded: bool,
+}
+
+impl CommandReport {
+    pub(crate) fn pass(
+        command: CliCommand,
+        summary: impl Into<String>,
+        receipt_recorded: bool,
+    ) -> Self {
+        Self {
+            schema_version: 2,
+            command,
+            status: CommandStatus::Pass,
+            summary: summary.into(),
+            diagnostics: Vec::new(),
+            receipt_recorded,
+        }
+    }
+
+    pub(crate) fn fail(
+        command: CliCommand,
+        actual: impl Into<String>,
+        receipt_recorded: bool,
+    ) -> Self {
+        let actual = actual.into();
+        Self {
+            schema_version: 2,
+            command,
+            status: CommandStatus::Fail,
+            summary: actual.clone(),
+            diagnostics: vec![Diagnostic::fail(
+                "cli-usage",
+                "cli",
+                ".",
+                "valid command",
+                actual,
+                "rerun with a supported command and arguments",
+            )],
+            receipt_recorded,
+        }
+    }
+
+    pub(crate) fn to_json(&self) -> Result<String, String> {
+        serde_json::to_string(self).map_err(|error| format!("serialize command report: {error}"))
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct InstallActionReport {
+    pub(crate) path: String,
+    pub(crate) action: InstallAction,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

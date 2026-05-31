@@ -87,32 +87,53 @@ Capture:
 ## Task Manifest
 
 ```toml
-schema_version = 1
+schema_version = 2
 plan_id = "PLAN-2026-05-30-production-gap-closures"
 
 [[behaviors]]
 behavior_id = "B-2026-05-30-hook-governance-before-validation"
+gap_id = "GAP-2026-05-30-hook-governance-before-validation"
+polarity = "positive"
 title = "Mutation hook allows governance repair while preserving implementation guards"
 given = "A repo with an unactivated plan manifest that makes full validation fail"
 when = "The mutation hook receives governance and implementation write payloads"
 then = "Governance writes and activation commands are allowed, while unbound implementation writes and unsafe payloads are denied"
 confirmation = "cargo test --manifest-path rust/task-registry-flow-cli/Cargo.toml hook_"
 
+[[behaviors.verifiers]]
+type = "command"
+command = "cargo test --manifest-path rust/task-registry-flow-cli/Cargo.toml hook_"
+expected_exit = 0
+
 [[behaviors]]
 behavior_id = "B-2026-05-30-wrapper-root-cwd"
+gap_id = "GAP-2026-05-30-wrapper-root-cwd"
+polarity = "positive"
 title = "Task-registry wrapper runs from repo root"
 given = "An installed workspace and a nested current directory"
 when = "The rendered task-registry wrapper runs validate"
 then = "The command uses repo-root registry files and does not create nested registry artifacts"
 confirmation = "bash scripts/test-install-modes.sh"
 
+[[behaviors.verifiers]]
+type = "command"
+command = "bash scripts/test-install-modes.sh"
+expected_exit = 0
+
 [[behaviors]]
 behavior_id = "B-2026-05-30-merge-status-hard-cutover"
+gap_id = "GAP-2026-05-30-merge-status-hard-cutover"
+polarity = "positive"
 title = "Merge install and status agree on stale-file removal"
 given = "A workspace containing stale legacy governance files"
 when = "The installer runs in dry-run, merge, and force modes"
 then = "Dry-run projects stale removal, merge and force remove stale files, and no preserve-stale output remains"
 confirmation = "bash scripts/test-install-modes.sh"
+
+[[behaviors.verifiers]]
+type = "command"
+command = "bash scripts/test-install-modes.sh"
+expected_exit = 0
 
 [[tasks]]
 task_id = "TASK-2026-05-30-production-gap-closures-001"

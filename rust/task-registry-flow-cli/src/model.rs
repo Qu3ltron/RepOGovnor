@@ -200,7 +200,7 @@ pub(crate) struct PlanReport {
     pub(crate) deferred_or_blocked: Vec<(String, String, String)>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub(crate) struct MetricsReport {
     pub(crate) plans: usize,
     pub(crate) tasks: usize,

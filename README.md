@@ -49,6 +49,8 @@ the terms in [LICENSE](LICENSE).
   implementation writes.
 - Schema-backed diagnostics for release checks, source limits, behavior
   verifiers, installer dry-runs, and mutation denials.
+- JSON command reports with `--format json`, and explicit receipt recording for
+  read-only commands with `--record-receipt`.
 - Strict v2 plan activation: phased checklists, exact file targets, behavior
   `gap_id`, behavior `polarity`, typed verifiers, and required positive plus
   negative behavior coverage before implementation work.
@@ -140,6 +142,20 @@ governance edits that are not tied to an active or planned task target.
 Runtime failures are schema-backed. A failed check should name the check id,
 path, expected state, actual state, and remediation. See
 [docs/runtime-schemas.md](docs/runtime-schemas.md).
+
+Read-only inspection commands do not append receipts by default. Use
+`--record-receipt` before the command when a validation receipt is intentional:
+
+```bash
+.codex/scripts/task-registry --record-receipt validate
+.codex/scripts/task-registry metrics --format json
+.codex/scripts/task-registry install plan --format json
+.codex/scripts/task-registry status-check --format json
+```
+
+Diagnostic JSON failures stay machine-readable and exit nonzero. Global JSON
+failures return a command envelope that identifies the parsed command and
+whether a receipt was recorded.
 
 ## Install modes
 

@@ -103,24 +103,38 @@ Capture:
 ## Task Manifest
 
 ```toml
-schema_version = 1
+schema_version = 2
 plan_id = "PLAN-2026-05-30-v2-production-followup-gap-closures"
 
 [[behaviors]]
 behavior_id = "B-2026-05-30-v2-followup-skill-symlink-replacement"
+gap_id = "GAP-2026-05-30-v2-followup-skill-symlink-replacement"
+polarity = "positive"
 title = "Legacy skill symlinks are replaced by native directories"
 given = "A v0.3 workspace with .agents skill symlinks pointing at .cursor skill directories"
 when = "The installer runs in dry-run, merge, and force modes"
 then = "Dry-run reports replacement without mutation, and merge/force replace symlinks with native v2 skill directories"
 confirmation = "bash scripts/test-install-modes.sh"
 
+[[behaviors.verifiers]]
+type = "command"
+command = "bash scripts/test-install-modes.sh"
+expected_exit = 0
+
 [[behaviors]]
 behavior_id = "B-2026-05-30-v2-followup-release-audit-root"
+gap_id = "GAP-2026-05-30-v2-followup-release-audit-root"
+polarity = "positive"
 title = "Release audit scans the repository root from any caller directory"
 given = "The plugin source repository or a temp copy with a root-level source-limit violation"
 when = "scripts/release-audit.sh is launched from a nested directory"
 then = "The normal repo passes and the temp repo with a root-level violation fails with that file named"
 confirmation = "bash scripts/test-release-readiness.sh audit"
+
+[[behaviors.verifiers]]
+type = "command"
+command = "bash scripts/test-release-readiness.sh audit"
+expected_exit = 0
 
 [[tasks]]
 task_id = "TASK-2026-05-30-v2-followup-001"

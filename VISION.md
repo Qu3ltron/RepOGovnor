@@ -71,8 +71,11 @@ Version `2.0.0` provides the core local workflow:
 - local validation receipts
 - schema-backed diagnostics for mutation, release, source-limit, and installer
   dry-run behavior
+- schema version 2 local receipts with explicit recording for read-only
+  inspection commands
 - task-bound runtime governance writes with a narrow plan-bootstrap exception
-- schema version 2 manifests with typed behavior verifiers for new activations
+- schema version 2 manifests with typed behavior verifiers for every runtime
+  plan, including migrated historical evidence
 
 This is usable today for repositories that accept a strict plan-first workflow.
 
@@ -87,8 +90,8 @@ repository:
 
 - easy install for first-time users
 - clear migration diagnostics for existing repos
-- continued schema coverage for installer/status surfaces that are still partly
-  rendered by shell wrappers
+- continued migration of installer/status wrappers toward thinner render-only
+  entrypoints
 - stronger policy presets for different risk levels
 - richer local reports for reviewers
 - better examples showing real agent workflows

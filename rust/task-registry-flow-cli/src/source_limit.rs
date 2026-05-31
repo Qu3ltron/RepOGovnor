@@ -1,4 +1,5 @@
 use crate::model::{Result, SOURCE_LINE_LIMIT};
+use crate::reports::{RuntimeFailure, RuntimeResult};
 use crate::schema::{CheckReport, Diagnostic};
 use serde::Serialize;
 use std::collections::BTreeMap;
@@ -40,9 +41,9 @@ struct LineRange {
     end: usize,
 }
 
-pub(crate) fn run_command(root: &Path, args: &[String]) -> Result<String> {
+pub(crate) fn run_command(root: &Path, args: &[String]) -> RuntimeResult<String> {
     let Some(subcommand) = args.first().map(String::as_str) else {
-        return Err(source_limit_usage());
+        return Err(source_limit_usage().into());
     };
     match subcommand {
         "check" => {
@@ -50,19 +51,22 @@ pub(crate) fn run_command(root: &Path, args: &[String]) -> Result<String> {
             if args.len() == 3 && args[1] == "--format" && args[2] == "json" {
                 json = true;
             } else if args.len() != 1 {
-                return Err(source_limit_usage());
+                return Err(source_limit_usage().into());
             }
             if json {
                 let report = check_report(root)?;
-                println!("{}", report.to_json()?);
+                let output = report.to_json()?;
                 if report.has_failures() {
-                    return Err("source file limit exceeded".to_string());
+                    Err(RuntimeFailure::json(output))
+                } else {
+                    Ok(output)
                 }
             } else {
                 check(root)?;
-                println!("source file limit ok: max {SOURCE_LINE_LIMIT} lines");
+                Ok(format!(
+                    "source file limit ok: max {SOURCE_LINE_LIMIT} lines"
+                ))
             }
-            Ok("source-limit check".to_string())
         }
         "plan" => {
             let mut path = None;
@@ -79,15 +83,14 @@ pub(crate) fn run_command(root: &Path, args: &[String]) -> Result<String> {
                         index += 1;
                         json = args.get(index).is_some_and(|value| value == "json");
                     }
-                    _ => return Err(source_limit_usage()),
+                    _ => return Err(source_limit_usage().into()),
                 }
                 index += 1;
             }
             let output = plan(root, path, json)?;
-            println!("{output}");
-            Ok("source-limit plan".to_string())
+            Ok(output)
         }
-        _ => Err(source_limit_usage()),
+        _ => Err(source_limit_usage().into()),
     }
 }
 

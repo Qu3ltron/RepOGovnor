@@ -13,31 +13,27 @@ fi
 emit_json() {
   local mode="$1"
   local reason="${2:-}"
-  GOVERNANCE_HOOK_FORMAT="$format" GOVERNANCE_HOOK_MODE="$mode" GOVERNANCE_HOOK_REASON="$reason" python3 - <<'PY'
-import json
-import os
-
-fmt = os.environ["GOVERNANCE_HOOK_FORMAT"]
-mode = os.environ["GOVERNANCE_HOOK_MODE"]
-reason = os.environ.get("GOVERNANCE_HOOK_REASON", "")
-
-if fmt == "codex":
-    if mode == "deny":
-        print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": reason}}))
-    raise SystemExit(0)
-
-if fmt == "cursor":
-    if mode == "deny":
-        print(json.dumps({"permission": "deny", "user_message": reason, "agent_message": reason}))
-    else:
-        print(json.dumps({"permission": "allow"}))
-    raise SystemExit(0)
-
-if mode == "deny":
-    print(json.dumps({"decision": "deny", "reason": reason}))
-else:
-    print(json.dumps({"decision": "allow"}))
-PY
+  local escaped_reason
+  escaped_reason="$(printf '%s' "$reason" | tr '\n' ' ' | sed 's/\\/\\\\/g; s/"/\\"/g')"
+  case "$format:$mode" in
+    codex:deny)
+      printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"%s"}}\n' "$escaped_reason"
+      ;;
+    codex:allow)
+      ;;
+    cursor:deny)
+      printf '{"permission":"deny","user_message":"%s","agent_message":"%s"}\n' "$escaped_reason" "$escaped_reason"
+      ;;
+    cursor:allow)
+      printf '{"permission":"allow"}\n'
+      ;;
+    *:deny)
+      printf '{"decision":"deny","reason":"%s"}\n' "$escaped_reason"
+      ;;
+    *)
+      printf '{"decision":"allow"}\n'
+      ;;
+  esac
 }
 
 emit_deny() {

@@ -120,40 +120,68 @@ Capture:
 ## Task Manifest
 
 ```toml
-schema_version = 1
+schema_version = 2
 plan_id = "PLAN-2026-05-30-v2-release-readiness"
 
 [[behaviors]]
 behavior_id = "B-2026-05-30-v2-version-consistency"
+gap_id = "GAP-2026-05-30-v2-version-consistency"
+polarity = "positive"
 title = "V2 versions are consistent"
 given = "A v2 release package"
 when = "The version consistency script runs"
 then = "All version-bearing files agree on 2.0.0 and drift/missing version files fail"
 confirmation = "bash scripts/test-release-readiness.sh version"
 
+[[behaviors.verifiers]]
+type = "command"
+command = "bash scripts/test-release-readiness.sh version"
+expected_exit = 0
+
 [[behaviors]]
 behavior_id = "B-2026-05-30-v2-release-artifacts"
+gap_id = "GAP-2026-05-30-v2-release-artifacts"
+polarity = "positive"
 title = "V2 release artifacts exist"
 given = "A v2 release package"
 when = "The release readiness test runs"
 then = "Release notes, license artifact, and v2 release docs exist and are linked"
 confirmation = "bash scripts/test-release-readiness.sh artifacts"
 
+[[behaviors.verifiers]]
+type = "command"
+command = "bash scripts/test-release-readiness.sh artifacts"
+expected_exit = 0
+
 [[behaviors]]
 behavior_id = "B-2026-05-30-v2-source-status"
+gap_id = "GAP-2026-05-30-v2-source-status"
+polarity = "positive"
 title = "Plugin-source status is distinct from consumer status"
 given = "The plugin source repository"
 when = "Release-source and consumer strict status checks are evaluated"
 then = "Release-source checks package readiness without requiring consumer install artifacts, while consumer strict status remains strict"
 confirmation = "bash scripts/test-release-readiness.sh status"
 
+[[behaviors.verifiers]]
+type = "command"
+command = "bash scripts/test-release-readiness.sh status"
+expected_exit = 0
+
 [[behaviors]]
 behavior_id = "B-2026-05-30-v2-audit-gate"
+gap_id = "GAP-2026-05-30-v2-audit-gate"
+polarity = "positive"
 title = "V2 audit gate is deterministic"
 given = "The Rust task-registry CLI package"
 when = "The release audit script runs"
 then = "Required Rust gates pass, duplicate dependency checks run, and missing audit tools require an explicit waiver"
 confirmation = "bash scripts/test-release-readiness.sh audit"
+
+[[behaviors.verifiers]]
+type = "command"
+command = "bash scripts/test-release-readiness.sh audit"
+expected_exit = 0
 
 [[tasks]]
 task_id = "TASK-2026-05-30-v2-release-readiness-001"

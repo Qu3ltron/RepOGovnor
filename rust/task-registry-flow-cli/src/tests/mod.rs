@@ -1,9 +1,12 @@
 use super::*;
-use crate::mutation_hook::{inspect_hook_payload, target_allows, verify_mutation_payload};
+use crate::mutation_hook::{
+    inspect_hook_payload, target_allows, verify_mutation_payload_for_format,
+};
 use crate::schema::{
     BehaviorPolarity, CheckReport, CheckStatus, CliCommand, Diagnostic, DiagnosticSeverity,
     EventOutcome, HookFormat, InstallAction, MutationScope, TaskKind, VerifierType,
 };
+use std::env;
 use std::str::FromStr;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -179,9 +182,62 @@ fn schema_event_serializes_versioned_receipt() {
     );
     let value = serde_json::to_value(event).unwrap();
 
-    assert_eq!(value["schema_version"], 1);
+    assert_eq!(value["schema_version"], 2);
     assert_eq!(value["command"], "validate");
     assert_eq!(value["outcome"], "ok");
+    assert_eq!(value["subject"]["kind"], "command");
+    assert_eq!(value["summary"], "schema test");
+}
+
+#[test]
+fn receipt_read_only_commands_do_not_mutate_events() {
+    assert!(!crate::receipts::should_record(CliCommand::Validate, false));
+    assert!(!crate::receipts::should_record(CliCommand::Metrics, false));
+    assert!(!crate::receipts::should_record(
+        CliCommand::ReleaseCheck,
+        false
+    ));
+    assert!(!crate::receipts::should_record(
+        CliCommand::SourceLimit,
+        false
+    ));
+    assert!(!crate::receipts::should_record(
+        CliCommand::VerifyBehaviors,
+        false
+    ));
+}
+
+#[test]
+fn receipt_record_flag_required_for_validation_receipt() {
+    assert!(!crate::receipts::should_record(CliCommand::Validate, false));
+    assert!(crate::receipts::should_record(CliCommand::Validate, true));
+    assert!(crate::receipts::should_record(CliCommand::Activate, false));
+}
+
+#[test]
+fn receipt_v2_serializes_typed_subjects() {
+    let event = EventRecord::mutation_denied(
+        "2026-05-31T00:00:00Z".to_string(),
+        3,
+        "src/lib.rs".to_string(),
+        "not bound".to_string(),
+    );
+    let value = serde_json::to_value(event).unwrap();
+
+    assert_eq!(value["schema_version"], 2);
+    assert_eq!(value["subject"]["kind"], "mutation-target");
+    assert_eq!(value["mutation_denial"]["path"], "src/lib.rs");
+    assert_eq!(value["mutation_denial"]["reason"], "not bound");
+    let verifier = crate::verifiers::verifier_result(
+        "B-001",
+        VerifierType::Command,
+        CheckStatus::Pass,
+        "docs/plans/sample.md",
+        "exit 0",
+        "exit 0",
+    );
+    let verifier_value = serde_json::to_value(verifier).unwrap();
+    assert_eq!(verifier_value["subject"]["kind"], "verifier-target");
 }
 
 #[test]
@@ -225,7 +281,7 @@ fn hook_allows_governance_write_with_unactivated_manifest() {
         }
     });
 
-    verify_mutation_payload(&root, &payload.to_string()).unwrap();
+    verify_mutation_payload_for_format(&root, HookFormat::Codex, &payload.to_string()).unwrap();
 }
 
 #[test]
@@ -240,7 +296,7 @@ fn hook_allows_activation_command_with_unactivated_manifest() {
         }
     });
 
-    verify_mutation_payload(&root, &payload.to_string()).unwrap();
+    verify_mutation_payload_for_format(&root, HookFormat::Codex, &payload.to_string()).unwrap();
 }
 
 #[test]
@@ -258,8 +314,9 @@ fn hook_denies_unbound_implementation_when_unactivated_manifest_exists() {
         }
     });
 
-    let error = verify_mutation_payload(&root, &payload.to_string())
-        .expect_err("unactivated manifest targets must not authorize implementation writes");
+    let error =
+        verify_mutation_payload_for_format(&root, HookFormat::Antigravity, &payload.to_string())
+            .expect_err("unactivated manifest targets must not authorize implementation writes");
     assert!(
         error.contains("src/lib.rs is not bound to an active registry task target"),
         "{error}"
@@ -277,7 +334,7 @@ fn hook_denies_runtime_governance_write_without_active_target() {
         }
     });
 
-    let error = verify_mutation_payload(&root, &payload.to_string())
+    let error = verify_mutation_payload_for_format(&root, HookFormat::Codex, &payload.to_string())
         .expect_err("runtime governance config writes require task-bound authorization");
 
     assert!(
@@ -301,7 +358,7 @@ fn hook_allows_runtime_governance_write_with_active_target() {
         }
     });
 
-    verify_mutation_payload(&root, &payload.to_string()).unwrap();
+    verify_mutation_payload_for_format(&root, HookFormat::Codex, &payload.to_string()).unwrap();
 }
 
 #[test]
@@ -355,10 +412,7 @@ fn activation_rejects_legacy_v1_manifest() {
     let error = activate_plan(&root, "docs/plans/sample.md")
         .expect_err("new activations must require manifest schema v2");
 
-    assert!(
-        error.contains("new activations require schema_version 2"),
-        "{error}"
-    );
+    assert!(error.contains("schema_version must be 2"), "{error}");
 }
 
 #[test]
@@ -386,7 +440,7 @@ expected_exit = 0
 }
 
 #[test]
-fn validation_accepts_completed_legacy_v1_manifest_evidence() {
+fn validation_rejects_completed_legacy_v1_manifest() {
     let root = temp_root("manifest-v1-completed");
     seed_repo(&root);
     let plan = sample_plan("true")
@@ -400,6 +454,60 @@ expected_exit = 0
 "#,
             "",
         );
+    fs::write(root.join("docs/plans/sample.md"), &plan).unwrap();
+    let plan_hash = normalized_hash(&plan);
+    fs::write(
+        root.join(REGISTRY_PATH),
+        format!(
+            r#"
+schema_version = 1
+registry_id = "test-task-registry"
+registry_authority = "docs/task-registry.toml"
+activation_skill = "task-registry-flow"
+hash_algorithm = "sha256(normalized plan text: CRLF/CR converted to LF, trailing whitespace stripped from each line, exactly one final newline)"
+status_vocabulary = ["planned", "active", "blocked", "deferred", "completed", "cancelled"]
+archive_paths = []
+
+[[plans]]
+plan_id = "PLAN-2026-05-30-sample"
+plan_path = "docs/plans/sample.md"
+plan_hash_sha256 = "{}"
+activated_at = "2026-05-30"
+status = "completed"
+
+[[tasks]]
+task_id = "TASK-2026-05-30-sample-001"
+plan_id = "PLAN-2026-05-30-sample"
+status = "completed"
+title = "Sample task"
+kind = "test"
+source_plan_path = "docs/plans/sample.md"
+source_plan_hash_sha256 = "{}"
+reason = "Exercise task registry behavior"
+acceptance_proof = "Behavior B-001-sample: true"
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = ["B-001-sample"]
+
+[[tasks.targets]]
+file = "src/lib.rs"
+object = "sample_task"
+required_change = "Update the sample task."
+"#,
+            plan_hash, plan_hash
+        ),
+    )
+    .unwrap();
+
+    let error = validate_all(&root).expect_err("completed v1 manifest must fail validation");
+    assert!(error.contains("schema_version must be 2"), "{error}");
+}
+
+#[test]
+fn validation_accepts_migrated_v2_historical_manifests() {
+    let root = temp_root("manifest-v2-completed");
+    seed_repo(&root);
+    let plan = sample_plan("true");
     fs::write(root.join("docs/plans/sample.md"), &plan).unwrap();
     let manifest = parse_manifest_from_body("docs/plans/sample.md", &plan).unwrap();
     fs::write(
@@ -587,7 +695,8 @@ fn hook_denies_malformed_uncertain_and_outside_payloads() {
     let root = temp_root("hook-deny-invalid");
     seed_repo(&root);
 
-    let malformed = verify_mutation_payload(&root, "{not json").expect_err("malformed JSON fails");
+    let malformed = verify_mutation_payload_for_format(&root, HookFormat::Codex, "{not json")
+        .expect_err("malformed JSON fails");
     assert!(malformed.contains("parse hook JSON"), "{malformed}");
 
     let uncertain = serde_json::json!({
@@ -598,8 +707,9 @@ fn hook_denies_malformed_uncertain_and_outside_payloads() {
             }
         }
     });
-    let uncertain_error = verify_mutation_payload(&root, &uncertain.to_string())
-        .expect_err("uncertain write payload must fail");
+    let uncertain_error =
+        verify_mutation_payload_for_format(&root, HookFormat::Antigravity, &uncertain.to_string())
+            .expect_err("uncertain write payload must fail");
     assert!(
         uncertain_error.contains("did not expose a deterministic target path"),
         "{uncertain_error}"
@@ -615,7 +725,8 @@ fn hook_denies_malformed_uncertain_and_outside_payloads() {
         }
     });
     let outside_error =
-        verify_mutation_payload(&root, &outside.to_string()).expect_err("outside path must fail");
+        verify_mutation_payload_for_format(&root, HookFormat::Antigravity, &outside.to_string())
+            .expect_err("outside path must fail");
     assert!(
         outside_error.contains("outside the repo root"),
         "{outside_error}"
@@ -659,6 +770,177 @@ fn hook_payload_flags_uncertain_write_tools() {
 }
 
 #[test]
+fn hook_format_typed_payloads_emit_responses() {
+    let codex = serde_json::json!({
+        "tool_name": "apply_patch",
+        "tool_input": {
+            "command": "*** Begin Patch\n*** Update File: src/main.rs\n@@\n old\n*** End Patch\n"
+        }
+    });
+    let cursor = serde_json::json!({
+        "toolCall": {
+            "name": "edit_file",
+            "args": {
+                "TargetFile": "src/lib.rs",
+                "CodeEdit": "change"
+            }
+        }
+    });
+
+    assert_eq!(HookFormat::Codex.as_str(), "codex");
+    assert_eq!(HookFormat::Cursor.as_str(), "cursor");
+    assert_eq!(inspect_hook_payload(&codex).paths, vec!["src/main.rs"]);
+    assert_eq!(inspect_hook_payload(&cursor).paths, vec!["src/lib.rs"]);
+}
+
+#[test]
+fn hook_rejects_format_mismatch_and_uncertain_paths() {
+    let root = temp_root("hook-format-negative");
+    seed_repo(&root);
+    let uncertain = serde_json::json!({
+        "toolCall": {
+            "name": "edit_file",
+            "args": {
+                "CodeEdit": "change without target"
+            }
+        }
+    });
+
+    let error =
+        verify_mutation_payload_for_format(&root, HookFormat::Antigravity, &uncertain.to_string())
+            .expect_err("uncertain write must fail");
+
+    assert!(error.contains("deterministic target path"), "{error}");
+    let mismatch = serde_json::json!({"tool_name": "apply_patch"});
+    let mismatch_error =
+        verify_mutation_payload_for_format(&root, HookFormat::Antigravity, &mismatch.to_string())
+            .expect_err("format mismatch must fail");
+    assert!(
+        mismatch_error.contains("requires toolCall"),
+        "{mismatch_error}"
+    );
+    assert!(HookFormat::from_str("legacy").is_err());
+}
+
+#[test]
+fn status_check_reports_marker_skill_hook_ci_facts() {
+    let report = crate::status_checks::report(
+        "status",
+        vec![
+            Diagnostic::pass(
+                "marker-present",
+                "status",
+                "AGENTS.md",
+                "single marker pair",
+            ),
+            crate::status_checks::native_skill_check(".agents/skills/task-registry-flow", true),
+        ],
+    )
+    .unwrap();
+
+    assert_eq!(report.summary.pass, 2);
+    assert!(!report.has_failures());
+}
+
+#[test]
+fn status_check_json_success_exits_zero() {
+    let root = temp_root("status-json-success");
+    fs::create_dir_all(root.join(".agents/skills/task-registry-flow")).unwrap();
+    let args = vec!["--format".to_string(), "json".to_string()];
+
+    let output = crate::status_checks::run_command(&root, &args).unwrap();
+    let value = serde_json::from_str::<serde_json::Value>(&output).unwrap();
+
+    assert_eq!(value["surface"], "status");
+    assert_eq!(value["summary"]["fail"], 0);
+    assert_eq!(value["checks"][0]["check_id"], "native-skill");
+}
+
+#[test]
+fn status_check_json_failure_exits_nonzero() {
+    let root = temp_root("status-json-failure");
+    let args = vec!["--format".to_string(), "json".to_string()];
+
+    let error = crate::status_checks::run_command(&root, &args)
+        .expect_err("missing native skill must fail JSON status");
+
+    let crate::reports::RuntimeFailure::Json(output) = error else {
+        panic!("status JSON failure must preserve raw JSON");
+    };
+    let value = serde_json::from_str::<serde_json::Value>(&output).unwrap();
+    assert_eq!(value["surface"], "status");
+    assert_eq!(value["summary"]["fail"], 1);
+    assert_eq!(value["checks"][0]["check_id"], "native-skill");
+    assert_eq!(value["checks"][0]["status"], "fail");
+}
+
+#[cfg(unix)]
+#[test]
+fn status_check_json_symlink_failure_exits_nonzero() {
+    let root = temp_root("status-json-symlink-failure");
+    let target = root.join(".cursor/skills/task-registry-flow");
+    fs::create_dir_all(&target).unwrap();
+    let link = root.join(".agents/skills/task-registry-flow");
+    fs::create_dir_all(link.parent().unwrap()).unwrap();
+    std::os::unix::fs::symlink(&target, &link).unwrap();
+    let args = vec!["--format".to_string(), "json".to_string()];
+
+    let error = crate::status_checks::run_command(&root, &args)
+        .expect_err("legacy skill symlink must fail JSON status");
+
+    let crate::reports::RuntimeFailure::Json(output) = error else {
+        panic!("status symlink JSON failure must preserve raw JSON");
+    };
+    let value = serde_json::from_str::<serde_json::Value>(&output).unwrap();
+    assert_eq!(value["surface"], "status");
+    assert_eq!(value["summary"]["fail"], 1);
+    assert_eq!(value["checks"][0]["check_id"], "native-skill");
+    assert_eq!(
+        value["checks"][0]["path"],
+        ".agents/skills/task-registry-flow"
+    );
+    assert_eq!(value["checks"][0]["status"], "fail");
+}
+
+#[test]
+fn status_check_fails_missing_native_skill_projection() {
+    let report = crate::status_checks::report(
+        "status",
+        vec![crate::status_checks::native_skill_check(
+            ".agents/skills/task-registry-flow",
+            false,
+        )],
+    )
+    .unwrap();
+
+    assert!(report.has_failures());
+    assert_eq!(report.checks[0].check_id, "native-skill");
+}
+
+#[test]
+fn installer_plan_emits_typed_actions() {
+    let report = crate::install::action_report(".agents/skills/task-registry-flow", "create")
+        .expect("known installer action");
+    assert_eq!(report.action, InstallAction::Create);
+    assert_eq!(
+        InstallAction::from_str("create").unwrap().as_str(),
+        "create"
+    );
+    assert_eq!(
+        InstallAction::from_str("replace-symlink").unwrap().as_str(),
+        "replace-symlink"
+    );
+}
+
+#[test]
+fn installer_rejects_unknown_config_and_dry_run_mutation() {
+    assert!(InstallAction::from_str("would-mutate").is_err());
+    assert!(InstallAction::from_str("unknown-action").is_err());
+    assert!(crate::install::assert_dry_run_unchanged("before", "before").is_ok());
+    assert!(crate::install::assert_dry_run_unchanged("before", "after").is_err());
+}
+
+#[test]
 fn metrics_counts_local_receipts() {
     let root = temp_root("metrics");
     seed_repo(&root);
@@ -691,6 +973,262 @@ fn metrics_counts_malformed_receipts_as_failures() {
     assert_eq!(report.events, 1);
     assert_eq!(report.failed_events, 1);
     assert_eq!(report.malformed_events, 1);
+}
+
+#[test]
+fn metrics_rejects_schema_v1_receipts() {
+    let root = temp_root("metrics-v1-receipt");
+    seed_repo(&root);
+    fs::create_dir_all(root.join("docs/task-registry")).unwrap();
+    fs::write(
+        root.join(EVENTS_PATH),
+        r#"{"schema_version":1,"timestamp":"2026-05-30T00:00:00Z","command":"validate","outcome":"ok","duration_ms":1,"detail":"legacy"}"#,
+    )
+    .unwrap();
+
+    let report = metrics(&root).unwrap();
+
+    assert_eq!(report.events, 1);
+    assert_eq!(report.failed_events, 1);
+    assert_eq!(report.malformed_events, 1);
+}
+
+#[test]
+fn cli_json_envelope_all_commands() {
+    let report =
+        crate::reports::success_json(CliCommand::Metrics, "metrics active=0 completed=1", false)
+            .unwrap();
+    let value = serde_json::from_str::<serde_json::Value>(&report).unwrap();
+
+    assert_eq!(value["schema_version"], 2);
+    assert_eq!(value["command"], "metrics");
+    assert_eq!(value["status"], "pass");
+    assert_eq!(
+        CliCommand::from_str("metrics").unwrap(),
+        CliCommand::Metrics
+    );
+    assert_eq!(
+        CliCommand::from_str("release-check").unwrap(),
+        CliCommand::ReleaseCheck
+    );
+    assert_eq!(
+        CliCommand::from_str("source-limit").unwrap(),
+        CliCommand::SourceLimit
+    );
+}
+
+#[test]
+fn cli_json_error_reports_actual_command() {
+    let output =
+        crate::cli::failure_json_for_test(CliCommand::Validate, false, "unexpected trailing args");
+    let value = serde_json::from_str::<serde_json::Value>(&output).unwrap();
+
+    assert_eq!(value["schema_version"], 2);
+    assert_eq!(value["command"], "validate");
+    assert_eq!(value["status"], "fail");
+    assert_eq!(value["receipt_recorded"], false);
+}
+
+#[test]
+fn cli_json_error_reports_receipt_state() {
+    let output =
+        crate::cli::failure_json_for_test(CliCommand::Validate, true, "unexpected trailing args");
+    let value = serde_json::from_str::<serde_json::Value>(&output).unwrap();
+
+    assert_eq!(value["command"], "validate");
+    assert_eq!(value["receipt_recorded"], true);
+    assert_ne!(value["command"], "usage");
+}
+
+#[test]
+fn cli_rejects_unknown_format_and_trailing_args() {
+    assert!(HookFormat::from_str("unknown").is_err());
+    let root = temp_root("source-limit-extra-format");
+    let args = vec![
+        "check".to_string(),
+        "--format".to_string(),
+        "bogus".to_string(),
+    ];
+
+    let error = source_limit::run_command(root.as_path(), &args)
+        .expect_err("unknown source-limit format must fail");
+    let error = error.to_string();
+
+    assert!(
+        error.contains("usage: task-registry-flow source-limit"),
+        "{error}"
+    );
+}
+
+#[test]
+fn module_split_preserves_registry_behaviors() {
+    let root = temp_root("module-split");
+    seed_repo(&root);
+    fs::write(root.join("docs/plans/sample.md"), sample_plan("true")).unwrap();
+
+    activate_plan(&root, "docs/plans/sample.md").unwrap();
+    update_task_status(&root, "TASK-2026-05-30-sample-001", "completed").unwrap();
+
+    assert_eq!(
+        report_plan(&root, "PLAN-2026-05-30-sample")
+            .unwrap()
+            .completed,
+        1
+    );
+}
+
+#[test]
+fn policy_loads_contract_sections_and_action_vocabulary() {
+    let policy = crate::policy::parse_manifest_policy(include_str!("../../../../MANIFEST.toml"))
+        .expect("manifest policy should be typed");
+
+    assert!(
+        policy
+            .install_policy
+            .action_vocabulary
+            .iter()
+            .any(|value| value == "replace-symlink")
+    );
+    assert!(
+        crate::install::validate_action_vocabulary(&policy.install_policy.action_vocabulary)
+            .is_ok()
+    );
+}
+
+#[test]
+fn policy_rejects_unknown_fields_and_action_mismatch() {
+    assert!(InstallAction::from_str("unknown-action").is_err());
+    assert!(
+        crate::policy::parse_manifest_policy(
+            r#"[install_policy]
+action_vocabulary = ["create", "unknown-action"]
+dry_run_prefix = "would-"
+stale_absent = []
+"#
+        )
+        .is_err()
+    );
+    assert!(
+        crate::policy::parse_manifest_policy(
+            r#"[install_policy]
+action_vocabulary = ["create"]
+dry_run_prefix = "would-"
+stale_absent = []
+unknown = true
+"#
+        )
+        .is_err()
+    );
+}
+
+#[test]
+fn negative_tests_parse_json_contracts() {
+    let report = CheckReport::new(
+        "migration",
+        vec![Diagnostic::fail(
+            "task-manifest-schema-version",
+            "manifest",
+            "docs/plans/legacy.md",
+            "schema_version 2",
+            "schema_version 1",
+            "migrate the Task Manifest",
+        )],
+    )
+    .unwrap();
+    let value = serde_json::from_str::<serde_json::Value>(&report.to_json().unwrap()).unwrap();
+
+    assert_eq!(
+        value["checks"][0]["check_id"],
+        "task-manifest-schema-version"
+    );
+    assert_eq!(value["checks"][0]["status"], "fail");
+}
+
+#[test]
+fn source_limit_json_success_exits_zero() {
+    let root = temp_root("source-limit-json-success");
+    let args = vec![
+        "check".to_string(),
+        "--format".to_string(),
+        "json".to_string(),
+    ];
+
+    let output = source_limit::run_command(root.as_path(), &args).unwrap();
+    let value = serde_json::from_str::<serde_json::Value>(&output).unwrap();
+
+    assert_eq!(value["surface"], "source-limit");
+    assert_eq!(value["summary"]["fail"], 0);
+}
+
+#[test]
+fn source_limit_json_failure_preserves_diagnostics() {
+    let root = temp_root("source-limit-json-failure");
+    let long_file = root.join("src/large.rs");
+    fs::create_dir_all(long_file.parent().unwrap()).unwrap();
+    fs::write(&long_file, "fn item() {}\n".repeat(SOURCE_LINE_LIMIT + 1)).unwrap();
+    let args = vec![
+        "check".to_string(),
+        "--format".to_string(),
+        "json".to_string(),
+    ];
+
+    let error = source_limit::run_command(root.as_path(), &args)
+        .expect_err("over-limit JSON check must fail");
+
+    let crate::reports::RuntimeFailure::Json(output) = error else {
+        panic!("source-limit JSON failure must preserve raw JSON");
+    };
+    let value = serde_json::from_str::<serde_json::Value>(&output).unwrap();
+    assert_eq!(value["surface"], "source-limit");
+    assert_eq!(value["summary"]["fail"], 1);
+    assert_eq!(value["checks"][0]["check_id"], "source-limit");
+    assert_eq!(value["checks"][0]["path"], "src/large.rs");
+    assert_eq!(value["checks"][0]["status"], "fail");
+}
+
+#[test]
+fn release_check_json_success_exits_zero() {
+    let root = temp_root("release-json-success");
+    seed_release_repo(&root);
+    let args = vec![
+        "all".to_string(),
+        "--format".to_string(),
+        "json".to_string(),
+    ];
+
+    let output = release_checks::run_command(root.as_path(), &args).unwrap();
+    let value = serde_json::from_str::<serde_json::Value>(&output).unwrap();
+
+    assert_eq!(value["surface"], "release-source");
+    assert_eq!(value["summary"]["fail"], 0);
+}
+
+#[test]
+fn release_check_json_failure_preserves_report() {
+    let root = temp_root("release-json-failure");
+    seed_release_repo(&root);
+    fs::remove_file(root.join("VERSION")).unwrap();
+    let args = vec![
+        "all".to_string(),
+        "--format".to_string(),
+        "json".to_string(),
+    ];
+
+    let error = release_checks::run_command(root.as_path(), &args)
+        .expect_err("failing release JSON check must fail");
+
+    let crate::reports::RuntimeFailure::Json(output) = error else {
+        panic!("release-check JSON failure must preserve raw JSON");
+    };
+    let value = serde_json::from_str::<serde_json::Value>(&output).unwrap();
+    assert_eq!(value["surface"], "release-source");
+    assert!(value["summary"]["fail"].as_u64().unwrap() >= 1);
+    assert!(value["checks"].as_array().unwrap().iter().any(|check| {
+        check["check_id"] == "release-file-present"
+            && check["path"] == "VERSION"
+            && check["status"] == "fail"
+    }));
+    assert!(!output.starts_with("task-registry-flow error:"));
 }
 
 #[test]
@@ -753,6 +1291,7 @@ fn source_limit_check_rejects_unexpected_args() {
 
     let error = source_limit::run_command(root.as_path(), &args)
         .expect_err("source-limit check must reject trailing args");
+    let error = error.to_string();
 
     assert!(
         error.contains("usage: task-registry-flow source-limit"),
