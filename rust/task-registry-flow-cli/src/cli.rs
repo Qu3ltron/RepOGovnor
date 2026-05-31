@@ -37,7 +37,7 @@ pub(crate) fn main_entry() -> i32 {
         .first()
         .and_then(|value| CliCommand::from_str(value).ok())
         .unwrap_or(CliCommand::Usage);
-    let result = runtime::run(args);
+    let mut result = runtime::run(args);
     let duration_ms = started.elapsed().as_millis();
     let outcome = if result.is_ok() {
         EventOutcome::Ok
@@ -45,13 +45,12 @@ pub(crate) fn main_entry() -> i32 {
         EventOutcome::Error
     };
 
-    let receipt_recorded = receipts::should_record(command, options.record_receipt);
-    if receipt_recorded {
-        let summary = result
-            .as_ref()
-            .map_or_else(|error| error.summary().to_string(), Clone::clone);
-        let _ =
-            receipts::append_command_event(Path::new("."), command, outcome, duration_ms, &summary);
+    let mut receipt_recorded = false;
+    if receipts::should_record(command, options.record_receipt) {
+        match record_command_receipt(Path::new("."), command, outcome, duration_ms, &result) {
+            Ok(()) => receipt_recorded = true,
+            Err(error) => result = Err(error),
+        }
     }
 
     match result {
@@ -78,6 +77,20 @@ pub(crate) fn main_entry() -> i32 {
             1
         }
     }
+}
+
+pub(crate) fn record_command_receipt(
+    root: &Path,
+    command: CliCommand,
+    outcome: EventOutcome,
+    duration_ms: u128,
+    result: &reports::RuntimeResult<String>,
+) -> Result<(), RuntimeFailure> {
+    let summary = result
+        .as_ref()
+        .map_or_else(|error| error.summary().to_string(), Clone::clone);
+    receipts::append_command_event(root, command, outcome, duration_ms, &summary)
+        .map_err(|error| RuntimeFailure::Text(format!("required receipt append failed: {error}")))
 }
 
 fn parse_global_options(args: Vec<String>) -> Result<(CliOptions, Vec<String>), String> {

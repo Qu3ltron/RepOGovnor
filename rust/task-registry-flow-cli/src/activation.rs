@@ -86,8 +86,12 @@ pub(crate) fn activate_plan(root: &Path, plan_path: &str) -> Result<()> {
                     existing.task_id, existing.plan_id, existing.source_plan_path
                 ));
             }
-            registry.tasks[index] =
-                build_registry_task(manifest_task, &manifest, Some(&existing), &today);
+            let candidate = build_registry_task(manifest_task, &manifest, Some(&existing), &today);
+            if task_is_terminal(existing.status) {
+                validate_terminal_task_unchanged(&existing, &candidate)?;
+            } else {
+                registry.tasks[index] = candidate;
+            }
         } else {
             registry
                 .tasks
@@ -200,6 +204,44 @@ fn build_registry_task(
             task.projected_steps.clone()
         },
     }
+}
+
+fn task_is_terminal(status: TaskStatus) -> bool {
+    matches!(status, TaskStatus::Completed | TaskStatus::Cancelled)
+}
+
+fn validate_terminal_task_unchanged(
+    existing: &RegistryTask,
+    candidate: &RegistryTask,
+) -> Result<()> {
+    if terminal_task_provenance_matches(existing, candidate) {
+        Ok(())
+    } else {
+        Err(format!(
+            "{} is terminal and cannot be rewritten; create a new task_id for changed work",
+            existing.task_id
+        ))
+    }
+}
+
+fn terminal_task_provenance_matches(existing: &RegistryTask, candidate: &RegistryTask) -> bool {
+    existing.task_id == candidate.task_id
+        && existing.plan_id == candidate.plan_id
+        && existing.status == candidate.status
+        && existing.title == candidate.title
+        && existing.kind == candidate.kind
+        && existing.source_plan_path == candidate.source_plan_path
+        && existing.source_plan_hash_sha256 == candidate.source_plan_hash_sha256
+        && existing.reason == candidate.reason
+        && existing.acceptance_proof == candidate.acceptance_proof
+        && existing.created_at == candidate.created_at
+        && existing.behavior_ids == candidate.behavior_ids
+        && existing.deferral_governance_basis == candidate.deferral_governance_basis
+        && existing.reactivation_condition == candidate.reactivation_condition
+        && existing.closure_plan_id == candidate.closure_plan_id
+        && existing.targets == candidate.targets
+        && existing.blockers == candidate.blockers
+        && existing.projected_steps == candidate.projected_steps
 }
 
 fn refresh_plan_status(registry: &mut crate::model::TaskRegistry, plan_id: &str) {

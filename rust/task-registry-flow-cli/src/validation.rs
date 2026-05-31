@@ -240,8 +240,7 @@ fn validate_task(task: &RegistryTask, plans_by_id: &BTreeMap<String, &RegistryPl
     if task.source_plan_path != plan.plan_path {
         return Err(format!("{} source_plan_path mismatch", task.task_id));
     }
-    if task.status != TaskStatus::Cancelled && task.source_plan_hash_sha256 != plan.plan_hash_sha256
-    {
+    if task.source_plan_hash_sha256 != plan.plan_hash_sha256 {
         return Err(format!("{} source_plan_hash_sha256 mismatch", task.task_id));
     }
     for (field, value) in [

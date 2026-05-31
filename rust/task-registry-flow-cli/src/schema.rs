@@ -172,6 +172,7 @@ string_enum!(ReleaseCheckId {
     ReleaseScriptExecutableUndeclared => "release-script-executable-undeclared",
     ReleaseExecutablePlatform => "release-executable-platform",
     ReleaseRustSourceUndeclared => "release-rust-source-undeclared",
+    ReleaseGovernedSourceUndeclared => "release-governed-source-undeclared",
     StalePathAbsent => "stale-path-absent",
     ReleaseVersionConsistent => "release-version-consistent",
     TrackedForCiPresent => "tracked-for-ci-present",
@@ -394,6 +395,7 @@ impl Diagnostic {
         }
     }
 
+    #[allow(dead_code)]
     pub(crate) fn warn(
         check_id: impl Into<String>,
         surface: impl Into<String>,

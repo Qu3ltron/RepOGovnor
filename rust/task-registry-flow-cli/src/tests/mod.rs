@@ -12,7 +12,11 @@ use std::os::unix::fs::PermissionsExt;
 use std::str::FromStr;
 use std::sync::atomic::{AtomicU64, Ordering};
 
+mod activation_terminal_tests;
+mod hook_command_tests;
 mod metrics_tests;
+mod receipt_chain_tests;
+mod release_source_tests;
 mod state_transition_tests;
 mod status_check_tests;
 mod verify_chain_tests;

@@ -49,6 +49,7 @@
       formatter = forAllSystems (_system: pkgs: pkgs.nixpkgs-fmt);
 
       nixosModules = {
+        agent-governance = import ./modules/nixos/agent-governance.nix;
         auto-update = import ./modules/nixos/agent-governance-auto-update.nix;
       };
     };

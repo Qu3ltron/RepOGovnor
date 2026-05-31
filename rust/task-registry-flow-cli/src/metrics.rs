@@ -81,6 +81,8 @@ fn count_receipts(root: &Path, report: &mut MetricsReport) -> Result<()> {
                     }
                 } else {
                     report.unchained_events += 1;
+                    report.receipt_chain_breaks += 1;
+                    report.failed_events += 1;
                 }
                 previous_hash = Some(current_hash);
             }

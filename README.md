@@ -121,6 +121,23 @@ DRY_RUN_FORMAT=json MODE=force DRY_RUN=1 \
   plugins/agent-governance/scripts/render-from-config.sh project.config.toml .
 ```
 
+## Nix Consumption
+
+The flake exposes `packages.<system>.task-registry-flow`, an app, and two NixOS
+modules:
+
+- `nixosModules.agent-governance` installs the CLI and exposes
+  `AGENT_GOVERNANCE_ASSET_ROOT`.
+- `nixosModules.auto-update` updates the configured flake input, validates it,
+  rebuilds, runs an optional health command, and restores the previous lock on
+  failure.
+
+The package installs runtime assets under
+`share/agent-governance`: `templates/`, `skills/`, `hooks/`, `modules/`,
+`MANIFEST.toml`, `REQUIREMENTS.toml`, `project.config.example.toml`, and runtime
+docs. Consumers should use this packaged asset root instead of reading from a
+mutable checkout.
+
 ## Daily workflow
 
 1. Draft a plan in `docs/plans/<name>.md`.

@@ -53,15 +53,21 @@ receipts by default.
 }
 ```
 
-Schema version 1 receipt lines are legacy data and are counted as malformed by
-current metrics.
+Schema version 1 receipt lines are invalid for current runtime verification.
+Metrics count them as malformed, `verify-chain` fails them, and `--repair`
+refuses to rewrite them.
 
 New schema version 2 receipts are hash-chained locally. The event hash is
 computed from canonical event JSON with `event_hash_sha256` omitted; the
 previous hash links to the immediately preceding non-empty event line. Metrics
-report chained events, historical unchained v2 events, malformed events, and
-chain breaks. Historical unchained v2 events remain readable but are not
-treated as chained integrity evidence.
+report chained events, unchained v2 events, malformed events, and chain breaks.
+Unchained v2 receipts are failures because they are not integrity evidence.
+`verify-chain --repair` may repair parseable schema version 2 receipts only.
+
+Receipt append is part of mutating command success. If the runtime cannot append
+and sync the receipt, the mutating command fails instead of reporting success.
+Receipt appends take an exclusive file lock and compute the next hash while that
+lock is held.
 
 ## Diagnostic Report
 
@@ -179,6 +185,11 @@ placeholder tokens, omits positive or negative gap behavior, uses wildcard task
 target paths, uses broad target objects such as `backend` or `tests`, or links
 implementation closure only to validation behavior.
 
+Completed and cancelled tasks are terminal. Reactivating an unchanged plan is
+idempotent, but activation cannot rewrite terminal task provenance, including
+title, kind, source hash, acceptance proof, behavior IDs, targets, blockers, or
+projected steps. Changed follow-up work requires a new `task_id`.
+
 ## Release Contract
 
 `REQUIREMENTS.toml` owns release-source policy:
@@ -194,9 +205,10 @@ implementation closure only to validation behavior.
 `scripts/release-audit.sh` delegate release/version validation to the Rust
 schema checks instead of owning separate file lists.
 
-Executable release artifacts emit `release-file-executable` diagnostics. A path
-listed in `release_source.executable` must be a file with executable mode; a
-present but non-executable script is a release failure, not a warning.
+Executable release artifacts emit `release-file-executable` diagnostics.
+Required release-source paths must be native files, not symlinks. A path listed
+in `release_source.executable` must be a file with executable mode; a present
+but non-executable script is a release failure, not a warning.
 
 Required release scripts under `scripts/` must also be declared in
 `release_source.executable`; omissions emit
@@ -208,6 +220,11 @@ Rust task-registry source files under `rust/task-registry-flow-cli/src/**/*.rs`
 must be declared in `release_source.required`; omissions emit
 `release-rust-source-undeclared`. This keeps new modules and tests inside the
 release manifest instead of relying on reviewers to notice new source files.
+
+Governed runtime assets under Nix files, NixOS modules, hooks, templates,
+Claude skills, and `tools/agent-governance` must also be declared in
+`release_source.required`; omissions emit
+`release-governed-source-undeclared`.
 
 Local release waivers require a reason variable:
 

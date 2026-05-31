@@ -204,6 +204,14 @@ check_executable() {
   fi
 }
 
+check_receipt_chain() {
+  if task_registry verify-chain --format json >/dev/null; then
+    ok "task registry receipt chain verified"
+  else
+    bad "task registry receipt chain verification failed"
+  fi
+}
+
 version_at_least() {
   local actual="$1" minimum="$2"
   [[ "$(printf '%s\n%s\n' "$minimum" "$actual" | sort -V | head -n1)" == "$minimum" ]]
@@ -416,6 +424,7 @@ PY
   else
     bad "task registry validate failed"
   fi
+  check_receipt_chain
   if task_registry release-check all --format json >/dev/null; then
     ok "schema-backed release check"
   else
@@ -675,6 +684,7 @@ if (cd "$TARGET_ROOT" && .codex/scripts/task-registry source-limit check >/dev/n
 else
   bad ".codex/scripts/task-registry source-limit check failed"
 fi
+check_receipt_chain
 
 echo ""
 printf 'Summary: %d ok, %d note, %d fail\n' "$pass" "$warn" "$fail"

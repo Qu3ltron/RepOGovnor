@@ -159,6 +159,36 @@ test -f "$TARGET_ROOT/docs/task-registry/events.jsonl"
 test ! -e "$TARGET_ROOT/nested/work/docs/task-registry.toml"
 test ! -e "$TARGET_ROOT/nested/work/docs/task-registry/events.jsonl"
 
+cat > "$OUT_DIR/failing-verify-hook.sh" <<'EOF'
+#!/usr/bin/env bash
+printf 'quote " slash \\ tab \t cr \r newline\nnext'
+exit 1
+EOF
+chmod +x "$OUT_DIR/failing-verify-hook.sh"
+printf 'GOVERNANCE_VERIFY_HOOK_CMD="%s"\n' "$OUT_DIR/failing-verify-hook.sh" > "$TARGET_ROOT/.codex/governance-cli.env"
+for format in codex claude cursor antigravity; do
+  (
+    cd "$TARGET_ROOT"
+    tools/agent-governance/pre-tool-use-gap-closure.sh --format "$format" \
+      > "$OUT_DIR/hook-deny-$format.json"
+  )
+  python3 - "$format" "$OUT_DIR/hook-deny-$format.json" <<'PY'
+import json
+import sys
+fmt = sys.argv[1]
+payload = json.loads(open(sys.argv[2], encoding="utf-8").read())
+if fmt in {"codex", "claude"}:
+    reason = payload["hookSpecificOutput"]["permissionDecisionReason"]
+elif fmt == "cursor":
+    reason = payload["user_message"]
+else:
+    reason = payload["reason"]
+assert 'quote " slash \\' in reason
+assert "newline" in reason
+PY
+done
+printf 'GOVERNANCE_VERIFY_HOOK_CMD=".codex/scripts/task-registry verify-mutation-hook"\n' > "$TARGET_ROOT/.codex/governance-cli.env"
+
 # Claude Code merge checks
 test -f "$TARGET_ROOT/.claude/settings.json"
 grep -q 'GOVERNANCE_HOOK_FORMAT=claude' "$TARGET_ROOT/.claude/settings.json"

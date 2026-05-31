@@ -130,7 +130,7 @@ fn metrics_rejects_schema_v1_receipts() {
 }
 
 #[test]
-fn metrics_reports_legacy_unchained_v2_receipts() {
+fn metrics_counts_unchained_receipts_as_failures() {
     let root = temp_root("metrics-v2-unchained");
     seed_repo(&root);
     fs::create_dir_all(root.join("docs/task-registry")).unwrap();
@@ -151,5 +151,6 @@ fn metrics_reports_legacy_unchained_v2_receipts() {
 
     assert_eq!(report.events, 1);
     assert_eq!(report.unchained_events, 1);
-    assert_eq!(report.receipt_chain_breaks, 0);
+    assert_eq!(report.receipt_chain_breaks, 1);
+    assert_eq!(report.failed_events, 1);
 }

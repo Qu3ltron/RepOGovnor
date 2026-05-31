@@ -128,6 +128,93 @@ fn verify_chain_reports_empty_events_file_as_ok() {
     assert!(result.contains("intact"), "{result}");
 }
 
+#[test]
+fn verify_chain_fails_unchained_v2_receipt() {
+    let root = temp_root("verify-chain-unchained");
+    seed_repo(&root);
+    let events_path = root.join(EVENTS_PATH);
+    fs::create_dir_all(events_path.parent().unwrap()).unwrap();
+    let event = EventRecord::new(
+        timestamp(),
+        CliCommand::Metrics,
+        EventOutcome::Ok,
+        1,
+        "unchained".to_string(),
+    );
+    fs::write(
+        &events_path,
+        format!("{}\n", serde_json::to_string(&event).unwrap()),
+    )
+    .unwrap();
+
+    let error = crate::verify_chain::run_verify_chain(&root, &[])
+        .expect_err("unchained v2 receipt must fail");
+
+    assert!(
+        error.summary().contains("unchained event"),
+        "{}",
+        error.summary()
+    );
+}
+
+#[test]
+fn verify_chain_repair_chains_parseable_v2_receipts() {
+    let root = temp_root("verify-chain-repair-unchained");
+    seed_repo(&root);
+    let events_path = root.join(EVENTS_PATH);
+    fs::create_dir_all(events_path.parent().unwrap()).unwrap();
+    let first = EventRecord::new(
+        timestamp(),
+        CliCommand::Metrics,
+        EventOutcome::Ok,
+        1,
+        "first unchained".to_string(),
+    );
+    let second = EventRecord::new(
+        timestamp(),
+        CliCommand::Validate,
+        EventOutcome::Ok,
+        2,
+        "second unchained".to_string(),
+    );
+    fs::write(
+        &events_path,
+        format!(
+            "{}\n{}\n",
+            serde_json::to_string(&first).unwrap(),
+            serde_json::to_string(&second).unwrap()
+        ),
+    )
+    .unwrap();
+
+    let repaired = crate::verify_chain::run_verify_chain(&root, &["--repair".to_string()]).unwrap();
+    assert!(repaired.contains("repaired"), "{repaired}");
+    let result = crate::verify_chain::run_verify_chain(&root, &[]).unwrap();
+    assert!(result.contains("intact"), "{result}");
+}
+
+#[test]
+fn verify_chain_repair_refuses_schema_v1_receipt() {
+    let root = temp_root("verify-chain-repair-v1");
+    seed_repo(&root);
+    let events_path = root.join(EVENTS_PATH);
+    fs::create_dir_all(events_path.parent().unwrap()).unwrap();
+    fs::write(
+        &events_path,
+        r#"{"schema_version":1,"timestamp":"2026-05-30T00:00:00Z","command":"validate","outcome":"ok","duration_ms":1,"summary":"legacy"}"#,
+    )
+    .unwrap();
+
+    let error = crate::verify_chain::run_verify_chain(&root, &["--repair".to_string()])
+        .expect_err("schema v1 repair must fail");
+
+    assert!(
+        error.summary().contains("schema_version 2"),
+        "{}",
+        error.summary()
+    );
+}
+
 // ---------------------------------------------------------------------------
 // Concurrent-write lock test
 // ---------------------------------------------------------------------------

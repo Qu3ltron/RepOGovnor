@@ -102,7 +102,7 @@ pub(crate) struct TaskTarget {
     pub(crate) required_change: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct TaskBlocker {
     pub(crate) blocker_id: String,
@@ -113,7 +113,7 @@ pub(crate) struct TaskBlocker {
     pub(crate) evidence_required: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct ProjectedStep {
     pub(crate) step_id: String,

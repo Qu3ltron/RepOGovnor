@@ -14,21 +14,24 @@ emit_json() {
   local mode="$1"
   local reason="${2:-}"
   local escaped_reason
-  escaped_reason="$(printf '%s' "$reason" | tr '\n' ' ' | sed 's/\\/\\\\/g; s/"/\\"/g')"
+  escaped_reason="$(python3 -c 'import json, sys; print(json.dumps(sys.argv[1]))' "$reason" 2>/dev/null)" || {
+    escaped_reason="$(printf '%s' "$reason" | tr '\r\n\t' '   ' | sed 's/\\/\\\\/g; s/"/\\"/g')"
+    escaped_reason="\"${escaped_reason}\""
+  }
   case "$format:$mode" in
     codex:deny|claude:deny)
-      printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"%s"}}\n' "$escaped_reason"
+      printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":%s}}\n' "$escaped_reason"
       ;;
     codex:allow|claude:allow)
       ;;
     cursor:deny)
-      printf '{"permission":"deny","user_message":"%s","agent_message":"%s"}\n' "$escaped_reason" "$escaped_reason"
+      printf '{"permission":"deny","user_message":%s,"agent_message":%s}\n' "$escaped_reason" "$escaped_reason"
       ;;
     cursor:allow)
       printf '{"permission":"allow"}\n'
       ;;
     *:deny)
-      printf '{"decision":"deny","reason":"%s"}\n' "$escaped_reason"
+      printf '{"decision":"deny","reason":%s}\n' "$escaped_reason"
       ;;
     *)
       printf '{"decision":"allow"}\n'

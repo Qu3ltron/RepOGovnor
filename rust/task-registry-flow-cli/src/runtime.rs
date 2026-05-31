@@ -356,18 +356,19 @@ pub(crate) fn append_event(root: &Path, mut event: EventRecord) -> Result<()> {
         fs::create_dir_all(parent)
             .map_err(|error| format!("create {}: {error}", parent.display()))?;
     }
-    event.previous_event_hash_sha256 = previous_receipt_hash(&path)?;
-    event.event_hash_sha256 = None;
-    let value = serde_json::to_value(&event)
-        .map_err(|error| format!("serialize event for hash: {error}"))?;
-    event.event_hash_sha256 = Some(receipt_value_hash(&value)?);
     let mut file = OpenOptions::new()
         .create(true)
+        .read(true)
         .append(true)
         .open(&path)
         .map_err(|error| format!("open {}: {error}", path.display()))?;
     file.try_lock_exclusive()
         .map_err(|_| "events file is locked by another process; retry in a moment".to_string())?;
+    event.previous_event_hash_sha256 = previous_receipt_hash(&path)?;
+    event.event_hash_sha256 = None;
+    let value = serde_json::to_value(&event)
+        .map_err(|error| format!("serialize event for hash: {error}"))?;
+    event.event_hash_sha256 = Some(receipt_value_hash(&value)?);
     let line =
         serde_json::to_string(&event).map_err(|error| format!("serialize event: {error}"))?;
     writeln!(file, "{line}").map_err(|error| format!("write {}: {error}", path.display()))?;

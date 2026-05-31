@@ -129,6 +129,7 @@ pub(crate) fn report(root: &Path, mode: Mode) -> Result<CheckReport> {
         checks.extend(executable_checks(root, &requirements));
         checks.extend(executable_policy_checks(root, &requirements));
         checks.extend(rust_source_policy_checks(root, &requirements));
+        checks.extend(governed_source_policy_checks(root, &requirements));
         checks.extend(stale_absent_checks(root, &requirements));
         checks.extend(schema_checks(&requirements));
     }
@@ -154,22 +155,37 @@ fn required_checks(root: &Path, requirements: &Requirements) -> Vec<Diagnostic> 
         .required
         .iter()
         .map(|path| {
-            if root.join(path).is_file() {
-                Diagnostic::pass(
+            match fs::symlink_metadata(root.join(path)) {
+                Ok(metadata) if metadata.file_type().is_symlink() => Diagnostic::fail(
                     ReleaseCheckId::ReleaseFilePresent.as_str(),
                     "release-source",
                     path,
-                    "file present",
-                )
-            } else {
-                Diagnostic::fail(
+                    "native file present",
+                    "symlink",
+                    "replace the symlink with a native release artifact or update REQUIREMENTS.toml through an approved plan",
+                ),
+                Ok(metadata) if metadata.is_file() => Diagnostic::pass(
                     ReleaseCheckId::ReleaseFilePresent.as_str(),
                     "release-source",
                     path,
-                    "file present",
+                    "native file present",
+                ),
+                Ok(_) => Diagnostic::fail(
+                    ReleaseCheckId::ReleaseFilePresent.as_str(),
+                    "release-source",
+                    path,
+                    "native file present",
+                    "not a file",
+                    "restore the required release artifact or update REQUIREMENTS.toml through an approved plan",
+                ),
+                Err(_) => Diagnostic::fail(
+                    ReleaseCheckId::ReleaseFilePresent.as_str(),
+                    "release-source",
+                    path,
+                    "native file present",
                     "missing",
                     "restore the required release artifact or update REQUIREMENTS.toml through an approved plan",
-                )
+                ),
             }
         })
         .collect()
@@ -307,6 +323,69 @@ fn rust_source_policy_checks(root: &Path, requirements: &Requirements) -> Vec<Di
             )
         })
         .collect()
+}
+
+fn governed_source_policy_checks(root: &Path, requirements: &Requirements) -> Vec<Diagnostic> {
+    let required = requirements
+        .release_source
+        .required
+        .iter()
+        .map(String::as_str)
+        .collect::<BTreeSet<_>>();
+    discover_governed_sources(root)
+        .into_iter()
+        .filter(|path| !required.contains(path.as_str()))
+        .map(|path| {
+            Diagnostic::fail(
+                ReleaseCheckId::ReleaseGovernedSourceUndeclared.as_str(),
+                "release-source",
+                path,
+                "governed source declared in release_source.required",
+                "missing release policy",
+                "add the governed source file to release_source.required or remove it through an approved plan",
+            )
+        })
+        .collect()
+}
+
+fn discover_governed_sources(root: &Path) -> Vec<String> {
+    let mut paths = BTreeSet::new();
+    for path in [
+        "flake.nix",
+        "flake.lock",
+        "package.nix",
+        ".claude/settings.json",
+    ] {
+        if root.join(path).is_file() {
+            paths.insert(path.to_string());
+        }
+    }
+    for dir in [
+        "modules/nixos",
+        ".claude/skills",
+        "templates",
+        "hooks",
+        "tools/agent-governance",
+    ] {
+        collect_governed_sources(root, &root.join(dir), &mut paths);
+    }
+    paths.into_iter().collect()
+}
+
+fn collect_governed_sources(root: &Path, dir: &Path, paths: &mut BTreeSet<String>) {
+    let Ok(entries) = fs::read_dir(dir) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+            collect_governed_sources(root, &path, paths);
+        } else if path.is_file()
+            && let Ok(relative) = path.strip_prefix(root)
+        {
+            paths.insert(relative.to_string_lossy().replace('\\', "/"));
+        }
+    }
 }
 
 fn discover_rust_sources(root: &Path) -> Vec<String> {

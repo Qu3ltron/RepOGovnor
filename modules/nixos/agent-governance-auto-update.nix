@@ -10,16 +10,51 @@ let
   # Path to the flake whose lock file contains the governance-plugin input.
   flakeDir = cfg.flakeDir;
 
+  validationCommand =
+    if cfg.validationCommand == ""
+    then "${pkgs.nix}/bin/nix flake check --no-build ${lib.escapeShellArg flakeDir}"
+    else cfg.validationCommand;
+
+  rebuildCommand =
+    if cfg.rebuildCommand == ""
+    then "${pkgs.nixos-rebuild}/bin/nixos-rebuild switch --flake ${lib.escapeShellArg flakeDir}"
+    else cfg.rebuildCommand;
+
+  healthCommand =
+    if cfg.healthCommand == ""
+    then "true"
+    else cfg.healthCommand;
+
   # One-shot service script: update the flake lock and rebuild if changed.
   updateScript = pkgs.writeShellScriptBin "agent-governance-update" ''
     set -euo pipefail
 
     LOCK_FILE="${flakeDir}/flake.lock"
+    backup_lock="$(mktemp)"
+    validation_cmd=${lib.escapeShellArg validationCommand}
+    rebuild_cmd=${lib.escapeShellArg rebuildCommand}
+    health_cmd=${lib.escapeShellArg healthCommand}
+
+    cleanup() {
+      rm -f "$backup_lock"
+    }
+    trap cleanup EXIT
+
+    rollback_lock() {
+      local reason="$1"
+      echo "agent-governance-update: rolling back lock after $reason" >&2
+      cp "$backup_lock" "$LOCK_FILE"
+      if ! bash -lc "$rebuild_cmd"; then
+        echo "agent-governance-update: rollback rebuild failed" >&2
+      fi
+    }
 
     if [[ ! -f "$LOCK_FILE" ]]; then
       echo "agent-governance-update: no flake.lock at $LOCK_FILE" >&2
       exit 1
     fi
+
+    cp "$LOCK_FILE" "$backup_lock"
 
     # Snapshot the current lock hash for the governance-plugin input.
     old_rev="$(${pkgs.jq}/bin/jq -r \
@@ -32,9 +67,12 @@ let
     fi
 
     # Update only the governance-plugin input.
-    ${pkgs.nix}/bin/nix flake lock \
+    if ! ${pkgs.nix}/bin/nix flake lock \
       --update-input "${flakeInput}" \
-      "$flakeDir" 2>&1
+      "$flakeDir" 2>&1; then
+      rollback_lock "flake lock failure"
+      exit 1
+    fi
 
     # Snapshot the new lock hash.
     new_rev="$(${pkgs.jq}/bin/jq -r \
@@ -48,8 +86,20 @@ let
 
     echo "agent-governance-update: ${flakeInput} updated $old_rev -> $new_rev"
 
-    # Rebuild the system so dependent services pick up the new plugin.
-    ${pkgs.nixos-rebuild}/bin/nixos-rebuild switch --flake "$flakeDir" 2>&1
+    if ! bash -lc "$validation_cmd"; then
+      rollback_lock "validation failure"
+      exit 1
+    fi
+
+    if ! bash -lc "$rebuild_cmd"; then
+      rollback_lock "rebuild failure"
+      exit 1
+    fi
+
+    if ! bash -lc "$health_cmd"; then
+      rollback_lock "health check failure"
+      exit 1
+    fi
   '';
 
 in
@@ -59,7 +109,7 @@ in
 
     flakeDir = lib.mkOption {
       type = lib.types.str;
-      default = "/home/hasnamuss";
+      default = "/etc/nixos";
       description = "Path to the flake whose lock file contains the governance-plugin input";
     };
 
@@ -83,14 +133,32 @@ in
 
     user = lib.mkOption {
       type = lib.types.str;
-      default = "hasnamuss";
-      description = "User to run the update service as";
+      default = "root";
+      description = "User to run the update service as; root is required for nixos-rebuild switch";
     };
 
     group = lib.mkOption {
       type = lib.types.str;
-      default = "users";
+      default = "root";
       description = "Group to run the update service as";
+    };
+
+    validationCommand = lib.mkOption {
+      type = lib.types.str;
+      default = "";
+      description = "Command run after lock update and before rebuild; default runs nix flake check --no-build";
+    };
+
+    rebuildCommand = lib.mkOption {
+      type = lib.types.str;
+      default = "";
+      description = "Root-safe rebuild command; default runs nixos-rebuild switch for flakeDir";
+    };
+
+    healthCommand = lib.mkOption {
+      type = lib.types.str;
+      default = "";
+      description = "Post-rebuild health command; default is true";
     };
   };
 

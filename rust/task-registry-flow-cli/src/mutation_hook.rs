@@ -134,7 +134,9 @@ fn collect_hook_signals(value: &Value, inspection: &mut HookInspection) {
                     && let Some(command) = child.as_str()
                 {
                     let command_paths = collect_command_paths(command);
-                    if command_paths.is_empty() && command_has_write_intent(command) {
+                    if command_has_ambiguous_write_intent(command)
+                        || command_paths.is_empty() && command_has_write_intent(command)
+                    {
                         inspection.command_write_without_path = true;
                     }
                     inspection.paths.extend(command_paths);
@@ -196,6 +198,8 @@ fn is_write_hook_tool(name: &str) -> bool {
 
 fn collect_command_paths(command: &str) -> Vec<String> {
     let mut paths = collect_patch_paths(command);
+    paths.extend(inspect_compact_redirections(command).paths);
+    paths.extend(collect_inline_write_paths(command));
     let tokens = shell_like_tokens(command);
     for (index, token) in tokens.iter().enumerate() {
         if matches!(
@@ -250,7 +254,14 @@ fn command_has_write_intent(command: &str) -> bool {
             && tokens
                 .iter()
                 .any(|token| token.starts_with("-i") || token.starts_with("-pi"))
+        || inspect_compact_redirections(command).has_file_write
         || command.contains("*** Begin Patch")
+        || inline_command_has_write_intent(command)
+}
+
+fn command_has_ambiguous_write_intent(command: &str) -> bool {
+    inspect_compact_redirections(command).ambiguous_write
+        || inspect_inline_open_writes(command).ambiguous_write
 }
 
 fn push_candidate_path(paths: &mut Vec<String>, raw: &str) {
@@ -283,6 +294,164 @@ fn shell_like_tokens(command: &str) -> Vec<String> {
         })
         .filter(|token| !token.is_empty())
         .collect()
+}
+
+fn inline_command_has_write_intent(command: &str) -> bool {
+    let lowered = command.to_ascii_lowercase();
+    [
+        ".write_text(",
+        ".write_bytes(",
+        ".write_all(",
+        ".writestr(",
+        "writefilesync(",
+        "writefile(",
+        "appendfilesync(",
+        "appendfile(",
+        "fs.write",
+        "file.write(",
+        "file.openwrite(",
+        "createwriter(",
+        "createtext(",
+        "truncate(",
+        "removefile(",
+        "deletefile(",
+    ]
+    .iter()
+    .any(|needle| lowered.contains(needle))
+        || inline_open_has_write_mode(&lowered)
+}
+
+fn inline_open_has_write_mode(command: &str) -> bool {
+    inspect_inline_open_writes(command).has_write
+}
+
+fn collect_inline_write_paths(command: &str) -> Vec<String> {
+    let mut paths = Vec::new();
+    for marker in ["Path(", "pathlib.Path("] {
+        collect_quoted_arg_after(command, marker, &mut paths);
+    }
+    paths.extend(inspect_inline_open_writes(command).paths);
+    paths.sort();
+    paths.dedup();
+    paths
+}
+
+#[derive(Default)]
+struct CompactRedirectionInspection {
+    paths: Vec<String>,
+    has_file_write: bool,
+    ambiguous_write: bool,
+}
+
+fn inspect_compact_redirections(command: &str) -> CompactRedirectionInspection {
+    let mut inspection = CompactRedirectionInspection::default();
+    for token in shell_like_tokens(command) {
+        let Some(target) = compact_redirection_target(&token) else {
+            continue;
+        };
+        if target.is_empty() || target.starts_with('&') {
+            continue;
+        }
+        inspection.has_file_write = true;
+        if target.starts_with('$') || target.contains('$') {
+            inspection.ambiguous_write = true;
+        } else {
+            push_candidate_path(&mut inspection.paths, target);
+        }
+    }
+    inspection.paths.sort();
+    inspection.paths.dedup();
+    inspection
+}
+
+fn compact_redirection_target(token: &str) -> Option<&str> {
+    for prefix in ["1>>", "2>>", ">>", "1>", "2>", ">"] {
+        if let Some(target) = token.strip_prefix(prefix) {
+            return Some(target);
+        }
+    }
+    None
+}
+
+#[derive(Default)]
+struct InlineOpenWriteInspection {
+    paths: Vec<String>,
+    has_write: bool,
+    ambiguous_write: bool,
+}
+
+fn inspect_inline_open_writes(command: &str) -> InlineOpenWriteInspection {
+    let lowered = command.to_ascii_lowercase();
+    let mut inspection = InlineOpenWriteInspection::default();
+    let mut offset = 0usize;
+    while let Some(index) = lowered[offset..].find("open(") {
+        let open_index = offset + index;
+        let args_start = open_index + "open(".len();
+        let after_lowered = &lowered[args_start..];
+        let after_original = &command[args_start..];
+        let Some(close_index) = after_lowered.find(')') else {
+            inspection.has_write = true;
+            inspection.ambiguous_write = true;
+            break;
+        };
+        let args_lowered = &after_lowered[..close_index];
+        let args_original = &after_original[..close_index];
+        if inline_open_args_have_write_mode(args_lowered) {
+            inspection.has_write = true;
+            if let Some(path) = first_quoted_arg(args_original) {
+                let before = inspection.paths.len();
+                push_candidate_path(&mut inspection.paths, path);
+                if inspection.paths.len() == before {
+                    inspection.ambiguous_write = true;
+                }
+            } else {
+                inspection.ambiguous_write = true;
+            }
+        }
+        offset = args_start + close_index + 1;
+    }
+    inspection.paths.sort();
+    inspection.paths.dedup();
+    inspection
+}
+
+fn inline_open_args_have_write_mode(args: &str) -> bool {
+    let Some(comma_index) = args.find(',') else {
+        return false;
+    };
+    let mode_args = &args[comma_index + 1..];
+    ["'w", "\"w", "'a", "\"a", "'x", "\"x", "'r+", "\"r+"]
+        .iter()
+        .any(|mode| mode_args.contains(mode))
+}
+
+fn first_quoted_arg(args: &str) -> Option<&str> {
+    let trimmed = args.trim_start();
+    let quote = trimmed
+        .chars()
+        .next()
+        .filter(|ch| *ch == '\'' || *ch == '"')?;
+    let body = &trimmed[quote.len_utf8()..];
+    body.find(quote).map(|end| &body[..end])
+}
+
+fn collect_quoted_arg_after(command: &str, marker: &str, paths: &mut Vec<String>) {
+    let mut rest = command;
+    while let Some(index) = rest.find(marker) {
+        let after_marker = &rest[index + marker.len()..];
+        let trimmed = after_marker.trim_start();
+        if let Some(quote) = trimmed
+            .chars()
+            .next()
+            .filter(|ch| *ch == '\'' || *ch == '"')
+        {
+            let body = &trimmed[quote.len_utf8()..];
+            if let Some(end) = body.find(quote) {
+                push_candidate_path(paths, &body[..end]);
+            }
+        }
+        rest = &after_marker[marker.len().min(after_marker.len())..];
+    }
 }
 
 fn normalize_hook_path(root: &Path, raw_path: &str) -> Result<String> {

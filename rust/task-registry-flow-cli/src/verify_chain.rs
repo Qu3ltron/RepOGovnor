@@ -117,6 +117,21 @@ fn check_chain(root: &Path) -> Result<CheckReport> {
                 continue;
             }
         };
+        if value.get("schema_version").and_then(|value| value.as_i64()) != Some(2) {
+            diagnostics.push(Diagnostic::fail(
+                "receipt-chain-schema",
+                "receipt-chain",
+                events_path.display().to_string(),
+                format!("line {line_num}: schema_version 2 receipt"),
+                format!(
+                    "schema_version {:?}",
+                    value.get("schema_version").cloned().unwrap_or(Value::Null)
+                ),
+                "migrate legacy receipts to schema version 2 before verification",
+            ));
+            expected_previous_hash = None;
+            continue;
+        }
 
         let declared_event_hash = value
             .get("event_hash_sha256")
@@ -128,11 +143,13 @@ fn check_chain(root: &Path) -> Result<CheckReport> {
             .map(|s| s.to_string());
 
         if declared_event_hash.is_none() {
-            diagnostics.push(Diagnostic::warn(
+            diagnostics.push(Diagnostic::fail(
                 "receipt-chain-unchained",
                 "receipt-chain",
                 events_path.display().to_string(),
+                "chained event_hash_sha256",
                 format!("line {line_num}: unchained event"),
+                "run task-registry-flow verify-chain --repair",
             ));
             if let Ok(hash) = receipt_value_hash(&value) {
                 expected_previous_hash = Some(hash);
@@ -202,6 +219,11 @@ fn repair_chain(root: &Path, _broken: &CheckReport) -> Result<CheckReport> {
 
         let mut value: Value =
             serde_json::from_str(line).map_err(|e| format!("parse line {line_num}: {e}"))?;
+        if value.get("schema_version").and_then(|value| value.as_i64()) != Some(2) {
+            return Err(format!(
+                "cannot repair line {line_num}: expected schema_version 2 receipt"
+            ));
+        }
 
         value["previous_event_hash_sha256"] = match &expected_previous_hash {
             Some(prev) => Value::String(prev.clone()),

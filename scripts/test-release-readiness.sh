@@ -406,6 +406,42 @@ PY
   grep -q 'usage: release-audit.sh' /tmp/release-audit-unknown-arg.out
 }
 
+check_nix_package() {
+  test -f "$ROOT/flake.nix"
+  test -f "$ROOT/package.nix"
+  test -f "$ROOT/modules/nixos/agent-governance.nix"
+  test -f "$ROOT/modules/nixos/agent-governance-auto-update.nix"
+  grep -q 'agent-governance = import ./modules/nixos/agent-governance.nix' "$ROOT/flake.nix"
+  grep -q 'auto-update = import ./modules/nixos/agent-governance-auto-update.nix' "$ROOT/flake.nix"
+  grep -q 'backup_lock' "$ROOT/modules/nixos/agent-governance-auto-update.nix"
+  grep -q 'rollback_lock' "$ROOT/modules/nixos/agent-governance-auto-update.nix"
+  grep -q 'default = "root"' "$ROOT/modules/nixos/agent-governance-auto-update.nix"
+  grep -q 'ConditionPathExists' "$ROOT/modules/nixos/agent-governance-auto-update.nix"
+  grep -q 'validationCommand' "$ROOT/modules/nixos/agent-governance-auto-update.nix"
+  grep -q 'healthCommand' "$ROOT/modules/nixos/agent-governance-auto-update.nix"
+
+  local out
+  out="$(cd "$ROOT" && nix build .#task-registry-flow --no-link --print-out-paths)"
+  test -x "$out/bin/task-registry-flow"
+  test -x "$out/bin/pre-tool-use-gap-closure.sh"
+  test -x "$out/bin/agent-governance-status"
+  test -f "$out/share/agent-governance/templates/AGENTS.md.template"
+  test -f "$out/share/agent-governance/templates/tools/agent-governance/pre-tool-use-gap-closure.sh.template"
+  test -f "$out/share/agent-governance/skills/task-registry-flow/SKILL.md"
+  test -f "$out/share/agent-governance/skills/gap-closure-contract/SKILL.md"
+  test -f "$out/share/agent-governance/hooks/hooks.json"
+  test -f "$out/share/agent-governance/modules/nixos/agent-governance.nix"
+  test -f "$out/share/agent-governance/MANIFEST.toml"
+  test -f "$out/share/agent-governance/REQUIREMENTS.toml"
+  test -f "$out/share/agent-governance/project.config.example.toml"
+  test -f "$out/share/agent-governance/docs/runtime-schemas.md"
+  ! grep -R '/home/hasnamuss' \
+    "$out/bin" \
+    "$out/share/agent-governance/templates" \
+    "$out/share/agent-governance/hooks" \
+    "$out/share/agent-governance/modules"
+}
+
 check_waivers() {
   if AGENT_GOVERNANCE_ALLOW_DIRTY_RELEASE_CHECK=1 \
     "$ROOT/scripts/status.sh" --release-source >/tmp/release-waiver-missing-reason.out 2>&1; then
@@ -450,6 +486,7 @@ case "$MODE" in
     check_installer_schema
     check_json_failure_reports
     check_status
+    check_nix_package
     check_waivers
     check_audit
     ;;
@@ -459,9 +496,10 @@ case "$MODE" in
   installer) check_installer_schema ;;
   json-failures) check_json_failure_reports ;;
   status) check_status ;;
+  nix-package) check_nix_package ;;
   waivers) check_waivers ;;
   audit) check_audit ;;
-  *) echo "usage: test-release-readiness.sh [all|version|artifacts|executable|installer|json-failures|status|waivers|audit]" >&2; exit 2 ;;
+  *) echo "usage: test-release-readiness.sh [all|version|artifacts|executable|installer|json-failures|status|nix-package|waivers|audit]" >&2; exit 2 ;;
 esac
 
 echo "release readiness tests ok: $MODE"
