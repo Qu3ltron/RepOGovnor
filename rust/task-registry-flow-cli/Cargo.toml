@@ -3,7 +3,7 @@ name = "task-registry-flow-cli"
 version = "2.0.0"
 edition = "2024"
 publish = false
-license-file = "../../LICENSE"
+license = "MIT"
 
 [[bin]]
 name = "task-registry-flow"
@@ -11,6 +11,7 @@ path = "src/main.rs"
 
 [dependencies]
 chrono = { version = "0.4.42", default-features = false, features = ["clock"] }
+jsonschema = { version = "0.46.5", default-features = false }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
 sha2 = "0.10.9"

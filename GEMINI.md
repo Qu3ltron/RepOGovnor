@@ -1,0 +1,57 @@
+# Antigravity — Governance-plugin Agent Instructions
+
+Antigravity (`agy`) entry point. Shared repo rules: [AGENTS.md](AGENTS.md) (Codex uses that file as its primary entry).
+
+## What Antigravity reads
+
+| Asset | Path | Role |
+|-------|------|------|
+| Context | [GEMINI.md](GEMINI.md) | Always-loaded instructions (this file) |
+| Context | [AGENTS.md](AGENTS.md) | Shared governance |
+| Workspace hooks | [.agents/hooks.json](.agents/hooks.json) | PreToolUse hard gate on implementation writes (when executor supports it) |
+| Mutation gate | `tools/agent-governance/pre-tool-use-gap-closure.sh` | Calls plugin-owned `verify-mutation-hook` command |
+| Workspace skills | [.agents/skills/](.agents/skills/) | AGY markdown skills plus Codex-compatible skill folders |
+| User CLI settings | `~/.gemini/antigravity-cli/settings.json` | Model, permissions, trusted workspaces |
+
+Antigravity CLI does **not** read `.codex/config.toml`, `.codex/hooks.json`, `.codex/agent-governance.toml`, or repo-local `.gemini/settings.json`. Do not create workspace `.gemini/settings.json`.
+
+## Codebase policy
+
+Read [AGENTS.md](AGENTS.md) before feature work.
+
+- **Repo boundary.** Work only in `/home/hasnamuss/reclaimed/work/Governance-plugin`. Scratch: `/home/hasnamuss/reclaimed/work/tmp/governance-plugin-gap-closure/<short-slug>/`.
+- **Architecture and product rules** live in project docs — not in this file.
+
+## Mandatory skills
+
+Canonical skill content ships from `plugins/agent-governance/skills/`. Antigravity discovers markdown projections in `.agents/skills/*.md`; Codex discovers folder projections in `.agents/skills/<skill>/`; Cursor discovers `.cursor/skills/<skill>/`.
+
+| Skill | Antigravity path | When |
+|-------|------------------|------|
+| `gap-closure-contract` | [.agents/skills/gap-closure-contract.md](.agents/skills/gap-closure-contract.md) | After gap analysis + user approval, before plan edits or implementation |
+| `task-registry-flow` | [.agents/skills/task-registry-flow.md](.agents/skills/task-registry-flow.md) | Plan activation, status, deferrals, handoff |
+
+## Plan activation (before code edits)
+
+After user-approved gap closure:
+
+1. Write or refresh `docs/plans/<short-slug>.md` with Approved Scope, Phased Required Change Checklist, Per-Gap Success Criteria, Validation Plan, Walkthrough Evidence, and one fenced `## Task Manifest` TOML block.
+2. Manifest: `schema_version = 2`, `[[behaviors]]` with `gap_id` and `polarity`, typed `[[behaviors.verifiers]]`, and `[[tasks]]` rows linked through `behavior_ids`.
+3. `.codex/scripts/task-registry activate docs/plans/<short-slug>.md`
+4. Confirm tasks in `docs/task-registry.toml` with matching `source_plan_hash_sha256`.
+5. Only then edit implementation files listed in active task targets.
+
+**Hard gate:** `.agents/hooks.json` calls `.codex/scripts/task-registry verify-mutation-hook` and blocks unbound implementation writes outside governance files or active/planned task targets.
+
+Handoff: `.codex/scripts/task-registry report <plan_id>`; archive completed when supported.
+
+## Governance reminders
+
+- **Spec authority:** `README.md` → `docs/runtime-schemas.md` → `docs/releases/v2.md` → `VISION.md` → `ROADMAP.md`. On conflict, ask.
+- **Registry:** use only `.codex/scripts/task-registry` opcodes; typed validation via `validate`; new activations require Task Manifest schema v2, exact targets, positive and negative gap behavior, and no placeholders.
+- **Deferrals:** `TASK_DEFER` via registry CLI `defer`; requires `deferral_governance_basis` + `reactivation_condition`.
+- **Source file limit:** 1600 lines is a hard design-time budget for source/governance files. Run `.codex/scripts/task-registry source-limit check`; use `.codex/scripts/task-registry source-limit plan --path <file>` before splitting existing violations.
+
+## Verify in Antigravity
+
+Run `agy --version` and require 1.0.3 or newer. Run `agy` in this repo, then `/skills` — expect `gap-closure-contract` and `task-registry-flow`. Hooks load from `.agents/hooks.json`; plugin package validation must show hooks processed with `agy plugin validate plugins/agent-governance`.

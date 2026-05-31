@@ -24,12 +24,12 @@ Read before feature work:
 
 After user-approved gap closure:
 
-1. Load `$gap-closure-contract` and write `docs/plans/<slug>.md` with **behavioral** per-gap criteria and typed `[[behaviors]]` in the Task Manifest (`given` / `when` / `then` / `confirmation` with runnable commands).
+1. Load `$gap-closure-contract` and write `docs/plans/<slug>.md` with the full phased structure: Approved Scope, Phased Required Change Checklist, Per-Gap Success Criteria, Validation Plan, Walkthrough Evidence, and `schema_version = 2` Task Manifest.
 2. `$task-registry-flow` → `{{TASK_REGISTRY_CLI}} activate docs/plans/<file>.md` before code edits.
-3. Mark tasks `completed` only after linked behavior confirmations pass.
+3. Mark tasks `completed` only after linked typed behavior verifiers pass.
 4. Final handoff: `{{TASK_REGISTRY_CLI}} report <plan_id>` and `{{TASK_REGISTRY_CLI}} metrics`; archive completed history with `{{TASK_REGISTRY_CLI}} archive-completed`.
 
-Registry work uses the plugin-owned Rust CLI at `{{TASK_REGISTRY_CLI}}`. Typed TOML validation, behavior verification, mutation checks, and local metrics are canonical there. `TASK_DEFER` requires `deferral_governance_basis` and `reactivation_condition`.
+Registry work uses the plugin-owned Rust CLI at `{{TASK_REGISTRY_CLI}}`. Typed TOML validation, behavior verification, mutation checks, and local metrics are canonical there. New activations require Task Manifest schema v2, behavior `gap_id`, behavior `polarity`, typed verifiers, and positive plus negative behavior coverage for each implementation gap. `TASK_DEFER` requires `deferral_governance_basis` and `reactivation_condition`.
 
 {{COMMIT_GOVERNANCE_SECTION}}
 

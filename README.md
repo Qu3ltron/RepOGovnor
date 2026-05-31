@@ -1,84 +1,185 @@
-# Agent Governance Plugin
+# Agent Governance
 
-Portable **Codex + Cursor + Antigravity CLI** workflow: gap-closure contract, plugin-owned task-registry CLI, native hooks, mutation gates, and local efficacy receipts.
+Agent Governance helps teams use coding agents without letting work drift into
+unreviewed edits, stale plans, or unverifiable "trust me" changes.
 
-Hard source/governance file limit: **1600 lines**. The plugin checks this during validation and provides deterministic split guidance.
+It installs a local governance layer for Codex, Cursor, and Antigravity:
 
-Repository: https://github.com/Qu3ltron/Governance-plugin
+- every meaningful change starts from an approved plan
+- plan tasks are activated into a local registry
+- mutation hooks block unplanned implementation writes
+- installs and upgrades are checked by repeatable scripts
+- local receipts show what was validated, without network telemetry
 
-Release: [`VERSION`](VERSION), [`CHANGELOG.md`](CHANGELOG.md), [`LICENSE`](LICENSE), and [`docs/releases/v2.md`](docs/releases/v2.md).
+The goal is simple: keep agent-assisted development fast while making the work
+auditable enough for production repositories.
 
-## Add to a project
+## Who this is for
 
-Vendoring (recommended path in consumer repos):
+Use this plugin if you are:
+
+- a maintainer who lets agents edit a real repository
+- a team lead who needs plan-first agent workflows
+- a project owner who wants local evidence before merging agent changes
+- a regulated or high-risk project that needs explicit task provenance
+- a multi-tool user moving between Codex, Cursor, and Antigravity
+
+This is probably not the right tool if you want:
+
+- a hosted dashboard
+- automatic product management
+- a zero-setup chat-only assistant
+- compatibility shims for old governance layouts
+- agents to freely edit any file without a declared task
+
+## What you get today
+
+Current release: `2.0.0`
+
+License: MIT. The plugin is free to use, copy, modify, and distribute under
+the terms in [LICENSE](LICENSE).
+
+- A Rust task-registry CLI installed into consumer repos as
+  `.codex/scripts/task-registry`.
+- Plan activation, task status, deferral, reports, metrics, behavior checks, and
+  source-limit checks.
+- Codex, Cursor, and Antigravity hook templates.
+- Native skills for plan closure and task-registry flow.
+- Local mutation gates that allow governance repair paths but block unbound
+  implementation writes.
+- Schema-backed diagnostics for release checks, source limits, behavior
+  verifiers, installer dry-runs, and mutation denials.
+- Strict v2 plan activation: phased checklists, exact file targets, behavior
+  `gap_id`, behavior `polarity`, typed verifiers, and required positive plus
+  negative behavior coverage before implementation work.
+- Install modes for real upgrades: `--dry-run`, `--merge`, and `--force`.
+- Release checks for version consistency, dependency audit, source limits,
+  plugin layout, and tracked release artifacts.
+
+Important limits:
+
+- It is local-first. There is no hosted service or remote sync.
+- Receipts are local files; there is no built-in analytics pipeline.
+- The workflow is intentionally strict. Legacy hook paths and `--overlay` are
+  removed in v2.
+- It validates process and provenance; it does not prove product correctness by
+  itself.
+
+See [VISION.md](VISION.md) for the product direction and
+[ROADMAP.md](ROADMAP.md) for planned improvements.
+
+## Install
+
+Vendoring or submodule installation is recommended.
 
 ```bash
-# from your project root
 mkdir -p plugins
 git submodule add https://github.com/Qu3ltron/Governance-plugin.git plugins/agent-governance
-# or vendor a copy under plugins/agent-governance without a nested .git directory
 
 cp plugins/agent-governance/project.config.example.toml project.config.toml
-# edit project.config.toml
+# edit project.config.toml for your repo
 
-plugins/agent-governance/scripts/install-to-workspace.sh --config project.config.toml --merge
+plugins/agent-governance/scripts/install-to-workspace.sh \
+  --config project.config.toml \
+  --merge
+```
 
+Then validate the install:
+
+```bash
 .codex/scripts/task-registry validate
 .codex/scripts/task-registry source-limit check
 .codex/scripts/task-registry metrics
 plugins/agent-governance/scripts/status.sh --strict
 ```
 
-Antigravity CLI targets `agy` 1.0.3 or newer. It discovers workspace hooks and skills from `.agents/`, and plugin packages must pass `agy plugin validate`.
+Fresh installs or intentional rebaselines can use `--force`. Preview the full
+write set first:
 
-## Layout (this repo)
-
-```
-.
-├── plugin.json
-├── .codex-plugin/plugin.json
-├── REQUIREMENTS.toml      # CI tracked-artifact requirements (authoritative)
-├── hooks/
-├── project.config.example.toml
-├── skills/
-├── rust/task-registry-flow-cli/
-├── templates/
-├── scripts/
-│   ├── install-to-workspace.sh
-│   ├── render-from-config.sh
-│   ├── status.sh
-│   ├── release-audit.sh
-│   ├── release-version-check.sh
-│   └── pre-tool-use-gap-closure.sh
-├── rules/
-└── examples/
-    └── spectrum-arcana-overlay.md
+```bash
+plugins/agent-governance/scripts/install-to-workspace.sh \
+  --config project.config.toml \
+  --dry-run
 ```
 
-## CI tracked artifacts (required)
+For machine-readable installer output:
 
-After install, commit every path in [`REQUIREMENTS.toml`](REQUIREMENTS.toml) → `[tracked_for_ci].required`:
+```bash
+DRY_RUN_FORMAT=json MODE=force DRY_RUN=1 \
+  plugins/agent-governance/scripts/render-from-config.sh project.config.toml .
+```
 
-- `plugins/agent-governance` (repo-local submodule or vendored checkout)
-- `.codex/config.toml`, `.codex/hooks.json`, `.codex/agent-governance.toml`
-- `.codex/governance-cli.env`, `.codex/scripts/task-registry`
-- `.codex/templates/task-registry-plan-template.md`
-- `.github/workflows/agent-governance.yml`
-- `.agents/plugins/agent-governance` (relative symlink → `../../plugins/agent-governance`)
-- `.agents/hooks.json`, `.agents/skills/*`, and `.agents/skills/*.md`
-- `.cursor/rules/agent-governance.mdc`
-- `.cursor/hooks.json` and `.cursor/hooks/gap-closure-gate.sh`
-- `AGENTS.md` and `GEMINI.md` (with `<!-- agent-governance:begin/end -->` overlay markers)
-- `.cursor/skills/gap-closure-contract/PROJECT.md`
-- `.cursor/skills/task-registry-flow/PROJECT.md`
-- `docs/task-registry.toml`
-- `docs/task-registry/events.jsonl`
+## Daily workflow
 
-Fresh CI clones only include tracked files. **`scripts/status.sh --strict`** fails if any path is missing or untracked.
+1. Draft a plan in `docs/plans/<name>.md`.
+2. Use the installed plan template. New activations must include Approved
+   Scope, Phased Required Change Checklist, Per-Gap Success Criteria,
+   Validation Plan, Walkthrough Evidence, and a `Task Manifest`.
+3. In the manifest, use `schema_version = 2`; every behavior needs `gap_id`,
+   `polarity`, and typed `[[behaviors.verifiers]]`. Each implementation gap
+   needs positive and negative behavior coverage.
+4. Activate it:
 
-Install prints a `git add` checklist automatically.
+```bash
+.codex/scripts/task-registry activate docs/plans/<name>.md
+```
 
-Plugin-source release readiness is separate from consumer install posture:
+5. Work only inside the activated task targets.
+6. Run focused validation from the plan.
+7. Mark tasks complete only after behavior checks pass:
+
+```bash
+.codex/scripts/task-registry status TASK-YYYY-MM-DD-example-001 completed
+.codex/scripts/task-registry report PLAN-YYYY-MM-DD-example
+```
+
+The hook layer is designed to keep this honest. It permits plan bootstrap work,
+such as writing or activating plans, and denies implementation or runtime
+governance edits that are not tied to an active or planned task target.
+
+Runtime failures are schema-backed. A failed check should name the check id,
+path, expected state, actual state, and remediation. See
+[docs/runtime-schemas.md](docs/runtime-schemas.md).
+
+## Install modes
+
+`--dry-run` prints what would change and does not write files.
+
+`--merge` is for existing repositories. It refreshes managed governance files,
+preserves valid project registry state, and removes stale v1/v0.x paths that
+v2 no longer supports.
+
+`--force` is for a fresh install or intentional rebaseline. It applies the
+complete managed projection.
+
+`--overlay` is removed. Use `--merge`.
+
+## Requirements
+
+- Git repository
+- Bash
+- Python 3.11 or newer
+- Rust toolchain for the registry CLI
+- `agy` 1.0.3 or newer if you use Antigravity
+
+For release verification of this plugin itself:
+
+- `cargo-audit`
+- `cargo-deny`
+
+## Files users should know
+
+- `project.config.example.toml` - starting config for a consumer repo
+- `REQUIREMENTS.toml` - files a consumer repo must commit after install
+- `docs/releases/v2.md` - v2 release and migration notes
+- `docs/runtime-schemas.md` - structured runtime report and verifier schemas
+- `VISION.md` - why this exists and where it is going
+- `ROADMAP.md` - planned improvements and known gaps
+- `CHANGELOG.md` - release history
+
+## Current release checks
+
+For this plugin source repo:
 
 ```bash
 scripts/status.sh --release-source
@@ -86,61 +187,20 @@ scripts/release-version-check.sh
 scripts/release-audit.sh
 ```
 
-`--release-source` checks package metadata, v2 release artifacts, plugin hooks/skills, registry state, and source package hygiene. `--strict` remains the consumer-workspace check after install.
-
-## Install modes
+For a consumer repo after install:
 
 ```bash
-# Project full install/rebaseline projection; no files changed
-./scripts/install-to-workspace.sh --config project.config.toml --dry-run
-
-# Existing repo; merge AGENTS/GEMINI markers and refresh managed plugin files
-./scripts/install-to-workspace.sh --config project.config.toml --merge
-
-# New repo or intentional rebaseline; applies the dry-run projection
-./scripts/install-to-workspace.sh --config project.config.toml --force
-
-# Posture check
-./scripts/status.sh --strict
-```
-
-## Consumer registry integration
-
-The plugin owns the task-registry executor. Consumer repos use:
-
-```bash
+plugins/agent-governance/scripts/status.sh --strict
 .codex/scripts/task-registry validate
-.codex/scripts/task-registry activate docs/plans/example.md
-.codex/scripts/task-registry status TASK-YYYY-MM-DD-example-001 completed
-.codex/scripts/task-registry defer TASK-YYYY-MM-DD-example-002 "governed basis" "reactivation evidence"
-.codex/scripts/task-registry report PLAN-YYYY-MM-DD-example
-.codex/scripts/task-registry metrics
 .codex/scripts/task-registry source-limit check
-.codex/scripts/task-registry source-limit plan --path src/large.rs
 ```
 
-Project-native `task_registry` binaries are noncanonical. Existing valid `docs/task-registry.toml` files are preserved, but install hard-cuts command wiring to `.codex/scripts/task-registry`. Incompatible registries fail install instead of being overwritten.
+## Privacy
 
-`--merge` is a hard cutover for legacy governance files: stale `.codex/settings.toml`, root `hooks.json`, `.gemini/settings.json`, and old Antigravity hook paths are removed so `status.sh --strict` matches the installed state. The rendered registry wrapper changes to the repo root before running, so it works from subdirectories without creating nested registry artifacts.
+Agent Governance does not emit network telemetry. Task events and validation
+receipts are local repo files. If a project publishes those files, that is a
+project decision, not plugin behavior.
 
-Mutation hook default: `.codex/scripts/task-registry verify-mutation-hook --format codex|antigravity|cursor`.
+## License
 
-Local efficacy measurement lives in `docs/task-registry/events.jsonl`; no network telemetry is emitted.
-
-The source limit covers source, scripts, configs, docs, templates, and governance files. Generated locks, vendored dependencies, build outputs, task-registry receipts, and archive shards are excluded.
-
-## Examples
-
-- [`examples/spectrum-arcana-overlay.md`](examples/spectrum-arcana-overlay.md) — Tarot-specific overlay
-- [`examples/spectrum-arcana.project.config.toml`](examples/spectrum-arcana.project.config.toml) — reference config
-
-## What is portable vs project-specific
-
-| Portable (this plugin) | Project-specific (your repo) |
-|-----------------------|------------------------------|
-| Gap closure contract structure | Constitution, vision, product rules |
-| Rust registry CLI, task manifest schema | Project-specific behavior confirmation commands |
-| Codex config, skills, and hooks | CI verify commands |
-| Antigravity CLI skills + hooks | Architecture, implementation path globs |
-| Cursor rules, skills, and hooks | `.cursor/hooks.json` + adapter script |
-| 1600-line source/governance limit + split planner | Actual module boundaries chosen during implementation |
+MIT. See [LICENSE](LICENSE).

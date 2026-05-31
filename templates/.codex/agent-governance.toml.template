@@ -43,7 +43,7 @@ scratch_root = "{{SCRATCH_ROOT}}"
 approval_triggers = ["Implement the plan", "approved", "proceed", "continue", "close these gaps", "use this to close", "reviewer output followed by a fix instruction"]
 required_sections = ["Approved Scope", "Required Change Checklist", "Per-Gap Success Criteria", "Validation Plan", "Walkthrough Evidence", "Task Manifest"]
 behavioral_contract_required = true
-design_rule = "After gap analysis plus user approval, load gap-closure-contract and create or refresh docs/plans/<short-slug>.md before code edits. Include [[behaviors]] with runnable confirmations, per-gap Behavioral criteria, and PLAN_ACTIVATE through the registry CLI before implementation."
+design_rule = "After gap analysis plus user approval, load gap-closure-contract and create or refresh docs/plans/<short-slug>.md before code edits. Required sections: Approved Scope, Phased Required Change Checklist, Per-Gap Success Criteria, Validation Plan, Walkthrough Evidence, Task Manifest. Use Task Manifest schema_version = 2, behavior gap_id, behavior polarity, typed [[behaviors.verifiers]], positive and negative behavior coverage for each implementation gap, and PLAN_ACTIVATE through the registry CLI before implementation."
 
 [task_registry]
 registry_path = "{{REGISTRY_PATH}}"
@@ -71,6 +71,10 @@ deferred_governance_basis_required = true
 deferred_reactivation_condition_required = true
 deferred_status_requires_defer_opcode = true
 status_vocabulary = ["planned", "active", "blocked", "deferred", "completed", "cancelled"]
+required_manifest_fields = ["schema_version", "plan_id", "behaviors", "tasks"]
+required_behavior_fields = ["behavior_id", "title", "given", "when", "then", "confirmation", "verifiers"]
+required_behavior_metadata = ["gap_id", "polarity"]
+behavior_polarity = ["positive", "negative", "validation"]
 required_task_fields = ["task_id", "plan_id", "status", "title", "kind", "reason", "acceptance_proof", "source_plan_path", "source_plan_hash_sha256", "behavior_ids", "targets.file", "targets.object", "targets.required_change"]
 required_deferred_task_fields = ["deferral_governance_basis", "reactivation_condition"]
 hash_algorithm = "sha256 of normalized plan text: CRLF/CR converted to LF, trailing whitespace stripped from each line, exactly one final newline"

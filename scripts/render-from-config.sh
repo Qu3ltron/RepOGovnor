@@ -22,6 +22,7 @@ export PLUGIN_ROOT CONFIG TARGET_ROOT MODE DRY_RUN
 
 python3 <<'PY'
 import os
+import json
 import re
 import shutil
 import subprocess
@@ -40,8 +41,67 @@ config_path = Path(os.environ["CONFIG"])
 target_root = Path(os.environ["TARGET_ROOT"]).resolve()
 mode = os.environ["MODE"]
 dry_run = os.environ.get("DRY_RUN", "0") == "1"
+dry_run_format = os.environ.get("DRY_RUN_FORMAT", "text")
 force = mode == "force"
 cfg = tomllib.loads(config_path.read_text())
+manifest = tomllib.loads((plugin_root / "MANIFEST.toml").read_text())
+
+allowed_config = {
+    "project": {
+        "repo_name",
+        "repo_root",
+        "scratch_root",
+        "constitution_path",
+        "vision_path",
+        "agents_path",
+        "design_docs_path",
+    },
+    "task_registry": {"cli_command", "registry_id", "registry_path", "plans_path", "archive_dir"},
+    "mutation_gate": {"verify_hook_command", "hook_script_path"},
+    "validation": {"focused", "full"},
+    "environments": {
+        "render_codex",
+        "render_antigravity",
+        "render_cursor",
+        "install_global_antigravity_plugin",
+        "minimum_agy_version",
+    },
+    "commit_governance": {
+        "verify_command",
+        "plan_id_footer_required",
+        "implementation_path_globs",
+    },
+    "authority": {"order"},
+}
+unknown_sections = sorted(set(cfg) - set(allowed_config))
+if unknown_sections:
+    raise SystemExit(f"unknown project.config.toml section(s): {', '.join(unknown_sections)}")
+for section, allowed_keys in allowed_config.items():
+    unknown_keys = sorted(set(cfg.get(section, {})) - allowed_keys)
+    if unknown_keys:
+        raise SystemExit(
+            f"unknown project.config.toml key(s) in [{section}]: {', '.join(unknown_keys)}"
+        )
+
+install_policy = manifest.get("install_policy", {})
+allowed_actions = set(install_policy.get("action_vocabulary", []))
+dry_run_prefix = install_policy.get("dry_run_prefix", "would-")
+stale_absent = install_policy.get("stale_absent", [])
+if not allowed_actions or not stale_absent:
+    raise SystemExit("MANIFEST.toml install_policy requires action_vocabulary and stale_absent")
+if dry_run_format not in {"text", "json"}:
+    raise SystemExit("DRY_RUN_FORMAT must be text or json")
+
+def validate_manifest_path(path: str, field: str) -> None:
+    candidate = Path(path)
+    if candidate.is_absolute() or ".." in candidate.parts:
+        raise SystemExit(f"MANIFEST.toml {field} must be repo-relative: {path}")
+
+for section in ("render", "copy", "generated", "symlinks", "plugin_only"):
+    for entry in manifest.get(section, []):
+        for key in ("template", "destination", "source", "link", "from"):
+            if key in entry:
+                validate_manifest_path(str(entry[key]), f"{section}.{key}")
 
 project = cfg.get("project", {})
 task_registry = cfg.get("task_registry", {})
@@ -49,6 +109,39 @@ mutation = cfg.get("mutation_gate", {})
 validation = cfg.get("validation", {})
 commit = cfg.get("commit_governance", {})
 authority = cfg.get("authority", {})
+environments = cfg.get("environments", {})
+
+canonical_task_registry = {
+    "cli_command": ".codex/scripts/task-registry",
+    "registry_path": "docs/task-registry.toml",
+    "plans_path": "docs/plans",
+    "archive_dir": "docs/task-registry/archive",
+}
+for key, expected in canonical_task_registry.items():
+    actual = task_registry.get(key, expected)
+    if actual != expected:
+        raise SystemExit(
+            f"noncanonical project.config.toml [task_registry].{key}: {actual!r}; expected {expected!r}"
+        )
+
+if mutation.get("verify_hook_command", ".codex/scripts/task-registry verify-mutation-hook") != ".codex/scripts/task-registry verify-mutation-hook":
+    raise SystemExit(
+        "noncanonical project.config.toml [mutation_gate].verify_hook_command; expected '.codex/scripts/task-registry verify-mutation-hook'"
+    )
+
+for key in ("render_codex", "render_antigravity", "render_cursor"):
+    if environments.get(key, True) is not True:
+        raise SystemExit(
+            f"project.config.toml [environments].{key}=false is not supported by the v2 canonical runtime projection"
+        )
+if environments.get("install_global_antigravity_plugin", False) is not False:
+    raise SystemExit(
+        "project.config.toml [environments].install_global_antigravity_plugin=true is not supported by this local-first installer"
+    )
+if environments.get("minimum_agy_version", "1.0.3") != "1.0.3":
+    raise SystemExit(
+        "project.config.toml [environments].minimum_agy_version must remain 1.0.3 for the v2 templates"
+    )
 
 repo_root = project.get("repo_root", "{{AUTO_REPO_ROOT}}")
 if repo_root == "{{AUTO_REPO_ROOT}}":
@@ -167,7 +260,14 @@ def rel(path: Path) -> str:
 def projected(action: str) -> str:
     if not dry_run or action.startswith("preserve") or action in {"aligned", "skip"}:
         return action
-    return f"would-{action}"
+    return f"{dry_run_prefix}{action}"
+
+def validate_action(action: str) -> None:
+    normalized = action
+    if normalized.startswith(dry_run_prefix):
+        normalized = normalized[len(dry_run_prefix):]
+    if normalized not in allowed_actions:
+        raise SystemExit(f"unknown installer action emitted: {action}")
 
 def remove_existing(path: Path) -> None:
     if path.is_symlink() or path.is_file():
@@ -343,13 +443,7 @@ for src, dest, always in infra_files:
     action = write_file(dest, render_template(src), merge_updates=always)
     actions.append(f"{rel(dest)}: {action}")
 
-for stale in (
-    ".codex/settings.toml",
-    ".codex/hooks/user-plan-approval.toml",
-    ".gemini/settings.json",
-    "hooks.json",
-    "tools/antigravity/pre-tool-use-gap-closure.sh",
-):
+for stale in stale_absent:
     stale_path = target_root / stale
     if stale_path.exists() or stale_path.is_symlink():
         if not dry_run:
@@ -526,7 +620,22 @@ for executable in (
     actions.append(f"{rel(executable)}: {ensure_executable(executable)}")
 
 verb = "Projected" if dry_run else "Rendered"
-print(f"{verb} agent-governance ({mode}) into {target_root}")
+records = []
 for line in actions:
-    print(f"  {line}")
+    path, action = line.rsplit(": ", 1)
+    validate_action(action)
+    records.append({"path": path, "action": action})
+
+if dry_run and dry_run_format == "json":
+    print(json.dumps({
+        "schema_version": 1,
+        "surface": "installer-dry-run",
+        "mode": mode,
+        "target_root": str(target_root),
+        "actions": records,
+    }, indent=2))
+else:
+    print(f"{verb} agent-governance ({mode}) into {target_root}")
+    for line in actions:
+        print(f"  {line}")
 PY

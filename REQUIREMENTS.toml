@@ -70,6 +70,8 @@ version_check_command = "scripts/release-version-check.sh"
 audit_command = "scripts/release-audit.sh"
 required = [
   "VERSION",
+  "VISION.md",
+  "ROADMAP.md",
   "LICENSE",
   "CHANGELOG.md",
   "README.md",
@@ -79,12 +81,65 @@ required = [
   ".codex-plugin/plugin.json",
   ".github/workflows/ci.yml",
   "docs/releases/v2.md",
+  "docs/runtime-schemas.md",
+  "docs/task-registry.toml",
   "hooks/codex-hooks.json",
   "hooks/hooks.json",
   "rust/task-registry-flow-cli/Cargo.toml",
   "rust/task-registry-flow-cli/Cargo.lock",
   "rust/task-registry-flow-cli/deny.toml",
+  "rust/task-registry-flow-cli/src/main.rs",
+  "rust/task-registry-flow-cli/src/model.rs",
+  "rust/task-registry-flow-cli/src/mutation_hook.rs",
+  "rust/task-registry-flow-cli/src/release_checks.rs",
+  "rust/task-registry-flow-cli/src/schema.rs",
+  "rust/task-registry-flow-cli/src/source_limit.rs",
+  "rust/task-registry-flow-cli/src/tests.rs",
+  "scripts/install-to-workspace.sh",
+  "scripts/render-from-config.sh",
+  "scripts/status.sh",
+  "scripts/test-install-modes.sh",
   "scripts/release-version-check.sh",
   "scripts/release-audit.sh",
   "scripts/test-release-readiness.sh",
+  "templates/.codex/scripts/task-registry.template",
+  "templates/tools/agent-governance/pre-tool-use-gap-closure.sh.template",
 ]
+stale_absent = [
+  "hooks.json",
+  "templates/.codex/settings.toml.template",
+  "templates/.codex/hooks/user-plan-approval.toml.template",
+  "templates/.gemini/settings.json",
+  "templates/tools/antigravity/pre-tool-use-gap-closure.sh.template",
+]
+check_ids = [
+  "release-file-present",
+  "stale-path-absent",
+  "release-version-consistent",
+  "tracked-for-ci-present",
+  "release-schema-valid",
+]
+
+[[release_source.version_files]]
+path = "VERSION"
+format = "plain"
+
+[[release_source.version_files]]
+path = "plugin.json"
+format = "json"
+key = "version"
+
+[[release_source.version_files]]
+path = ".codex-plugin/plugin.json"
+format = "json"
+key = "version"
+
+[[release_source.version_files]]
+path = "MANIFEST.toml"
+format = "toml"
+key = "plugin_version"
+
+[[release_source.version_files]]
+path = "rust/task-registry-flow-cli/Cargo.toml"
+format = "toml"
+key = "package.version"

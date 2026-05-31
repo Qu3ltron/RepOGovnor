@@ -5,7 +5,7 @@ set -euo pipefail
 PLUGIN_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TARGET_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 TARGET_ROOT="$(cd "$TARGET_ROOT" && pwd)"
-CONFIG="${PLUGIN_ROOT}/examples/spectrum-arcana.project.config.toml"
+CONFIG=""
 STRICT=0
 ENV_FILTER="all"
 RELEASE_SOURCE=0
@@ -19,6 +19,14 @@ while [[ $# -gt 0 ]]; do
     *) CONFIG="$1"; shift ;;
   esac
 done
+
+if [[ -z "$CONFIG" ]]; then
+  if [[ -f "${TARGET_ROOT}/project.config.toml" ]]; then
+    CONFIG="${TARGET_ROOT}/project.config.toml"
+  else
+    CONFIG="${PLUGIN_ROOT}/examples/spectrum-arcana.project.config.toml"
+  fi
+fi
 
 case "$ENV_FILTER" in
   all|codex|antigravity|cursor) ;;
@@ -281,37 +289,27 @@ check_release_tracked() {
 }
 
 run_release_source_status() {
-  local release_files=(
-    "VERSION"
-    "LICENSE"
-    "CHANGELOG.md"
-    "README.md"
-    "MANIFEST.toml"
-    "REQUIREMENTS.toml"
-    "plugin.json"
-    ".codex-plugin/plugin.json"
-    ".github/workflows/ci.yml"
-    "docs/releases/v2.md"
-    "docs/task-registry.toml"
-    "hooks/codex-hooks.json"
-    "hooks/hooks.json"
-    "rust/task-registry-flow-cli/Cargo.toml"
-    "rust/task-registry-flow-cli/Cargo.lock"
-    "rust/task-registry-flow-cli/deny.toml"
-    "rust/task-registry-flow-cli/src/main.rs"
-    "rust/task-registry-flow-cli/src/model.rs"
-    "rust/task-registry-flow-cli/src/mutation_hook.rs"
-    "rust/task-registry-flow-cli/src/source_limit.rs"
-    "rust/task-registry-flow-cli/src/tests.rs"
-    "scripts/install-to-workspace.sh"
-    "scripts/render-from-config.sh"
-    "scripts/status.sh"
-    "scripts/test-install-modes.sh"
-    "scripts/test-release-readiness.sh"
-    "scripts/release-version-check.sh"
-    "scripts/release-audit.sh"
-    "templates/.codex/scripts/task-registry.template"
-    "templates/tools/agent-governance/pre-tool-use-gap-closure.sh.template"
+  local release_files=()
+  local stale_files=()
+  mapfile -t release_files < <(
+    PLUGIN_ROOT="${PLUGIN_ROOT}" python3 <<'PY'
+import os
+import tomllib
+from pathlib import Path
+req = tomllib.loads((Path(os.environ["PLUGIN_ROOT"]) / "REQUIREMENTS.toml").read_text(encoding="utf-8"))
+for path in req["release_source"]["required"]:
+    print(path)
+PY
+  )
+  mapfile -t stale_files < <(
+    PLUGIN_ROOT="${PLUGIN_ROOT}" python3 <<'PY'
+import os
+import tomllib
+from pathlib import Path
+req = tomllib.loads((Path(os.environ["PLUGIN_ROOT"]) / "REQUIREMENTS.toml").read_text(encoding="utf-8"))
+for path in req["release_source"].get("stale_absent", []):
+    print(path)
+PY
   )
 
   echo "Agent governance release-source status"
@@ -324,11 +322,9 @@ run_release_source_status() {
   for path in "${release_files[@]}"; do
     check_release_file "$path"
   done
-  check_release_absent "hooks.json"
-  check_release_absent "templates/.codex/settings.toml.template"
-  check_release_absent "templates/.codex/hooks/user-plan-approval.toml.template"
-  check_release_absent "templates/.gemini/settings.json"
-  check_release_absent "templates/tools/antigravity/pre-tool-use-gap-closure.sh.template"
+  for path in "${stale_files[@]}"; do
+    check_release_absent "$path"
+  done
   echo ""
 
   echo "Release version"
@@ -338,9 +334,14 @@ run_release_source_status() {
     bad "release versions are inconsistent"
   fi
   check_file_contains "${TARGET_ROOT}/CHANGELOG.md" '## 2.0.0' "CHANGELOG.md includes 2.0.0 section"
+  check_file_contains "${TARGET_ROOT}/LICENSE" 'MIT License' "LICENSE is MIT"
   check_file_contains "${TARGET_ROOT}/docs/releases/v2.md" 'Audit Policy' "v2 release docs include audit policy"
+  check_file_contains "${TARGET_ROOT}/docs/releases/v2.md" 'License: MIT' "v2 release docs state MIT license"
   check_file_contains "${TARGET_ROOT}/README.md" 'CHANGELOG.md' "README links changelog"
   check_file_contains "${TARGET_ROOT}/README.md" 'docs/releases/v2.md' "README links v2 release checklist"
+  check_file_contains "${TARGET_ROOT}/README.md" 'VISION.md' "README links vision"
+  check_file_contains "${TARGET_ROOT}/README.md" 'ROADMAP.md' "README links roadmap"
+  check_file_contains "${TARGET_ROOT}/README.md" 'License: MIT' "README states MIT license"
   echo ""
 
   echo "Package validation"
@@ -353,6 +354,12 @@ run_release_source_status() {
     ok "task registry validate"
   else
     bad "task registry validate failed"
+  fi
+  if (cd "$TARGET_ROOT" \
+    && cargo run --quiet --manifest-path rust/task-registry-flow-cli/Cargo.toml -- release-check all --format json >/dev/null); then
+    ok "schema-backed release check"
+  else
+    bad "schema-backed release check failed"
   fi
   if [[ "${AGENT_GOVERNANCE_ALLOW_ACTIVE_RELEASE_TASKS:-0}" == "1" ]]; then
     note "active release task waiver active"

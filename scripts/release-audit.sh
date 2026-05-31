@@ -2,6 +2,11 @@
 # Release audit gate for the plugin source package.
 set -euo pipefail
 
+if [[ $# -ne 0 ]]; then
+  echo "usage: release-audit.sh" >&2
+  exit 2
+fi
+
 ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 ROOT="$(cd "$ROOT" && pwd)"
 MANIFEST="${ROOT}/rust/task-registry-flow-cli/Cargo.toml"
@@ -9,6 +14,7 @@ PACKAGE_DIR="${ROOT}/rust/task-registry-flow-cli"
 cd "$ROOT"
 
 cargo run --locked --quiet --manifest-path "$MANIFEST" -- source-limit check
+cargo run --locked --quiet --manifest-path "$MANIFEST" -- release-check all
 cargo fmt --manifest-path "$MANIFEST" -- --check
 cargo test --locked --manifest-path "$MANIFEST"
 cargo clippy --locked --manifest-path "$MANIFEST" -- -D warnings

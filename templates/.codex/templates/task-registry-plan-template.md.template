@@ -2,71 +2,146 @@
 
 ## Approved Scope
 
-Approved gaps:
-- <gap id>: <gap summary>
+Approved production gaps:
+
+- `<gap id>`: `<confirmed gap and evidence source>`
 
 Out of scope:
-- <explicit non-goal or deferred scope>
 
-Interfaces affected:
-- <docs/source/runtime/governance surface>
+- `<explicit non-goal or governed deferral>`
 
-## Required Change Checklist
+Affected surfaces:
 
-- [ ] `[MODIFY]` `<path>` - <purpose>; acceptance proof: <behavior/test/gate/evidence>.
-- [ ] `[VERIFY]` `source-file limit` - ensure changed source/governance files remain at or below 1600 lines; acceptance proof: `.codex/scripts/task-registry source-limit check`.
+- `<schema|runtime|CLI|installer|docs|release|governance surface>`
+
+Primitive change gate: `<N/A with reason or required primitive gate>`.
+
+## Phased Required Change Checklist
+
+### Phase 0: Activation and safety
+
+- [ ] `[NEW|MODIFY|DELETE|GENERATE|VERIFY]` `<exact relative file>` - `<object or section>`: `<required change>`; acceptance proof: `<exact behavior id or command>`.
+
+### Phase 1: Implementation
+
+- [ ] `[MODIFY]` `<exact relative file>` - `<specific function/type/section>`: `<required change>`; acceptance proof: `<positive behavior command>`.
+
+### Phase 2: Negative and migration tests
+
+- [ ] `[MODIFY]` `<exact relative test file>` - `<specific test object>`: `<forbidden behavior that must fail>`; acceptance proof: `<negative behavior command>`.
+
+### Phase 3: Docs, release, and handoff
+
+- [ ] `[MODIFY]` `<exact relative doc or config file>` - `<specific section>`: `<required change>`; acceptance proof: `<doc/release/status gate>`.
 
 ## Per-Gap Success Criteria
 
-### <gap id>
+### <gap id>: <gap title>
 
-- Behavioral: Given <state> when <action> then <observable outcome>.
-- Data/schema/provenance: <ledger or manifest evidence, or N/A with reason>.
-- Runtime: <live/runtime check, or N/A with reason>.
+- Current failure: `<observable broken behavior and where it was found>`.
+- Good behavior: Given `<state>` when `<action>` then `<observable expected outcome>`.
+- Forbidden behavior: Given `<state>` when `<bad action or invalid input>` then `<failure mode that proves the gap is closed>`.
+- Files involved: `<exact relative files>`.
+- Positive test: `<exact command or typed verifier>`.
+- Negative test: `<exact command or typed verifier>`.
+- Data/schema/provenance: `<ledger, manifest, receipt, schema, or N/A with reason>`.
+- Runtime: `<live process/API/CLI check, or N/A with reason>`.
 
 ## Validation Plan
 
 Focused:
-- `.codex/scripts/task-registry validate`
-- `.codex/scripts/task-registry source-limit check`
+
+- `<positive behavior command>`
+- `<negative behavior command>`
 - `.codex/scripts/task-registry verify-behaviors <plan_id>`
+- `.codex/scripts/task-registry source-limit check`
 
 Full:
-- <project full gate or N/A>
 
-## Walkthrough Evidence Required
-
-- `.codex/scripts/task-registry report <plan_id>`
+- `.codex/scripts/task-registry validate`
 - `.codex/scripts/task-registry metrics`
+- `<project full gate>`
+
+Failure evidence:
+
+- `<what failing command or runtime state means the gap remains open>`
+
+## Walkthrough Evidence
+
+Capture:
+
+- Plan activation output.
+- Positive and negative behavior verifier output.
+- Full validation output.
+- `.codex/scripts/task-registry report <plan_id>`.
+- `.codex/scripts/task-registry metrics`.
 
 ## Task Manifest
 
 ```toml
-schema_version = 1
+schema_version = 2
 plan_id = "PLAN-YYYY-MM-DD-{{REPO_SLUG}}-<slug>"
 
 [[behaviors]]
-behavior_id = "B-001-<short-name>"
+behavior_id = "B-001-<gap>-positive"
+gap_id = "<gap id>"
+polarity = "positive"
 title = "<short behavior title>"
 given = "<initial state or fixture>"
 when = "<action under test>"
-then = "<observable outcome asserted by the command>"
-confirmation = "<runnable command>"
+then = "<observable expected outcome>"
+confirmation = "<runnable positive command>"
+
+[[behaviors.verifiers]]
+type = "command"
+command = "<runnable positive command>"
+expected_exit = 0
+
+[[behaviors]]
+behavior_id = "B-002-<gap>-negative"
+gap_id = "<gap id>"
+polarity = "negative"
+title = "<short negative behavior title>"
+given = "<invalid state, forbidden input, or bypass attempt>"
+when = "<forbidden behavior is attempted>"
+then = "<the system fails closed with observable evidence>"
+confirmation = "<runnable negative command>"
+
+[[behaviors.verifiers]]
+type = "command"
+command = "<runnable negative command>"
+expected_exit = 0
+
+[[behaviors]]
+behavior_id = "B-003-full-validation"
+gap_id = "GAP-VALIDATION"
+polarity = "validation"
+title = "Full validation passes"
+given = "The implementation is complete"
+when = "Full repository gates run"
+then = "All required validation gates pass"
+confirmation = "<full validation command>"
+
+[[behaviors.verifiers]]
+type = "command"
+command = "<full validation command>"
+expected_exit = 0
 
 [[tasks]]
 task_id = "TASK-YYYY-MM-DD-<slug>-001"
 title = "<task title>"
 status = "planned"
-kind = "<agent_workflow|development_governance|test|runtime|docs>"
+kind = "<authorization|diagnostics|documentation|governance|implementation|migration|release|schema|test|validation>"
 reason = "<why this task exists>"
-acceptance_proof = "Behavior B-001-<short-name>: <same runnable command>"
-behavior_ids = ["B-001-<short-name>"]
+acceptance_proof = "Behaviors B-001-<gap>-positive and B-002-<gap>-negative pass"
+behavior_ids = ["B-001-<gap>-positive", "B-002-<gap>-negative"]
+
 [[tasks.targets]]
 file = "<exact relative path>"
-object = "<specific object or section>"
+object = "<specific object, function, schema, section, or test>"
 required_change = "<diffable required change>"
 ```
 
 ## Assumptions
 
-- <defaults chosen and constraints>
+- `<defaults chosen and constraints>`

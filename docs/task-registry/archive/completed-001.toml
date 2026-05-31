@@ -4,6 +4,20 @@ archive_id = "completed-001"
 archive_authority = "docs/task-registry/archive/completed-001.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-05-30-activation-plan-structure-hardening"
+plan_path = "docs/plans/activation-plan-structure-hardening.md"
+plan_hash_sha256 = "ed3f0a7bbfb0bc6305fd4483137938cbf99c96f6e58591b796a0c96a846dea07"
+activated_at = "2026-05-30"
+status = "completed"
+
+[[plans]]
+plan_id = "PLAN-2026-05-30-runtime-schema-production-closures"
+plan_path = "docs/plans/runtime-schema-production-closures.md"
+plan_hash_sha256 = "3bc3d1c84b6abc98a39ed195845d5c9bdef514acc6496d8d1ce3ed65ff976a7b"
+activated_at = "2026-05-30"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-05-30-v2-production-followup-gap-closures"
 plan_path = "docs/plans/v2-production-followup-gap-closures.md"
 plan_hash_sha256 = "ab4fd233b98075e85655529d5f19ac802a33143639c797a0f41be0f079f81665"
@@ -23,6 +37,449 @@ plan_path = "docs/plans/production-gap-closures.md"
 plan_hash_sha256 = "625aa13c0ef2a077fd3a95235aec3728cc3db63f7e64bf457b46910f7bd14b5a"
 activated_at = "2026-05-30"
 status = "completed"
+
+[[tasks]]
+task_id = "TASK-2026-05-30-activation-plan-001"
+plan_id = "PLAN-2026-05-30-activation-plan-structure-hardening"
+status = "completed"
+title = "Enforce strict v2 plan contract"
+kind = "schema"
+source_plan_path = "docs/plans/activation-plan-structure-hardening.md"
+source_plan_hash_sha256 = "ed3f0a7bbfb0bc6305fd4483137938cbf99c96f6e58591b796a0c96a846dea07"
+reason = "Production closures need schema-backed plan quality gates before activation"
+acceptance_proof = "Behaviors B-2026-05-30-plan-structure-positive and B-2026-05-30-plan-structure-negative pass"
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = [
+    "B-2026-05-30-plan-structure-positive",
+    "B-2026-05-30-plan-structure-negative",
+    "B-2026-05-30-placeholder-positive",
+    "B-2026-05-30-placeholder-negative",
+    "B-2026-05-30-behavior-metadata-positive",
+    "B-2026-05-30-behavior-metadata-negative",
+    "B-2026-05-30-validation-only-positive",
+    "B-2026-05-30-validation-only-negative",
+    "B-2026-05-30-target-positive",
+    "B-2026-05-30-target-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/schema.rs"
+object = "behavior_polarity_schema"
+required_change = "Add typed behavior polarity vocabulary."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/model.rs"
+object = "behavior_metadata"
+required_change = "Add v2 gap_id and polarity behavior metadata fields."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/plan_contract.rs"
+object = "activation_plan_contract_validator"
+required_change = "Validate required phased sections, placeholders, gap coverage, and task behavior closure semantics."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/main.rs"
+object = "activation_validation_flow"
+required_change = "Call plan-contract validation during activation and registry validation."
+
+[[tasks]]
+task_id = "TASK-2026-05-30-activation-plan-002"
+plan_id = "PLAN-2026-05-30-activation-plan-structure-hardening"
+status = "completed"
+title = "Add positive and negative activation tests"
+kind = "test"
+source_plan_path = "docs/plans/activation-plan-structure-hardening.md"
+source_plan_hash_sha256 = "ed3f0a7bbfb0bc6305fd4483137938cbf99c96f6e58591b796a0c96a846dea07"
+reason = "Activation hardening must prove good plans pass and weak plans fail"
+acceptance_proof = "Behaviors B-2026-05-30-plan-structure-positive and B-2026-05-30-plan-structure-negative pass"
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = [
+    "B-2026-05-30-plan-structure-positive",
+    "B-2026-05-30-plan-structure-negative",
+    "B-2026-05-30-placeholder-positive",
+    "B-2026-05-30-placeholder-negative",
+    "B-2026-05-30-behavior-metadata-positive",
+    "B-2026-05-30-behavior-metadata-negative",
+    "B-2026-05-30-validation-only-positive",
+    "B-2026-05-30-validation-only-negative",
+    "B-2026-05-30-target-positive",
+    "B-2026-05-30-target-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests.rs"
+object = "activation_plan_contract_tests"
+required_change = "Add positive and negative tests for strict plan activation behavior."
+
+[[tasks]]
+task_id = "TASK-2026-05-30-activation-plan-003"
+plan_id = "PLAN-2026-05-30-activation-plan-structure-hardening"
+status = "completed"
+title = "Refresh plan authoring surfaces"
+kind = "documentation"
+source_plan_path = "docs/plans/activation-plan-structure-hardening.md"
+source_plan_hash_sha256 = "ed3f0a7bbfb0bc6305fd4483137938cbf99c96f6e58591b796a0c96a846dea07"
+reason = "Design-time plan authors need an opinionated activation-ready template and matching skills"
+acceptance_proof = "Behavior B-2026-05-30-template-projection passes"
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = ["B-2026-05-30-template-projection"]
+
+[[tasks.targets]]
+file = "templates/.codex/templates/task-registry-plan-template.md.template"
+object = "strict_plan_template"
+required_change = "Provide a comprehensive phased activation-ready plan skeleton."
+
+[[tasks.targets]]
+file = ".codex/templates/task-registry-plan-template.md"
+object = "installed_strict_plan_template"
+required_change = "Refresh installed plan template from the canonical template."
+
+[[tasks.targets]]
+file = "skills/gap-closure-contract/SKILL.md"
+object = "gap_closure_contract_authoring_rules"
+required_change = "Require phased checklist, exact targets, and positive/negative typed verifier coverage."
+
+[[tasks.targets]]
+file = "skills/task-registry-flow/SKILL.md"
+object = "task_registry_activation_rules"
+required_change = "Require strict v2 activation metadata and behavior polarity discipline."
+
+[[tasks.targets]]
+file = ".agents/skills/gap-closure-contract/SKILL.md"
+object = "installed_gap_closure_contract_skill"
+required_change = "Refresh installed skill projection from canonical skill."
+
+[[tasks.targets]]
+file = ".agents/skills/task-registry-flow/SKILL.md"
+object = "installed_task_registry_flow_skill"
+required_change = "Refresh installed skill projection from canonical skill."
+
+[[tasks.targets]]
+file = ".cursor/skills/gap-closure-contract/SKILL.md"
+object = "installed_cursor_gap_closure_contract_skill"
+required_change = "Refresh installed Cursor skill projection from canonical skill."
+
+[[tasks.targets]]
+file = ".cursor/skills/task-registry-flow/SKILL.md"
+object = "installed_cursor_task_registry_flow_skill"
+required_change = "Refresh installed Cursor skill projection from canonical skill."
+
+[[tasks.targets]]
+file = "templates/AGENTS.md.template"
+object = "codex_instruction_template"
+required_change = "Describe strict v2 activation contract."
+
+[[tasks.targets]]
+file = "templates/GEMINI.md.template"
+object = "antigravity_instruction_template"
+required_change = "Describe strict v2 activation contract."
+
+[[tasks.targets]]
+file = "templates/.codex/agent-governance.toml.template"
+object = "governance_metadata_template"
+required_change = "Expose strict activation-plan manifest requirements."
+
+[[tasks.targets]]
+file = "AGENTS.md"
+object = "installed_codex_instructions"
+required_change = "Refresh installed repo instructions from template."
+
+[[tasks.targets]]
+file = "GEMINI.md"
+object = "installed_antigravity_instructions"
+required_change = "Refresh installed Antigravity instructions from template."
+
+[[tasks.targets]]
+file = ".codex/agent-governance.toml"
+object = "installed_governance_metadata"
+required_change = "Refresh installed governance metadata from template."
+
+[[tasks]]
+task_id = "TASK-2026-05-30-activation-plan-004"
+plan_id = "PLAN-2026-05-30-activation-plan-structure-hardening"
+status = "completed"
+title = "Document and validate activation-plan hardening"
+kind = "validation"
+source_plan_path = "docs/plans/activation-plan-structure-hardening.md"
+source_plan_hash_sha256 = "ed3f0a7bbfb0bc6305fd4483137938cbf99c96f6e58591b796a0c96a846dea07"
+reason = "Users and release gates need proof that strict plan activation works"
+acceptance_proof = "Behavior B-2026-05-30-full-validation passes"
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = ["B-2026-05-30-full-validation"]
+
+[[tasks.targets]]
+file = "docs/runtime-schemas.md"
+object = "plan_manifest_schema_docs"
+required_change = "Document gap_id, polarity, required sections, and activation rejection rules."
+
+[[tasks.targets]]
+file = "README.md"
+object = "activation_quality_gate_docs"
+required_change = "Document user-facing plan activation quality gates."
+
+[[tasks.targets]]
+file = "CHANGELOG.md"
+object = "unreleased_activation_plan_hardening_entry"
+required_change = "Record activation-plan structure hardening."
+
+[[tasks.targets]]
+file = "docs/task-registry/events.jsonl"
+object = "local_metrics_receipts"
+required_change = "Keep local receipt metrics schema-valid with zero malformed events."
+
+[[tasks]]
+task_id = "TASK-2026-05-30-runtime-schema-001"
+plan_id = "PLAN-2026-05-30-runtime-schema-production-closures"
+status = "completed"
+title = "Add canonical runtime schema core"
+kind = "schema"
+source_plan_path = "docs/plans/runtime-schema-production-closures.md"
+source_plan_hash_sha256 = "3bc3d1c84b6abc98a39ed195845d5c9bdef514acc6496d8d1ce3ed65ff976a7b"
+reason = "Runtime command, action, status, outcome, verifier, and diagnostic values are passed as loose strings."
+acceptance_proof = "Behavior B-2026-05-30-runtime-schema-core passes."
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = ["B-2026-05-30-runtime-schema-core"]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/schema.rs"
+object = "runtime_schema_types"
+required_change = "Define typed enums and structured report/event/verifier/mutation/release schema types."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/model.rs"
+object = "event_and_manifest_schema"
+required_change = "Use typed receipt events and behavior verifier manifest fields."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/main.rs"
+object = "typed_command_dispatch"
+required_change = "Parse public CLI strings into typed runtime commands and outcomes before dispatch."
+
+[[tasks]]
+task_id = "TASK-2026-05-30-runtime-schema-002"
+plan_id = "PLAN-2026-05-30-runtime-schema-production-closures"
+status = "completed"
+title = "Replace mutation prefix matching with typed scopes"
+kind = "authorization"
+source_plan_path = "docs/plans/runtime-schema-production-closures.md"
+source_plan_hash_sha256 = "3bc3d1c84b6abc98a39ed195845d5c9bdef514acc6496d8d1ce3ed65ff976a7b"
+reason = "Raw prefix matching can authorize accidental broad or prefix-collision paths."
+acceptance_proof = "Behavior B-2026-05-30-mutation-scope-authorization passes."
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = ["B-2026-05-30-mutation-scope-authorization"]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/mutation_hook.rs"
+object = "mutation_scope_authorizer"
+required_change = "Evaluate exact file, directory tree, generated artifact, and governance repair scopes."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests.rs"
+object = "mutation_scope_negative_tests"
+required_change = "Assert broad targets, traversal, prefix collisions, and undeclared paths fail."
+
+[[tasks]]
+task_id = "TASK-2026-05-30-runtime-schema-003"
+plan_id = "PLAN-2026-05-30-runtime-schema-production-closures"
+status = "completed"
+title = "Schema-back behavior verification"
+kind = "validation"
+source_plan_path = "docs/plans/runtime-schema-production-closures.md"
+source_plan_hash_sha256 = "3bc3d1c84b6abc98a39ed195845d5c9bdef514acc6496d8d1ce3ed65ff976a7b"
+reason = "Behavior confirmation currently depends on prose shell commands."
+acceptance_proof = "Behavior B-2026-05-30-behavior-verifier-schema and B-2026-05-30-clean-verifier-api pass."
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = [
+    "B-2026-05-30-behavior-verifier-schema",
+    "B-2026-05-30-clean-verifier-api",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/model.rs"
+object = "behavior_verifier_manifest"
+required_change = "Add typed verifier declarations to behavior manifests."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/main.rs"
+object = "verify_behaviors_runner"
+required_change = "Run typed verifiers and return structured verifier failure diagnostics."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests.rs"
+object = "verifier_positive_negative_tests"
+required_change = "Add command, file, contains, not_contains, JSON, unknown type, and failing assertion tests."
+
+[[tasks]]
+task_id = "TASK-2026-05-30-runtime-schema-004"
+plan_id = "PLAN-2026-05-30-runtime-schema-production-closures"
+status = "completed"
+title = "Schema-back installer actions"
+kind = "migration"
+source_plan_path = "docs/plans/runtime-schema-production-closures.md"
+source_plan_hash_sha256 = "3bc3d1c84b6abc98a39ed195845d5c9bdef514acc6496d8d1ce3ed65ff976a7b"
+reason = "Installer behavior mixes config, hard-coded file lists, and loose action strings."
+acceptance_proof = "Behavior B-2026-05-30-installer-action-schema passes."
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = ["B-2026-05-30-installer-action-schema"]
+
+[[tasks.targets]]
+file = "scripts/render-from-config.sh"
+object = "installer_action_schema"
+required_change = "Validate install manifest/config and emit enumerated dry-run actions."
+
+[[tasks.targets]]
+file = "MANIFEST.toml"
+object = "installer_manifest_contract"
+required_change = "Declare installer stale paths and action policy needed by the renderer."
+
+[[tasks.targets]]
+file = "scripts/test-release-readiness.sh"
+object = "installer_schema_negative_tests"
+required_change = "Add tests for unknown actions, symlink alignment rejection, and dry-run JSON action output."
+
+[[tasks]]
+task_id = "TASK-2026-05-30-runtime-schema-005"
+plan_id = "PLAN-2026-05-30-runtime-schema-production-closures"
+status = "completed"
+title = "Consolidate release and status schema"
+kind = "release"
+source_plan_path = "docs/plans/runtime-schema-production-closures.md"
+source_plan_hash_sha256 = "3bc3d1c84b6abc98a39ed195845d5c9bdef514acc6496d8d1ce3ed65ff976a7b"
+reason = "Release/status/version checks duplicate file lists and policy across shell scripts."
+acceptance_proof = "Behavior B-2026-05-30-release-status-schema passes."
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = ["B-2026-05-30-release-status-schema"]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/release_checks.rs"
+object = "release_contract_validator"
+required_change = "Load REQUIREMENTS.toml and validate release source, version-bearing files, and tracked-for-CI paths."
+
+[[tasks.targets]]
+file = "REQUIREMENTS.toml"
+object = "release_check_schema"
+required_change = "Declare release check IDs and version-bearing file paths."
+
+[[tasks.targets]]
+file = "scripts/status.sh"
+object = "schema_backed_status"
+required_change = "Use schema-backed CLI checks instead of owning duplicated release-source file policy."
+
+[[tasks.targets]]
+file = "scripts/release-version-check.sh"
+object = "schema_backed_version_check"
+required_change = "Read version-bearing files from REQUIREMENTS.toml."
+
+[[tasks.targets]]
+file = "scripts/release-audit.sh"
+object = "schema_backed_release_audit"
+required_change = "Run schema-backed release validation from repo root and reject unknown args."
+
+[[tasks]]
+task_id = "TASK-2026-05-30-runtime-schema-006"
+plan_id = "PLAN-2026-05-30-runtime-schema-production-closures"
+status = "completed"
+title = "Emit structured diagnostics for production gates"
+kind = "diagnostics"
+source_plan_path = "docs/plans/runtime-schema-production-closures.md"
+source_plan_hash_sha256 = "3bc3d1c84b6abc98a39ed195845d5c9bdef514acc6496d8d1ce3ed65ff976a7b"
+reason = "Status, release, validation, source-limit, and installer dry-run failures are primarily prose."
+acceptance_proof = "Behavior B-2026-05-30-structured-diagnostics passes."
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = ["B-2026-05-30-structured-diagnostics"]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/schema.rs"
+object = "diagnostic_report_schema"
+required_change = "Define reusable diagnostic and check report structures."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/source_limit.rs"
+object = "source_limit_json_report"
+required_change = "Emit source-limit diagnostics in JSON report mode."
+
+[[tasks.targets]]
+file = "scripts/render-from-config.sh"
+object = "installer_dry_run_report"
+required_change = "Emit structured installer dry-run action reports."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests.rs"
+object = "diagnostic_negative_tests"
+required_change = "Assert malformed diagnostic values and missing failure fields are rejected."
+
+[[tasks]]
+task_id = "TASK-2026-05-30-runtime-schema-007"
+plan_id = "PLAN-2026-05-30-runtime-schema-production-closures"
+status = "completed"
+title = "Align docs with runtime schema behavior"
+kind = "documentation"
+source_plan_path = "docs/plans/runtime-schema-production-closures.md"
+source_plan_hash_sha256 = "3bc3d1c84b6abc98a39ed195845d5c9bdef514acc6496d8d1ce3ed65ff976a7b"
+reason = "User docs need to explain current clean runtime API and schema-backed failures."
+acceptance_proof = "Behavior B-2026-05-30-live-license-docs passes."
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = ["B-2026-05-30-live-license-docs"]
+
+[[tasks.targets]]
+file = "README.md"
+object = "schema_failure_model"
+required_change = "Document user-facing schema-backed failure behavior."
+
+[[tasks.targets]]
+file = "VISION.md"
+object = "schema_first_vision"
+required_change = "Align vision with clean runtime API."
+
+[[tasks.targets]]
+file = "ROADMAP.md"
+object = "schema_runtime_roadmap"
+required_change = "Mark schema-backed runtime work accurately."
+
+[[tasks.targets]]
+file = "docs/releases/v2.md"
+object = "schema_release_notes"
+required_change = "Document schema-backed release and status checks."
+
+[[tasks.targets]]
+file = "docs/runtime-schemas.md"
+object = "runtime_schema_reference"
+required_change = "Document diagnostic, mutation-scope, verifier, installer-action, and release-check schemas."
+
+[[tasks]]
+task_id = "TASK-2026-05-30-runtime-schema-008"
+plan_id = "PLAN-2026-05-30-runtime-schema-production-closures"
+status = "completed"
+title = "Protect historical license evidence"
+kind = "governance"
+source_plan_path = "docs/plans/runtime-schema-production-closures.md"
+source_plan_hash_sha256 = "3bc3d1c84b6abc98a39ed195845d5c9bdef514acc6496d8d1ce3ed65ff976a7b"
+reason = "Historical archive files can contain stale prose but should not be silently rewritten."
+acceptance_proof = "Behavior B-2026-05-30-live-license-docs passes."
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = ["B-2026-05-30-live-license-docs"]
+
+[[tasks.targets]]
+file = "scripts/test-release-readiness.sh"
+object = "live_license_scan_scope"
+required_change = "Ensure license scans cover live docs and exclude historical archived evidence unless explicitly migrated."
+
+[[tasks.targets]]
+file = "docs/runtime-schemas.md"
+object = "historical_evidence_policy"
+required_change = "Document that historical evidence changes require registry-aware migration."
 
 [[tasks]]
 task_id = "TASK-2026-05-30-v2-followup-001"

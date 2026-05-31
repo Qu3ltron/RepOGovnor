@@ -1,0 +1,104 @@
+# Plugin-owned governance metadata. This is not Codex project config.
+# Codex-native config lives in .codex/config.toml and hooks live in .codex/hooks.json.
+
+[workspace_boundary]
+repo_name = "Governance-plugin"
+repo_root = "/home/hasnamuss/reclaimed/work/Governance-plugin"
+allowed_mutation_roots = ["/home/hasnamuss/reclaimed/work/Governance-plugin"]
+allowed_scratch_root = "/home/hasnamuss/reclaimed/work/tmp/governance-plugin-gap-closure"
+branch_rule = "Use the branch the user names for this repository."
+mutation_rule = "Before editing, confirm git rev-parse --show-toplevel matches repo_root. Do not write outside allowed_mutation_roots except project-isolated scratch under allowed_scratch_root."
+push_rule = "Push only when the user explicitly asks."
+
+[project_governance]
+constitution_path = "README.md"
+vision_path = "VISION.md"
+agents_path = "AGENTS.md"
+antigravity_context_path = "GEMINI.md"
+cursor_rules_path = ".cursor/rules/agent-governance.mdc"
+design_docs_path = "docs"
+design_rule = "Follow project authority order and architecture docs. This plugin supplies workflow only."
+
+[authority]
+order = ["README.md", "docs/runtime-schemas.md", "docs/releases/v2.md", "VISION.md", "ROADMAP.md"]
+
+[agent_paths]
+codex_config_path = ".codex/config.toml"
+codex_hooks_path = ".codex/hooks.json"
+codex_skills_path = ".agents/skills"
+canonical_skills_path = "plugins/agent-governance/skills"
+antigravity_user_settings_path = "~/.gemini/antigravity-cli/settings.json"
+antigravity_workspace_skills_path = ".agents/skills"
+antigravity_hooks_path = ".agents/hooks.json"
+cursor_rules_path = ".cursor/rules/agent-governance.mdc"
+cursor_skills_path = ".cursor/skills"
+cursor_hooks_path = ".cursor/hooks.json"
+mutation_hook_script = "tools/agent-governance/pre-tool-use-gap-closure.sh"
+
+[gap_closure_contract]
+skill_name = "gap-closure-contract"
+contract_required_before_mutation = true
+contract_path_pattern = "docs/plans/<short-slug>.md"
+scratch_root = "/home/hasnamuss/reclaimed/work/tmp/governance-plugin-gap-closure"
+approval_triggers = ["Implement the plan", "approved", "proceed", "continue", "close these gaps", "use this to close", "reviewer output followed by a fix instruction"]
+required_sections = ["Approved Scope", "Required Change Checklist", "Per-Gap Success Criteria", "Validation Plan", "Walkthrough Evidence", "Task Manifest"]
+behavioral_contract_required = true
+design_rule = "After gap analysis plus user approval, load gap-closure-contract and create or refresh docs/plans/<short-slug>.md before code edits. Required sections: Approved Scope, Phased Required Change Checklist, Per-Gap Success Criteria, Validation Plan, Walkthrough Evidence, Task Manifest. Use Task Manifest schema_version = 2, behavior gap_id, behavior polarity, typed [[behaviors.verifiers]], positive and negative behavior coverage for each implementation gap, and PLAN_ACTIVATE through the registry CLI before implementation."
+
+[task_registry]
+registry_path = "docs/task-registry.toml"
+plans_path = "docs/plans"
+skill_name = "task-registry-flow"
+manifest_section = "Task Manifest"
+activation_opcode = "PLAN_ACTIVATE"
+status_opcode = "TASK_STATUS"
+defer_opcode = "TASK_DEFER"
+report_opcode = "TASK_REPORT"
+archive_completed_opcode = "TASK_ARCHIVE_COMPLETED"
+verify_behaviors_opcode = "TASK_VERIFY_BEHAVIORS"
+metrics_opcode = "TASK_METRICS"
+cli_binary = "task-registry"
+cli_command = ".codex/scripts/task-registry"
+typed_validation_command = ".codex/scripts/task-registry validate"
+verify_behaviors_command = ".codex/scripts/task-registry verify-behaviors"
+verify_mutation_hook_command = ".codex/scripts/task-registry verify-mutation-hook"
+registry_authoritative_after_activation = true
+activation_required_before_implementation = true
+final_report_required = true
+archive_dir = "docs/task-registry/archive"
+deferred_without_governed_reason_forbidden = true
+deferred_governance_basis_required = true
+deferred_reactivation_condition_required = true
+deferred_status_requires_defer_opcode = true
+status_vocabulary = ["planned", "active", "blocked", "deferred", "completed", "cancelled"]
+required_manifest_fields = ["schema_version", "plan_id", "behaviors", "tasks"]
+required_behavior_fields = ["behavior_id", "title", "given", "when", "then", "confirmation", "verifiers"]
+required_behavior_metadata = ["gap_id", "polarity"]
+behavior_polarity = ["positive", "negative", "validation"]
+required_task_fields = ["task_id", "plan_id", "status", "title", "kind", "reason", "acceptance_proof", "source_plan_path", "source_plan_hash_sha256", "behavior_ids", "targets.file", "targets.object", "targets.required_change"]
+required_deferred_task_fields = ["deferral_governance_basis", "reactivation_condition"]
+hash_algorithm = "sha256 of normalized plan text: CRLF/CR converted to LF, trailing whitespace stripped from each line, exactly one final newline"
+design_rule = "Use only .codex/scripts/task-registry for activate, status, defer, report, validate, archive-completed, verify-behaviors, verify-mutation-hook, metrics, and source-limit. Project-native task_registry executors are noncanonical."
+
+[task_registry.metrics]
+events_path = "docs/task-registry/events.jsonl"
+local_receipts_only = true
+network_telemetry = false
+design_rule = "Measure workflow efficacy from local registry state and JSONL receipts only."
+
+[source_file_governance]
+max_lines = 1600
+check_command = ".codex/scripts/task-registry source-limit check"
+split_plan_command = ".codex/scripts/task-registry source-limit plan --path <file>"
+ci_workflow = ".github/workflows/agent-governance.yml"
+coverage = ["source", "scripts", "configs", "docs", "templates", "agent-governance"]
+excluded_paths = [".git/", "target/", "node_modules/", ".cache/", ".next/", ".nuxt/", ".pytest_cache/", ".mypy_cache/", ".ruff_cache/", ".svelte-kit/", ".venv/", ".workspace-render/", "__pycache__/", "coverage/", "dist/", "build/", "out/", "venv/", "vendor/", "docs/task-registry/events.jsonl", "docs/task-registry/archive/"]
+excluded_files = ["Cargo.lock", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "bun.lockb", "Gemfile.lock", "poetry.lock", "uv.lock", "Pipfile.lock", "composer.lock", "deno.lock", "flake.lock", "go.sum"]
+design_rule = "Treat 1600 lines as a hard design-time budget. Before adding code or governance prose, estimate resulting file length and split first when a file would exceed the limit. Use the split planner for existing violations; do not defer source-limit failures to CI."
+
+[validation]
+focused = [".codex/scripts/task-registry source-limit check", "cargo test --locked --manifest-path rust/task-registry-flow-cli/Cargo.toml"]
+full = [".codex/scripts/task-registry validate", "cargo test --locked --manifest-path rust/task-registry-flow-cli/Cargo.toml", "bash scripts/test-release-readiness.sh all"]
+design_rule = "Validation Plan commands in each contract override these defaults when they are more specific."
+
+# [commit_governance] — optional; configure in project.config.toml and extend AGENTS.md locally

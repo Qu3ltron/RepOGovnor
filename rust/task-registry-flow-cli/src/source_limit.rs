@@ -1,4 +1,5 @@
 use crate::model::{Result, SOURCE_LINE_LIMIT};
+use crate::schema::{CheckReport, Diagnostic};
 use serde::Serialize;
 use std::collections::BTreeMap;
 use std::fs;
@@ -20,6 +21,13 @@ struct SplitPlan {
 }
 
 #[derive(Debug, Clone, Serialize)]
+struct SplitPlanReport {
+    schema_version: i64,
+    surface: String,
+    plans: Vec<SplitPlan>,
+}
+
+#[derive(Debug, Clone, Serialize)]
 struct SplitTarget {
     destination: String,
     reason: String,
@@ -38,11 +46,22 @@ pub(crate) fn run_command(root: &Path, args: &[String]) -> Result<String> {
     };
     match subcommand {
         "check" => {
-            if args.len() != 1 {
+            let mut json = false;
+            if args.len() == 3 && args[1] == "--format" && args[2] == "json" {
+                json = true;
+            } else if args.len() != 1 {
                 return Err(source_limit_usage());
             }
-            check(root)?;
-            println!("source file limit ok: max {SOURCE_LINE_LIMIT} lines");
+            if json {
+                let report = check_report(root)?;
+                println!("{}", report.to_json()?);
+                if report.has_failures() {
+                    return Err("source file limit exceeded".to_string());
+                }
+            } else {
+                check(root)?;
+                println!("source file limit ok: max {SOURCE_LINE_LIMIT} lines");
+            }
             Ok("source-limit check".to_string())
         }
         "plan" => {
@@ -88,6 +107,33 @@ pub(crate) fn check(root: &Path) -> Result<()> {
     Err(message)
 }
 
+pub(crate) fn check_report(root: &Path) -> Result<CheckReport> {
+    let violations = violations(root)?;
+    let checks = if violations.is_empty() {
+        vec![Diagnostic::pass(
+            "source-limit",
+            "source-limit",
+            ".",
+            format!("all source files at or below {SOURCE_LINE_LIMIT} lines"),
+        )]
+    } else {
+        violations
+            .into_iter()
+            .map(|violation| {
+                Diagnostic::fail(
+                    "source-limit",
+                    "source-limit",
+                    violation.path,
+                    format!("at most {} lines", violation.limit),
+                    format!("{} lines", violation.lines),
+                    "split the file or run source-limit plan for a focused split plan",
+                )
+            })
+            .collect()
+    };
+    CheckReport::new("source-limit", checks)
+}
+
 pub(crate) fn plan(root: &Path, path: Option<&str>, json: bool) -> Result<String> {
     let plans = if let Some(path) = path {
         let rel = normalize_relative_path(path)?;
@@ -105,8 +151,12 @@ pub(crate) fn plan(root: &Path, path: Option<&str>, json: bool) -> Result<String
     };
 
     if json {
-        return serde_json::to_string_pretty(&plans)
-            .map_err(|error| format!("serialize source-limit plan: {error}"));
+        return serde_json::to_string_pretty(&SplitPlanReport {
+            schema_version: 1,
+            surface: "source-limit-plan".to_string(),
+            plans,
+        })
+        .map_err(|error| format!("serialize source-limit plan: {error}"));
     }
     if plans.is_empty() {
         return Ok("No source file split needed.".to_string());
@@ -562,6 +612,6 @@ fn relative_path(root: &Path, path: &Path) -> Result<String> {
 }
 
 fn source_limit_usage() -> String {
-    "usage: task-registry-flow source-limit {check|plan [--all|--path <file>] [--format json]}"
+    "usage: task-registry-flow source-limit {check [--format json]|plan [--all|--path <file>] [--format json]}"
         .to_string()
 }

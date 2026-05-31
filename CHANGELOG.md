@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Switched the project license to MIT.
+- Reworked user-facing README content around value, users, limits, install,
+  and daily workflow.
+- Added vision and roadmap documents.
+- Tightened runtime schema enforcement: new Task Manifests require
+  `schema_version = 2` with typed behavior verifiers, runtime governance writes
+  are task-bound, release/version wrappers delegate to Rust schema checks, and
+  installer config rejects noncanonical runtime keys.
+- Hardened activation plans: new v2 plans require phased checklists,
+  behavior `gap_id`, behavior `polarity`, typed positive and negative
+  verifier coverage, exact task targets, and placeholder-free plan text.
+
 ## 2.0.0 - 2026-05-30
 
 ### Breaking changes

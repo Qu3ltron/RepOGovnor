@@ -1,0 +1,12 @@
+---
+description: Agent governance workflow, task registry, and source-file limit.
+alwaysApply: true
+---
+
+Read `AGENTS.md` before feature work. Use `docs/plans/<short-slug>.md` for approved gap-closure contracts, then activate tasks with `.codex/scripts/task-registry activate docs/plans/<short-slug>.md` before implementation edits.
+
+Use the plugin-owned registry only: `.codex/scripts/task-registry validate`, `status`, `defer`, `report`, `verify-behaviors`, `metrics`, and `source-limit`.
+
+Keep source, scripts, configs, docs, templates, and governance files at or below 1600 lines. Treat this as a design-time rule. Before adding behavior to a violating file, run `.codex/scripts/task-registry source-limit plan --path <file>` and split first.
+
+Cursor hooks live in `.cursor/hooks.json`; they are runtime guardrails, not the source of truth. CI and `.codex/scripts/task-registry source-limit check` are authoritative.

@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "preToolUse": [
+      {
+        "command": ".cursor/hooks/gap-closure-gate.sh",
+        "failClosed": true
+      }
+    ],
+    "beforeShellExecution": [
+      {
+        "command": ".cursor/hooks/gap-closure-gate.sh",
+        "timeout": 60,
+        "failClosed": true
+      }
+    ]
+  }
+}

@@ -1,12 +1,18 @@
 use chrono::Local;
 mod model;
 mod mutation_hook;
+mod plan_contract;
+mod release_checks;
+mod schema;
 mod source_limit;
 #[cfg(test)]
 mod tests;
 
 use crate::model::*;
 use crate::mutation_hook::verify_mutation_hook;
+use crate::schema::{
+    BehaviorVerifier, CliCommand, EventOutcome, HookFormat, MutationScope, TaskStatus,
+};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
@@ -15,11 +21,15 @@ use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::{Component, Path, PathBuf};
 use std::process::Command;
+use std::str::FromStr;
 use std::time::Instant;
 
 fn main() {
     let args = env::args().skip(1).collect::<Vec<_>>();
-    let command = args.first().cloned().unwrap_or_else(|| "usage".to_string());
+    let command = args
+        .first()
+        .and_then(|value| CliCommand::from_str(value).ok())
+        .unwrap_or(CliCommand::Usage);
     let started = Instant::now();
     let result = run(args);
     let duration_ms = started.elapsed().as_millis();
@@ -27,25 +37,25 @@ fn main() {
         Ok(detail) => {
             let _ = append_event(
                 Path::new("."),
-                EventRecord {
-                    timestamp: timestamp(),
+                EventRecord::new(
+                    timestamp(),
                     command,
-                    outcome: "ok".to_string(),
+                    EventOutcome::Ok,
                     duration_ms,
-                    detail: truncate_detail(&detail),
-                },
+                    truncate_detail(&detail),
+                ),
             );
         }
         Err(error) => {
             let _ = append_event(
                 Path::new("."),
-                EventRecord {
-                    timestamp: timestamp(),
+                EventRecord::new(
+                    timestamp(),
                     command,
-                    outcome: "error".to_string(),
+                    EventOutcome::Error,
                     duration_ms,
-                    detail: truncate_detail(&error),
-                },
+                    truncate_detail(&error),
+                ),
             );
             eprintln!("task-registry-flow error: {error}");
             std::process::exit(1);
@@ -57,10 +67,10 @@ fn run(mut args: Vec<String>) -> Result<String> {
     if args.is_empty() {
         return Err(usage());
     }
-    let command = args.remove(0);
+    let command = CliCommand::from_str(&args.remove(0)).map_err(|_| usage())?;
     let root = Path::new(".");
-    match command.as_str() {
-        "validate" => {
+    match command {
+        CliCommand::Validate => {
             let report = validate_all(root)?;
             println!(
                 "task registry validate ok: {} plans, {} tasks, {} manifests",
@@ -68,20 +78,20 @@ fn run(mut args: Vec<String>) -> Result<String> {
             );
             Ok("validate".to_string())
         }
-        "activate" => {
+        CliCommand::Activate => {
             let plan_path = args.first().ok_or_else(usage)?;
             activate_plan(root, plan_path)?;
             println!("PLAN_ACTIVATE {plan_path} ok");
             Ok(format!("activate {plan_path}"))
         }
-        "status" => {
+        CliCommand::Status => {
             let task_id = args.first().ok_or_else(usage)?;
             let status = args.get(1).ok_or_else(usage)?;
             update_task_status(root, task_id, status)?;
             println!("TASK_STATUS {task_id} {status} ok");
             Ok(format!("status {task_id} {status}"))
         }
-        "defer" => {
+        CliCommand::Defer => {
             let task_id = args.first().ok_or_else(usage)?;
             let basis = args.get(1).ok_or_else(usage)?;
             let reactivation = args.get(2).ok_or_else(usage)?;
@@ -89,43 +99,44 @@ fn run(mut args: Vec<String>) -> Result<String> {
             println!("TASK_DEFER {task_id} ok");
             Ok(format!("defer {task_id}"))
         }
-        "report" => {
+        CliCommand::Report => {
             let plan_id = args.first().ok_or_else(usage)?;
             let report = report_plan(root, plan_id)?;
             let formatted = format_report(&report);
             println!("{formatted}");
             Ok(format!("report {plan_id}"))
         }
-        "archive-completed" => {
+        CliCommand::ArchiveCompleted => {
             archive_completed(root)?;
             println!("TASK_ARCHIVE_COMPLETED ok");
             Ok("archive-completed".to_string())
         }
-        "verify-behaviors" => {
+        CliCommand::VerifyBehaviors => {
             let filter = args.first().map(String::as_str);
             let count = verify_behaviors(root, filter)?;
             println!("TASK_VERIFY_BEHAVIORS ok: {count} confirmations");
             Ok(format!("verify-behaviors {count}"))
         }
-        "verify-mutation-hook" => {
+        CliCommand::VerifyMutationHook => {
             let format = parse_hook_format(&args)?;
             verify_mutation_hook(root, format)?;
             println!("TASK_VERIFY_MUTATION_HOOK ok");
             Ok("verify-mutation-hook".to_string())
         }
-        "metrics" => {
+        CliCommand::Metrics => {
             let report = metrics(root)?;
             let formatted = format_metrics(&report);
             println!("{formatted}");
             Ok("metrics".to_string())
         }
-        "source-limit" => source_limit::run_command(root, &args),
-        _ => Err(usage()),
+        CliCommand::SourceLimit => source_limit::run_command(root, &args),
+        CliCommand::ReleaseCheck => release_checks::run_command(root, &args),
+        CliCommand::Usage => Err(usage()),
     }
 }
 
 fn usage() -> String {
-    "usage: task-registry-flow {validate|activate <docs/plans/file.md>|status <task_id> <status>|defer <task_id> <basis> <reactivation>|report <plan_id>|archive-completed|verify-behaviors [plan_id|task_id]|verify-mutation-hook [--format codex|antigravity|cursor]|metrics|source-limit check|source-limit plan}".to_string()
+    "usage: task-registry-flow {validate|activate <docs/plans/file.md>|status <task_id> <status>|defer <task_id> <basis> <reactivation>|report <plan_id>|archive-completed|verify-behaviors [plan_id|task_id]|verify-mutation-hook [--format codex|antigravity|cursor]|metrics|source-limit check|source-limit plan|release-check {required|version|tracked|all} [--format json]}".to_string()
 }
 
 fn validate_all(root: &Path) -> Result<ValidationReport> {
@@ -142,7 +153,12 @@ fn validate_all(root: &Path) -> Result<ValidationReport> {
 
 fn activate_plan(root: &Path, plan_path: &str) -> Result<()> {
     let manifest = load_manifest(root, plan_path)?;
-    validate_manifest(&manifest.manifest)?;
+    validate_manifest_for_activation(&manifest.manifest)?;
+    plan_contract::validate_activation_contract(
+        &manifest.plan_path,
+        &manifest.plan_body,
+        &manifest.manifest,
+    )?;
     let mut registry = load_registry(root)?;
     validate_registry_root(&registry)?;
     let today = today();
@@ -172,7 +188,7 @@ fn activate_plan(root: &Path, plan_path: &str) -> Result<()> {
             plan_path: plan_path.to_string(),
             plan_hash_sha256: manifest.plan_hash_sha256.clone(),
             activated_at: today.clone(),
-            status: "active".to_string(),
+            status: TaskStatus::Active,
         }),
     }
 
@@ -185,7 +201,7 @@ fn activate_plan(root: &Path, plan_path: &str) -> Result<()> {
     for task in &registry.tasks {
         if task.source_plan_path == manifest.plan_path
             && !manifest_task_ids.contains(task.task_id.as_str())
-            && task.status != "cancelled"
+            && task.status != TaskStatus::Cancelled
         {
             return Err(format!(
                 "{} would be removed by activation; cancel it explicitly first",
@@ -223,11 +239,11 @@ fn activate_plan(root: &Path, plan_path: &str) -> Result<()> {
 }
 
 fn update_task_status(root: &Path, task_id: &str, status: &str) -> Result<()> {
-    if status == "deferred" {
+    let status = parse_status(status, task_id)?;
+    if status == TaskStatus::Deferred {
         return Err("use TASK_DEFER instead of TASK_STATUS for deferred tasks".to_string());
     }
-    validate_status(status, task_id)?;
-    if status == "completed" {
+    if status == TaskStatus::Completed {
         verify_behaviors(root, Some(task_id))?;
     }
     let mut registry = load_registry(root)?;
@@ -237,7 +253,7 @@ fn update_task_status(root: &Path, task_id: &str, status: &str) -> Result<()> {
             .iter_mut()
             .find(|task| task.task_id == task_id)
             .ok_or_else(|| format!("missing task_id {task_id}"))?;
-        task.status = status.to_string();
+        task.status = status;
         task.updated_at = today();
         task.plan_id.clone()
     };
@@ -256,7 +272,7 @@ fn defer_task(root: &Path, task_id: &str, basis: &str, reactivation: &str) -> Re
             .iter_mut()
             .find(|task| task.task_id == task_id)
             .ok_or_else(|| format!("missing task_id {task_id}"))?;
-        task.status = "deferred".to_string();
+        task.status = TaskStatus::Deferred;
         task.deferral_governance_basis = Some(basis.to_string());
         task.reactivation_condition = Some(reactivation.to_string());
         task.updated_at = today();
@@ -288,9 +304,9 @@ fn report_plan(root: &Path, plan_id: &str) -> Result<PlanReport> {
         deferred_or_blocked: Vec::new(),
     };
     for task in registry.tasks.iter().filter(|task| task.plan_id == plan_id) {
-        match task.status.as_str() {
-            "completed" => report.completed += 1,
-            "deferred" => {
+        match task.status {
+            TaskStatus::Completed => report.completed += 1,
+            TaskStatus::Deferred => {
                 report.deferred += 1;
                 report.deferred_or_blocked.push((
                     task.task_id.clone(),
@@ -300,7 +316,7 @@ fn report_plan(root: &Path, plan_id: &str) -> Result<PlanReport> {
                         .unwrap_or_else(|| task.reason.clone()),
                 ));
             }
-            "blocked" => {
+            TaskStatus::Blocked => {
                 report.blocked += 1;
                 report.deferred_or_blocked.push((
                     task.task_id.clone(),
@@ -308,7 +324,7 @@ fn report_plan(root: &Path, plan_id: &str) -> Result<PlanReport> {
                     task.reason.clone(),
                 ));
             }
-            "cancelled" => report.cancelled += 1,
+            TaskStatus::Cancelled => report.cancelled += 1,
             _ => report.remaining += 1,
         }
     }
@@ -342,29 +358,26 @@ fn verify_behaviors(root: &Path, filter: Option<&str>) -> Result<usize> {
         if matches!(filter, Some(value) if value != task.task_id && value != task.plan_id) {
             continue;
         }
-        if task.status == "cancelled" {
+        if task.status == TaskStatus::Cancelled {
             continue;
         }
         for behavior_id in &task.behavior_ids {
             let behavior = behavior_map.get(behavior_id).ok_or_else(|| {
                 format!("{} references missing behavior {behavior_id}", task.task_id)
             })?;
-            run_confirmation(&behavior.confirmation, behavior_id)?;
+            run_behavior_verifiers(root, behavior, behavior_id)?;
             count += 1;
         }
     }
     Ok(count)
 }
 
-fn parse_hook_format(args: &[String]) -> Result<&str> {
+fn parse_hook_format(args: &[String]) -> Result<HookFormat> {
     if args.is_empty() {
-        return Ok("antigravity");
+        return Ok(HookFormat::Antigravity);
     }
     if args.len() == 2 && args[0] == "--format" {
-        return match args[1].as_str() {
-            "codex" | "antigravity" | "cursor" => Ok(args[1].as_str()),
-            other => Err(format!("unsupported hook format: {other}")),
-        };
+        return HookFormat::from_str(&args[1]);
     }
     Err(usage())
 }
@@ -385,16 +398,16 @@ fn metrics(root: &Path) -> Result<MetricsReport> {
         events: 0,
         failed_events: 0,
         mutation_denials: 0,
+        malformed_events: 0,
     };
     for task in &registry.tasks {
-        match task.status.as_str() {
-            "planned" => report.planned += 1,
-            "active" => report.active += 1,
-            "blocked" => report.blocked += 1,
-            "deferred" => report.deferred += 1,
-            "completed" => report.completed += 1,
-            "cancelled" => report.cancelled += 1,
-            _ => {}
+        match task.status {
+            TaskStatus::Planned => report.planned += 1,
+            TaskStatus::Active => report.active += 1,
+            TaskStatus::Blocked => report.blocked += 1,
+            TaskStatus::Deferred => report.deferred += 1,
+            TaskStatus::Completed => report.completed += 1,
+            TaskStatus::Cancelled => report.cancelled += 1,
         }
     }
     let events_path = root.join(EVENTS_PATH);
@@ -403,16 +416,18 @@ fn metrics(root: &Path) -> Result<MetricsReport> {
             .map_err(|error| format!("read {}: {error}", events_path.display()))?;
         for line in body.lines().filter(|line| !line.trim().is_empty()) {
             report.events += 1;
-            if let Ok(value) = serde_json::from_str::<Value>(line) {
-                let outcome = value
-                    .get("outcome")
-                    .and_then(Value::as_str)
-                    .unwrap_or_default();
-                if outcome == "error" {
-                    report.failed_events += 1;
+            match serde_json::from_str::<EventRecord>(line) {
+                Ok(event) => {
+                    if event.outcome == EventOutcome::Error {
+                        report.failed_events += 1;
+                    }
+                    if event.outcome == EventOutcome::MutationDenied {
+                        report.mutation_denials += 1;
+                    }
                 }
-                if outcome == "mutation-denied" {
-                    report.mutation_denials += 1;
+                Err(_) => {
+                    report.malformed_events += 1;
+                    report.failed_events += 1;
                 }
             }
         }
@@ -422,7 +437,7 @@ fn metrics(root: &Path) -> Result<MetricsReport> {
 
 fn format_metrics(report: &MetricsReport) -> String {
     format!(
-        "Task registry metrics: plans={}, tasks={}, manifests={}, planned={}, active={}, completed={}, deferred={}, blocked={}, cancelled={}, events={}, failed_events={}, mutation_denials={}",
+        "Task registry metrics: plans={}, tasks={}, manifests={}, planned={}, active={}, completed={}, deferred={}, blocked={}, cancelled={}, events={}, failed_events={}, mutation_denials={}, malformed_events={}",
         report.plans,
         report.tasks,
         report.manifests,
@@ -434,7 +449,8 @@ fn format_metrics(report: &MetricsReport) -> String {
         report.cancelled,
         report.events,
         report.failed_events,
-        report.mutation_denials
+        report.mutation_denials,
+        report.malformed_events
     )
 }
 
@@ -581,7 +597,7 @@ fn write_registry_archives(root: &Path, archives: &[(String, TaskRegistryArchive
 }
 
 fn plan_is_archive_eligible(plan: &RegistryPlan, tasks: &[RegistryTask]) -> bool {
-    if plan.status == "completed" || plan.status == "cancelled" {
+    if plan.status == TaskStatus::Completed || plan.status == TaskStatus::Cancelled {
         return true;
     }
     let plan_tasks = tasks
@@ -589,15 +605,15 @@ fn plan_is_archive_eligible(plan: &RegistryPlan, tasks: &[RegistryTask]) -> bool
         .filter(|task| task.plan_id == plan.plan_id)
         .collect::<Vec<_>>();
     !plan_tasks.is_empty()
-        && plan_tasks
-            .iter()
-            .all(|task| task.status == "completed" || task.status == "cancelled")
+        && plan_tasks.iter().all(|task| {
+            task.status == TaskStatus::Completed || task.status == TaskStatus::Cancelled
+        })
 }
 
 fn archived_completed_plan(plan: &RegistryPlan) -> RegistryPlan {
     let mut archived = plan.clone();
-    if archived.status != "cancelled" {
-        archived.status = "completed".to_string();
+    if archived.status != TaskStatus::Cancelled {
+        archived.status = TaskStatus::Completed;
     }
     archived
 }
@@ -627,7 +643,6 @@ fn validate_registry_with_manifests(
     let mut manifest_plan_ids = BTreeMap::new();
     let mut manifest_task_ids = BTreeMap::new();
     for manifest in manifests {
-        validate_manifest(&manifest.manifest)?;
         if let Some(previous) = manifest_plan_ids.insert(
             manifest.manifest.plan_id.as_str(),
             manifest.plan_path.as_str(),
@@ -643,6 +658,13 @@ fn validate_registry_with_manifests(
                 manifest.manifest.plan_id, manifest.plan_path
             )
         })?;
+        validate_manifest_for_registry(&manifest.manifest, registry_plan.status)?;
+        plan_contract::validate_registry_contract(
+            &manifest.plan_path,
+            &manifest.plan_body,
+            &manifest.manifest,
+            registry_plan.status,
+        )?;
         if registry_plan.plan_path != manifest.plan_path {
             return Err(format!(
                 "{} registry path {} does not match manifest path {}",
@@ -691,7 +713,7 @@ fn validate_registry_with_manifests(
     for task in &registry.tasks {
         if task.source_plan_path.starts_with(PLAN_DIR)
             && !manifest_task_ids.contains_key(task.task_id.as_str())
-            && task.status != "cancelled"
+            && task.status != TaskStatus::Cancelled
             && manifests
                 .iter()
                 .any(|manifest| manifest.plan_path == task.source_plan_path)
@@ -716,7 +738,7 @@ fn validate_registry_root(registry: &TaskRegistry) -> Result<()> {
     if registry.activation_skill != "task-registry-flow" {
         return Err("activation_skill must be task-registry-flow".to_string());
     }
-    for status in VALID_STATUSES {
+    for status in TaskStatus::variants() {
         if !registry
             .status_vocabulary
             .iter()
@@ -758,7 +780,6 @@ fn validate_archive_path(path: &str) -> Result<()> {
 
 fn validate_plan(root: &Path, plan: &RegistryPlan) -> Result<()> {
     validate_plan_path(&plan.plan_path)?;
-    validate_status(&plan.status, &plan.plan_id)?;
     reject_empty("plan_hash_sha256", &plan.plan_hash_sha256)?;
     assert_sha256("plan_hash_sha256", &plan.plan_hash_sha256)?;
     let path = root.join(&plan.plan_path);
@@ -776,17 +797,16 @@ fn validate_task(task: &RegistryTask, plans_by_id: &BTreeMap<String, &RegistryPl
     let plan = plans_by_id
         .get(&task.plan_id)
         .ok_or_else(|| format!("{} references missing plan {}", task.task_id, task.plan_id))?;
-    validate_status(&task.status, &task.task_id)?;
     if task.source_plan_path != plan.plan_path {
         return Err(format!("{} source_plan_path mismatch", task.task_id));
     }
-    if task.status != "cancelled" && task.source_plan_hash_sha256 != plan.plan_hash_sha256 {
+    if task.status != TaskStatus::Cancelled && task.source_plan_hash_sha256 != plan.plan_hash_sha256
+    {
         return Err(format!("{} source_plan_hash_sha256 mismatch", task.task_id));
     }
     for (field, value) in [
         ("task_id", &task.task_id),
         ("title", &task.title),
-        ("kind", &task.kind),
         ("reason", &task.reason),
         ("acceptance_proof", &task.acceptance_proof),
         ("created_at", &task.created_at),
@@ -802,15 +822,15 @@ fn validate_task(task: &RegistryTask, plans_by_id: &BTreeMap<String, &RegistryPl
     for behavior_id in &task.behavior_ids {
         reject_empty("behavior_ids", behavior_id)?;
     }
-    if task.status == "deferred" {
+    if task.status == TaskStatus::Deferred {
         validate_deferred_task(task)?;
     }
     Ok(())
 }
 
 fn validate_manifest(manifest: &PlanManifest) -> Result<()> {
-    if manifest.schema_version != 1 {
-        return Err("Task Manifest schema_version must be 1".to_string());
+    if !matches!(manifest.schema_version, 1 | 2) {
+        return Err("Task Manifest schema_version must be 1 or 2".to_string());
     }
     reject_empty("manifest plan_id", &manifest.plan_id)?;
     if manifest.behaviors.is_empty() {
@@ -820,8 +840,9 @@ fn validate_manifest(manifest: &PlanManifest) -> Result<()> {
         return Err(format!("{} has no tasks", manifest.plan_id));
     }
     let mut behavior_ids = BTreeSet::new();
+    let require_verifiers = manifest.schema_version >= 2;
     for behavior in &manifest.behaviors {
-        validate_behavior(behavior)?;
+        validate_behavior(behavior, require_verifiers)?;
         if !behavior_ids.insert(behavior.behavior_id.as_str()) {
             return Err(format!("duplicate behavior_id {}", behavior.behavior_id));
         }
@@ -839,7 +860,31 @@ fn validate_manifest(manifest: &PlanManifest) -> Result<()> {
     Ok(())
 }
 
-fn validate_behavior(behavior: &Behavior) -> Result<()> {
+fn validate_manifest_for_activation(manifest: &PlanManifest) -> Result<()> {
+    validate_manifest(manifest)?;
+    if manifest.schema_version != 2 {
+        return Err(format!(
+            "{} uses Task Manifest schema_version {}; new activations require schema_version 2",
+            manifest.plan_id, manifest.schema_version
+        ));
+    }
+    Ok(())
+}
+
+fn validate_manifest_for_registry(manifest: &PlanManifest, status: TaskStatus) -> Result<()> {
+    validate_manifest(manifest)?;
+    if manifest.schema_version == 1
+        && !matches!(status, TaskStatus::Completed | TaskStatus::Cancelled)
+    {
+        return Err(format!(
+            "{} uses legacy Task Manifest schema_version 1; only completed/cancelled archived evidence may remain v1",
+            manifest.plan_id
+        ));
+    }
+    Ok(())
+}
+
+fn validate_behavior(behavior: &Behavior, require_verifiers: bool) -> Result<()> {
     for (field, value) in [
         ("behavior_id", &behavior.behavior_id),
         ("title", &behavior.title),
@@ -850,15 +895,36 @@ fn validate_behavior(behavior: &Behavior) -> Result<()> {
     ] {
         reject_empty(field, value)?;
     }
+    if require_verifiers && behavior.verifiers.is_empty() {
+        return Err(format!(
+            "{} requires typed [[behaviors.verifiers]] entries",
+            behavior.behavior_id
+        ));
+    }
+    if require_verifiers {
+        reject_empty(
+            "gap_id",
+            behavior
+                .gap_id
+                .as_deref()
+                .ok_or_else(|| format!("{} requires gap_id", behavior.behavior_id))?,
+        )?;
+        if behavior.polarity.is_none() {
+            return Err(format!("{} requires polarity", behavior.behavior_id));
+        }
+    }
+    for verifier in &behavior.verifiers {
+        verifier
+            .validate()
+            .map_err(|error| format!("{} invalid verifier: {error}", behavior.behavior_id))?;
+    }
     Ok(())
 }
 
 fn validate_manifest_task(task: &ManifestTask, behavior_ids: &BTreeSet<&str>) -> Result<()> {
-    validate_status(&task.status, &task.task_id)?;
     for (field, value) in [
         ("task_id", &task.task_id),
         ("title", &task.title),
-        ("kind", &task.kind),
         ("reason", &task.reason),
         ("acceptance_proof", &task.acceptance_proof),
     ] {
@@ -876,7 +942,7 @@ fn validate_manifest_task(task: &ManifestTask, behavior_ids: &BTreeSet<&str>) ->
         }
     }
     validate_targets(&task.task_id, &task.targets)?;
-    if task.status == "deferred" {
+    if task.status == TaskStatus::Deferred {
         if empty_option(&task.deferral_governance_basis)
             || empty_option(&task.reactivation_condition)
         {
@@ -911,6 +977,8 @@ fn validate_targets(task_id: &str, targets: &[TaskTarget]) -> Result<()> {
             ));
         }
         normalize_relative_path(&target.file)?;
+        MutationScope::from_task_target(&target.file)
+            .map_err(|error| format!("{task_id} invalid mutation target: {error}"))?;
     }
     Ok(())
 }
@@ -959,16 +1027,15 @@ fn validate_blocker_decomposition(
     }
     for step in projected_steps {
         for (field, value) in [
-            ("step_id", &step.step_id),
-            ("status", &step.status),
-            ("file", &step.file),
-            ("object", &step.object),
-            ("required_change", &step.required_change),
-            ("blocked_by", &step.blocked_by),
+            ("step_id", step.step_id.as_str()),
+            ("status", step.status.as_str()),
+            ("file", step.file.as_str()),
+            ("object", step.object.as_str()),
+            ("required_change", step.required_change.as_str()),
+            ("blocked_by", step.blocked_by.as_str()),
         ] {
             reject_empty(field, value)?;
         }
-        validate_status(&step.status, &step.step_id)?;
         for blocker_id in step
             .blocked_by
             .split(',')
@@ -995,11 +1062,9 @@ fn build_registry_task(
     RegistryTask {
         task_id: task.task_id.clone(),
         plan_id: manifest.manifest.plan_id.clone(),
-        status: existing
-            .map(|task| task.status.clone())
-            .unwrap_or_else(|| task.status.clone()),
+        status: existing.map(|task| task.status).unwrap_or(task.status),
         title: task.title.clone(),
-        kind: task.kind.clone(),
+        kind: task.kind,
         source_plan_path: manifest.plan_path.clone(),
         source_plan_hash_sha256: manifest.plan_hash_sha256.clone(),
         reason: task.reason.clone(),
@@ -1052,13 +1117,21 @@ fn refresh_plan_status(registry: &mut TaskRegistry, plan_id: &str) {
     }
 }
 
-fn derive_plan_status(tasks: &[RegistryTask]) -> String {
-    if !tasks.is_empty() && tasks.iter().all(|task| task.status == "completed") {
-        "completed".to_string()
-    } else if !tasks.is_empty() && tasks.iter().all(|task| task.status == "cancelled") {
-        "cancelled".to_string()
+fn derive_plan_status(tasks: &[RegistryTask]) -> TaskStatus {
+    if !tasks.is_empty()
+        && tasks
+            .iter()
+            .all(|task| task.status == TaskStatus::Completed)
+    {
+        TaskStatus::Completed
+    } else if !tasks.is_empty()
+        && tasks
+            .iter()
+            .all(|task| task.status == TaskStatus::Cancelled)
+    {
+        TaskStatus::Cancelled
     } else {
-        "active".to_string()
+        TaskStatus::Active
     }
 }
 
@@ -1110,6 +1183,7 @@ fn parse_manifest_from_body(plan_path: &str, body: &str) -> Result<ActivatedMani
     Ok(ActivatedManifest {
         plan_path: plan_path.to_string(),
         plan_hash_sha256: normalized_hash(body),
+        plan_body: body.to_string(),
         manifest,
     })
 }
@@ -1154,20 +1228,132 @@ fn behavior_map(manifests: &[ActivatedManifest]) -> Result<BTreeMap<String, Beha
     Ok(map)
 }
 
-fn run_confirmation(command: &str, behavior_id: &str) -> Result<()> {
+fn run_behavior_verifiers(root: &Path, behavior: &Behavior, behavior_id: &str) -> Result<()> {
+    if behavior.verifiers.is_empty() {
+        return Err(format!(
+            "{behavior_id} requires typed [[behaviors.verifiers]] entries"
+        ));
+    }
+    for verifier in &behavior.verifiers {
+        verifier
+            .validate()
+            .map_err(|error| format!("invalid verifier for {behavior_id}: {error}"))?;
+        run_behavior_verifier(root, verifier, behavior_id)?;
+    }
+    Ok(())
+}
+
+fn run_behavior_verifier(
+    root: &Path,
+    verifier: &BehaviorVerifier,
+    behavior_id: &str,
+) -> Result<()> {
+    match verifier {
+        BehaviorVerifier::Command {
+            command,
+            expected_exit,
+        } => run_confirmation(command, *expected_exit, behavior_id),
+        BehaviorVerifier::FileExists { path } => {
+            let path = verifier_path(path)?;
+            if root.join(&path).is_file() {
+                Ok(())
+            } else {
+                Err(format!(
+                    "verifier failed for {behavior_id}: expected file {path} to exist"
+                ))
+            }
+        }
+        BehaviorVerifier::FileAbsent { path } => {
+            let path = verifier_path(path)?;
+            if !root.join(&path).exists() {
+                Ok(())
+            } else {
+                Err(format!(
+                    "verifier failed for {behavior_id}: expected {path} to be absent"
+                ))
+            }
+        }
+        BehaviorVerifier::Contains { path, needle }
+        | BehaviorVerifier::NotContains { path, needle } => {
+            let path = verifier_path(path)?;
+            let body = fs::read_to_string(root.join(&path))
+                .map_err(|error| format!("read verifier file {path}: {error}"))?;
+            let contains = body.contains(needle);
+            if matches!(verifier, BehaviorVerifier::Contains { .. }) && contains {
+                return Ok(());
+            }
+            if matches!(verifier, BehaviorVerifier::NotContains { .. }) && !contains {
+                return Ok(());
+            }
+            Err(format!(
+                "verifier failed for {behavior_id}: {} {path} needle {:?}",
+                verifier.verifier_type(),
+                needle
+            ))
+        }
+        BehaviorVerifier::JsonValid { path } => {
+            let path = verifier_path(path)?;
+            let body = fs::read_to_string(root.join(&path))
+                .map_err(|error| format!("read verifier JSON {path}: {error}"))?;
+            serde_json::from_str::<Value>(&body).map_err(|error| {
+                format!("verifier failed for {behavior_id}: invalid JSON {path}: {error}")
+            })?;
+            Ok(())
+        }
+        BehaviorVerifier::JsonSchema { path, schema_path } => {
+            let path = verifier_path(path)?;
+            let schema_path = verifier_path(schema_path)?;
+            let body = fs::read_to_string(root.join(&path))
+                .map_err(|error| format!("read verifier JSON {path}: {error}"))?;
+            let schema_body = fs::read_to_string(root.join(&schema_path))
+                .map_err(|error| format!("read verifier JSON schema {schema_path}: {error}"))?;
+            let instance = serde_json::from_str::<Value>(&body).map_err(|error| {
+                format!("verifier failed for {behavior_id}: invalid JSON {path}: {error}")
+            })?;
+            let schema = serde_json::from_str::<Value>(&schema_body).map_err(|error| {
+                format!(
+                    "verifier failed for {behavior_id}: invalid JSON schema {schema_path}: {error}"
+                )
+            })?;
+            let validator = jsonschema::validator_for(&schema).map_err(|error| {
+                format!(
+                    "verifier failed for {behavior_id}: invalid JSON schema {schema_path}: {error}"
+                )
+            })?;
+            validator.validate(&instance).map_err(|error| {
+                format!("verifier failed for {behavior_id}: JSON {path} does not match {schema_path}: {error}")
+            })
+        }
+    }
+}
+
+fn verifier_path(path: &str) -> Result<String> {
+    normalize_relative_path(path)
+}
+
+fn run_confirmation(command: &str, expected_exit: i32, behavior_id: &str) -> Result<()> {
     let status = Command::new("bash")
         .arg("-lc")
         .arg(command)
         .status()
         .map_err(|error| format!("run confirmation for {behavior_id}: {error}"))?;
-    if status.success() {
+    let actual = status.code().unwrap_or(1);
+    if actual == expected_exit {
         Ok(())
     } else {
-        Err(format!("confirmation failed for {behavior_id}"))
+        Err(format!(
+            "confirmation failed for {behavior_id}: expected exit {expected_exit}, actual {actual}"
+        ))
     }
 }
 
 pub(crate) fn normalize_relative_path(path: &str) -> Result<String> {
+    if path
+        .chars()
+        .any(|value| matches!(value, '*' | '?' | '[' | ']' | '{' | '}'))
+    {
+        return Err(format!("path must not contain glob metacharacters: {path}"));
+    }
     let path = path.replace('\\', "/");
     let mut parts = Vec::new();
     for component in Path::new(&path).components() {
@@ -1232,12 +1418,8 @@ fn validate_plan_path(path: &str) -> Result<()> {
     Ok(())
 }
 
-fn validate_status(status: &str, object: &str) -> Result<()> {
-    if VALID_STATUSES.contains(&status) {
-        Ok(())
-    } else {
-        Err(format!("{object} has invalid status {status}"))
-    }
+fn parse_status(status: &str, object: &str) -> Result<TaskStatus> {
+    TaskStatus::from_str(status).map_err(|error| format!("{object} {error}"))
 }
 
 fn assert_sha256(field: &str, value: &str) -> Result<()> {

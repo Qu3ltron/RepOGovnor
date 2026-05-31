@@ -1,4 +1,5 @@
 use crate::model::*;
+use crate::schema::{CliCommand, EventOutcome, HookFormat, MutationScope};
 use crate::{append_event, load_registry, normalize_relative_path, timestamp, truncate_detail};
 use serde_json::Value;
 use std::env;
@@ -25,7 +26,7 @@ impl HookInspection {
     }
 }
 
-pub(crate) fn verify_mutation_hook(root: &Path, _format: &str) -> Result<()> {
+pub(crate) fn verify_mutation_hook(root: &Path, _format: HookFormat) -> Result<()> {
     let mut stdin = String::new();
     io::stdin()
         .read_to_string(&mut stdin)
@@ -53,7 +54,7 @@ pub(crate) fn verify_mutation_payload(root: &Path, stdin: &str) -> Result<()> {
     let mut implementation_paths = Vec::new();
     for raw_path in inspection.paths {
         let path = normalize_hook_path(root, &raw_path)?;
-        if !is_governance_write(&path) {
+        if !is_plan_bootstrap_write(&path) {
             implementation_paths.push(path);
         }
     }
@@ -62,26 +63,27 @@ pub(crate) fn verify_mutation_payload(root: &Path, stdin: &str) -> Result<()> {
     }
 
     let registry = load_registry(root)?;
-    let allowed_targets = registry
+    let allowed_scopes = registry
         .tasks
         .iter()
-        .filter(|task| ACTIVE_TARGET_STATUSES.contains(&task.status.as_str()))
-        .flat_map(|task| task.targets.iter().map(|target| target.file.as_str()))
-        .collect::<Vec<_>>();
+        .filter(|task| ACTIVE_TARGET_STATUSES.contains(&task.status))
+        .flat_map(|task| task.targets.iter())
+        .map(|target| MutationScope::from_task_target(&target.file))
+        .collect::<Result<Vec<_>>>()?;
 
     for path in implementation_paths {
-        if target_allows(&path, &allowed_targets) {
+        if allowed_scopes.iter().any(|scope| scope.allows(&path)) {
             continue;
         }
         let _ = append_event(
             root,
-            EventRecord {
-                timestamp: timestamp(),
-                command: "verify-mutation-hook".to_string(),
-                outcome: "mutation-denied".to_string(),
-                duration_ms: 0,
-                detail: truncate_detail(&path),
-            },
+            EventRecord::new(
+                timestamp(),
+                CliCommand::VerifyMutationHook,
+                EventOutcome::MutationDenied,
+                0,
+                truncate_detail(&path),
+            ),
         );
         return Err(format!(
             "{path} is not bound to an active registry task target"
@@ -283,18 +285,14 @@ fn normalize_hook_path(root: &Path, raw_path: &str) -> Result<String> {
     normalize_relative_path(&relative.to_string_lossy())
 }
 
-fn is_governance_write(path: &str) -> bool {
-    GOVERNANCE_WRITE_FILES.contains(&path)
-        || GOVERNANCE_WRITE_PREFIXES
-            .iter()
-            .any(|prefix| path.starts_with(prefix))
+fn is_plan_bootstrap_write(path: &str) -> bool {
+    path.starts_with(PLAN_BOOTSTRAP_PREFIX) && path.ends_with(".md")
 }
 
+#[cfg(test)]
 pub(crate) fn target_allows(path: &str, targets: &[&str]) -> bool {
-    targets.iter().any(|target| {
-        let Ok(target) = normalize_relative_path(target) else {
-            return false;
-        };
-        path == target || target.ends_with('/') && path.starts_with(&target)
-    })
+    targets
+        .iter()
+        .filter_map(|target| MutationScope::from_task_target(target).ok())
+        .any(|scope| scope.allows(path))
 }

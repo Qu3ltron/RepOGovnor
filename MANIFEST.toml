@@ -1,6 +1,7 @@
 schema_version = 1
 plugin_name = "agent-governance"
 plugin_version = "2.0.0"
+license = "MIT"
 portable = true
 
 # Templates render via scripts/render-from-config.sh + project.config.toml
@@ -178,4 +179,35 @@ tracked_for_ci = [
   ".cursor/skills/task-registry-flow/PROJECT.md",
   "docs/task-registry.toml",
   "docs/task-registry/events.jsonl",
+]
+
+[install_policy]
+action_vocabulary = [
+  "aligned",
+  "create",
+  "update",
+  "replace",
+  "merge-create",
+  "merge-append",
+  "merge-update",
+  "preserve",
+  "preserve-valid",
+  "preserve-drift",
+  "sync-skill",
+  "replace-symlink",
+  "remove-stale",
+  "create-dir",
+  "replace-dir",
+  "create-symlink",
+  "chmod",
+  "skip",
+  "link-plugin",
+]
+dry_run_prefix = "would-"
+stale_absent = [
+  ".codex/settings.toml",
+  ".codex/hooks/user-plan-approval.toml",
+  ".gemini/settings.json",
+  "hooks.json",
+  "tools/antigravity/pre-tool-use-gap-closure.sh",
 ]

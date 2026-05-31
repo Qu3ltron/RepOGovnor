@@ -35,8 +35,8 @@ Canonical skill content ships from `plugins/agent-governance/skills/`. Antigravi
 
 After user-approved gap closure:
 
-1. Write or refresh `docs/plans/<short-slug>.md` with per-gap `- Behavioral:` lines, `## Validation Plan`, and one fenced `## Task Manifest` TOML block.
-2. Manifest: `[[behaviors]]` with runnable `confirmation` commands; each `[[tasks]]` row links `behavior_ids`.
+1. Write or refresh `docs/plans/<short-slug>.md` with Approved Scope, Phased Required Change Checklist, Per-Gap Success Criteria, Validation Plan, Walkthrough Evidence, and one fenced `## Task Manifest` TOML block.
+2. Manifest: `schema_version = 2`, `[[behaviors]]` with `gap_id` and `polarity`, typed `[[behaviors.verifiers]]`, and `[[tasks]]` rows linked through `behavior_ids`.
 3. `{{TASK_REGISTRY_CLI}} activate docs/plans/<short-slug>.md`
 4. Confirm tasks in `docs/task-registry.toml` with matching `source_plan_hash_sha256`.
 5. Only then edit implementation files listed in active task targets.
@@ -48,7 +48,7 @@ Handoff: `{{TASK_REGISTRY_CLI}} report <plan_id>`; archive completed when suppor
 ## Governance reminders
 
 - **Spec authority:** {{AUTHORITY_ORDER}}. On conflict, ask.
-- **Registry:** use only `{{TASK_REGISTRY_CLI}}` opcodes; typed validation via `validate`.
+- **Registry:** use only `{{TASK_REGISTRY_CLI}}` opcodes; typed validation via `validate`; new activations require Task Manifest schema v2, exact targets, positive and negative gap behavior, and no placeholders.
 - **Deferrals:** `TASK_DEFER` via registry CLI `defer`; requires `deferral_governance_basis` + `reactivation_condition`.
 - **Source file limit:** 1600 lines is a hard design-time budget for source/governance files. Run `{{TASK_REGISTRY_CLI}} source-limit check`; use `{{TASK_REGISTRY_CLI}} source-limit plan --path <file>` before splitting existing violations.
 

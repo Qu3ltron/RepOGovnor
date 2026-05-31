@@ -1,34 +1,15 @@
 use serde::{Deserialize, Serialize};
 
+use crate::schema::{BehaviorPolarity, BehaviorVerifier, TaskKind, TaskStatus};
+
 pub(crate) const REGISTRY_PATH: &str = "docs/task-registry.toml";
 pub(crate) const REGISTRY_ARCHIVE_DIR: &str = "docs/task-registry/archive";
 pub(crate) const EVENTS_PATH: &str = "docs/task-registry/events.jsonl";
 pub(crate) const PLAN_DIR: &str = "docs/plans";
 pub(crate) const SOURCE_LINE_LIMIT: usize = 1600;
 pub(crate) const ARCHIVE_COMPLETED_PLAN_CHUNK_SIZE: usize = 8;
-pub(crate) const VALID_STATUSES: &[&str] = &[
-    "planned",
-    "active",
-    "blocked",
-    "deferred",
-    "completed",
-    "cancelled",
-];
-pub(crate) const ACTIVE_TARGET_STATUSES: &[&str] = &["planned", "active"];
-pub(crate) const GOVERNANCE_WRITE_PREFIXES: &[&str] = &[
-    ".agents/",
-    ".codex/",
-    ".cursor/",
-    "docs/plans/",
-    "docs/task-registry/",
-    "tools/agent-governance/",
-];
-pub(crate) const GOVERNANCE_WRITE_FILES: &[&str] = &[
-    "AGENTS.md",
-    "GEMINI.md",
-    "docs/task-registry.toml",
-    "project.config.toml",
-];
+pub(crate) const ACTIVE_TARGET_STATUSES: &[TaskStatus] = &[TaskStatus::Planned, TaskStatus::Active];
+pub(crate) const PLAN_BOOTSTRAP_PREFIX: &str = "docs/plans/";
 pub(crate) const EXTERNAL_BLOCKER_INDICATORS: &[&str] = &[
     "runtime",
     "provider",
@@ -80,7 +61,7 @@ pub(crate) struct RegistryPlan {
     pub(crate) plan_path: String,
     pub(crate) plan_hash_sha256: String,
     pub(crate) activated_at: String,
-    pub(crate) status: String,
+    pub(crate) status: TaskStatus,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -88,9 +69,9 @@ pub(crate) struct RegistryPlan {
 pub(crate) struct RegistryTask {
     pub(crate) task_id: String,
     pub(crate) plan_id: String,
-    pub(crate) status: String,
+    pub(crate) status: TaskStatus,
     pub(crate) title: String,
-    pub(crate) kind: String,
+    pub(crate) kind: TaskKind,
     pub(crate) source_plan_path: String,
     pub(crate) source_plan_hash_sha256: String,
     pub(crate) reason: String,
@@ -136,7 +117,7 @@ pub(crate) struct TaskBlocker {
 #[serde(deny_unknown_fields)]
 pub(crate) struct ProjectedStep {
     pub(crate) step_id: String,
-    pub(crate) status: String,
+    pub(crate) status: TaskStatus,
     pub(crate) file: String,
     pub(crate) object: String,
     pub(crate) required_change: String,
@@ -158,11 +139,17 @@ pub(crate) struct PlanManifest {
 #[serde(deny_unknown_fields)]
 pub(crate) struct Behavior {
     pub(crate) behavior_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) gap_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) polarity: Option<BehaviorPolarity>,
     pub(crate) title: String,
     pub(crate) given: String,
     pub(crate) when: String,
     pub(crate) then: String,
     pub(crate) confirmation: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub(crate) verifiers: Vec<BehaviorVerifier>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -170,8 +157,8 @@ pub(crate) struct Behavior {
 pub(crate) struct ManifestTask {
     pub(crate) task_id: String,
     pub(crate) title: String,
-    pub(crate) status: String,
-    pub(crate) kind: String,
+    pub(crate) status: TaskStatus,
+    pub(crate) kind: TaskKind,
     pub(crate) reason: String,
     pub(crate) acceptance_proof: String,
     pub(crate) behavior_ids: Vec<String>,
@@ -191,6 +178,7 @@ pub(crate) struct ManifestTask {
 pub(crate) struct ActivatedManifest {
     pub(crate) plan_path: String,
     pub(crate) plan_hash_sha256: String,
+    pub(crate) plan_body: String,
     pub(crate) manifest: PlanManifest,
 }
 
@@ -226,13 +214,7 @@ pub(crate) struct MetricsReport {
     pub(crate) events: usize,
     pub(crate) failed_events: usize,
     pub(crate) mutation_denials: usize,
+    pub(crate) malformed_events: usize,
 }
 
-#[derive(Debug, Serialize)]
-pub(crate) struct EventRecord {
-    pub(crate) timestamp: String,
-    pub(crate) command: String,
-    pub(crate) outcome: String,
-    pub(crate) duration_ms: u128,
-    pub(crate) detail: String,
-}
+pub(crate) type EventRecord = crate::schema::ReceiptEvent;

@@ -19,10 +19,13 @@ tmp_copy() {
   tmp="$(mktemp -d)"
   mkdir -p "$tmp/.codex-plugin" "$tmp/rust/task-registry-flow-cli"
   cp "$ROOT/VERSION" "$tmp/VERSION"
+  cp "$ROOT/REQUIREMENTS.toml" "$tmp/REQUIREMENTS.toml"
   cp "$ROOT/plugin.json" "$tmp/plugin.json"
   cp "$ROOT/.codex-plugin/plugin.json" "$tmp/.codex-plugin/plugin.json"
   cp "$ROOT/MANIFEST.toml" "$tmp/MANIFEST.toml"
+  cp "$ROOT/rust/task-registry-flow-cli/Cargo.lock" "$tmp/rust/task-registry-flow-cli/Cargo.lock"
   cp "$ROOT/rust/task-registry-flow-cli/Cargo.toml" "$tmp/rust/task-registry-flow-cli/Cargo.toml"
+  cp -R "$ROOT/rust/task-registry-flow-cli/src" "$tmp/rust/task-registry-flow-cli/src"
   printf '%s\n' "$tmp"
 }
 
@@ -36,7 +39,7 @@ check_version() {
     echo "version drift unexpectedly passed" >&2
     exit 1
   fi
-  grep -q 'version mismatch' /tmp/release-version-drift.out
+  grep -q 'release-version-consistent' /tmp/release-version-drift.out
 
   local missing
   missing="$(tmp_copy)"
@@ -45,7 +48,16 @@ check_version() {
     echo "missing VERSION unexpectedly passed" >&2
     exit 1
   fi
-  grep -q 'missing VERSION' /tmp/release-version-missing.out
+  grep -q 'VERSION' /tmp/release-version-missing.out
+
+  local bad_schema
+  bad_schema="$(tmp_copy)"
+  perl -0pi -e 's/format = "plain"/format = "bogus"/' "$bad_schema/REQUIREMENTS.toml"
+  if "$ROOT/scripts/release-version-check.sh" "$bad_schema" >/tmp/release-version-schema.out 2>&1; then
+    echo "unknown version file schema unexpectedly passed" >&2
+    exit 1
+  fi
+  grep -q 'unknown variant' /tmp/release-version-schema.out
 }
 
 check_artifacts() {
@@ -53,13 +65,56 @@ check_artifacts() {
   test -f "$ROOT/LICENSE"
   test -f "$ROOT/docs/releases/v2.md"
   test -f "$ROOT/rust/task-registry-flow-cli/deny.toml"
+  grep -q 'MIT License' "$ROOT/LICENSE"
   grep -q '2.0.0' "$ROOT/CHANGELOG.md"
   grep -q 'Breaking changes' "$ROOT/CHANGELOG.md"
+  grep -q 'License: MIT' "$ROOT/README.md"
   grep -q 'Audit Policy' "$ROOT/docs/releases/v2.md"
+  grep -q 'License: MIT' "$ROOT/docs/releases/v2.md"
   grep -q 'Unicode-3.0' "$ROOT/rust/task-registry-flow-cli/deny.toml"
   grep -q 'ignore = true' "$ROOT/rust/task-registry-flow-cli/deny.toml"
   grep -q 'CHANGELOG.md' "$ROOT/README.md"
   grep -q 'docs/releases/v2.md' "$ROOT/README.md"
+  grep -q 'VISION.md' "$ROOT/README.md"
+  grep -q 'ROADMAP.md' "$ROOT/README.md"
+  grep -q 'Primary users' "$ROOT/VISION.md"
+  grep -q 'Known gaps' "$ROOT/ROADMAP.md"
+  grep -q 'Runtime Schemas' "$ROOT/docs/runtime-schemas.md"
+}
+
+check_installer_schema() {
+  local target config
+  target="$(mktemp -d)"
+  config="$(mktemp)"
+  CLEANUP_PATHS+=("$target" "$config")
+  git init -q "$target"
+  cp "$ROOT/project.config.example.toml" "$config"
+
+  MODE=force DRY_RUN=1 DRY_RUN_FORMAT=json \
+    "$ROOT/scripts/render-from-config.sh" "$config" "$target" >/tmp/installer-dry-run-json.out
+  python3 - <<'PY'
+import json
+from pathlib import Path
+payload = json.loads(Path("/tmp/installer-dry-run-json.out").read_text(encoding="utf-8"))
+assert payload["schema_version"] == 1
+assert payload["surface"] == "installer-dry-run"
+assert any(item["action"].startswith("would-") for item in payload["actions"])
+PY
+
+  printf '\n[unknown_runtime]\nloose = true\n' >> "$config"
+  if MODE=force DRY_RUN=1 "$ROOT/scripts/render-from-config.sh" "$config" "$target" >/tmp/installer-unknown-config.out 2>&1; then
+    echo "unknown installer config unexpectedly passed" >&2
+    exit 1
+  fi
+  grep -q 'unknown project.config.toml section' /tmp/installer-unknown-config.out
+
+  cp "$ROOT/project.config.example.toml" "$config"
+  perl -0pi -e 's#cli_command = ".codex/scripts/task-registry"#cli_command = "scripts/task-registry"#' "$config"
+  if MODE=force DRY_RUN=1 "$ROOT/scripts/render-from-config.sh" "$config" "$target" >/tmp/installer-noncanonical-config.out 2>&1; then
+    echo "noncanonical installer config unexpectedly passed" >&2
+    exit 1
+  fi
+  grep -q 'noncanonical project.config.toml' /tmp/installer-noncanonical-config.out
 }
 
 check_status() {
@@ -67,10 +122,10 @@ check_status() {
     AGENT_GOVERNANCE_ALLOW_ACTIVE_RELEASE_TASKS=1 \
     "$ROOT/scripts/status.sh" --release-source
   if "$ROOT/scripts/status.sh" --strict >/tmp/release-consumer-strict.out 2>&1; then
-    echo "consumer strict status unexpectedly passed in plugin source checkout" >&2
-    exit 1
+    grep -q '0 fail' /tmp/release-consumer-strict.out
+  else
+    grep -q 'missing required CI artifact' /tmp/release-consumer-strict.out
   fi
-  grep -q 'missing required CI artifact' /tmp/release-consumer-strict.out
 }
 
 check_audit() {
@@ -120,20 +175,28 @@ PY
     exit 1
   fi
   grep -q 'cargo-deny missing' /tmp/release-audit-missing.out
+
+  if "$ROOT/scripts/release-audit.sh" --root "$ROOT" >/tmp/release-audit-unknown-arg.out 2>&1; then
+    echo "release audit unexpectedly accepted an ignored argument" >&2
+    exit 1
+  fi
+  grep -q 'usage: release-audit.sh' /tmp/release-audit-unknown-arg.out
 }
 
 case "$MODE" in
   all)
     check_version
     check_artifacts
+    check_installer_schema
     check_status
     check_audit
     ;;
   version) check_version ;;
   artifacts) check_artifacts ;;
+  installer) check_installer_schema ;;
   status) check_status ;;
   audit) check_audit ;;
-  *) echo "usage: test-release-readiness.sh [all|version|artifacts|status|audit]" >&2; exit 2 ;;
+  *) echo "usage: test-release-readiness.sh [all|version|artifacts|installer|status|audit]" >&2; exit 2 ;;
 esac
 
 echo "release readiness tests ok: $MODE"

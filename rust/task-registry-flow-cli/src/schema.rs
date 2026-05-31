@@ -1,0 +1,469 @@
+use serde::{Deserialize, Serialize};
+use std::fmt;
+use std::str::FromStr;
+
+macro_rules! string_enum {
+    ($name:ident { $($variant:ident => $value:literal),+ $(,)? }) => {
+        #[allow(dead_code)]
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+        pub(crate) enum $name {
+            $(
+                #[serde(rename = $value)]
+                $variant
+            ),+
+        }
+
+        #[allow(dead_code)]
+        impl $name {
+            pub(crate) fn as_str(self) -> &'static str {
+                match self {
+                    $(Self::$variant => $value),+
+                }
+            }
+
+            pub(crate) fn variants() -> &'static [&'static str] {
+                &[$($value),+]
+            }
+        }
+
+        impl fmt::Display for $name {
+            fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                formatter.write_str(self.as_str())
+            }
+        }
+
+        impl FromStr for $name {
+            type Err = String;
+
+            fn from_str(value: &str) -> Result<Self, Self::Err> {
+                match value {
+                    $($value => Ok(Self::$variant),)+
+                    _ => Err(format!(
+                        "unknown {}: {} (expected one of: {})",
+                        stringify!($name),
+                        value,
+                        Self::variants().join(", ")
+                    )),
+                }
+            }
+        }
+    };
+}
+
+string_enum!(CliCommand {
+    Validate => "validate",
+    Activate => "activate",
+    Status => "status",
+    Defer => "defer",
+    Report => "report",
+    ArchiveCompleted => "archive-completed",
+    VerifyBehaviors => "verify-behaviors",
+    VerifyMutationHook => "verify-mutation-hook",
+    Metrics => "metrics",
+    SourceLimit => "source-limit",
+    ReleaseCheck => "release-check",
+    Usage => "usage",
+});
+
+string_enum!(HookFormat {
+    Antigravity => "antigravity",
+    Codex => "codex",
+    Cursor => "cursor",
+});
+
+string_enum!(TaskStatus {
+    Planned => "planned",
+    Active => "active",
+    Blocked => "blocked",
+    Deferred => "deferred",
+    Completed => "completed",
+    Cancelled => "cancelled",
+});
+
+string_enum!(TaskKind {
+    Authorization => "authorization",
+    Diagnostics => "diagnostics",
+    Documentation => "documentation",
+    Governance => "governance",
+    Implementation => "implementation",
+    Migration => "migration",
+    Release => "release",
+    Schema => "schema",
+    Test => "test",
+    Validation => "validation",
+});
+
+string_enum!(EventOutcome {
+    Ok => "ok",
+    Error => "error",
+    MutationDenied => "mutation-denied",
+});
+
+string_enum!(DiagnosticSeverity {
+    Info => "info",
+    Warning => "warning",
+    Error => "error",
+});
+
+string_enum!(CheckStatus {
+    Pass => "pass",
+    Warn => "warn",
+    Fail => "fail",
+    Skip => "skip",
+});
+
+string_enum!(VerifierType {
+    Command => "command",
+    FileExists => "file_exists",
+    FileAbsent => "file_absent",
+    Contains => "contains",
+    NotContains => "not_contains",
+    JsonValid => "json_valid",
+    JsonSchema => "json_schema",
+});
+
+string_enum!(BehaviorPolarity {
+    Positive => "positive",
+    Negative => "negative",
+    Validation => "validation",
+});
+
+string_enum!(MutationScopeKind {
+    ExactFile => "exact_file",
+    DirectoryTree => "directory_tree",
+    GeneratedArtifact => "generated_artifact",
+    GovernanceRepair => "governance_repair",
+});
+
+string_enum!(InstallAction {
+    Aligned => "aligned",
+    Create => "create",
+    Update => "update",
+    Replace => "replace",
+    MergeCreate => "merge-create",
+    MergeAppend => "merge-append",
+    MergeUpdate => "merge-update",
+    Preserve => "preserve",
+    PreserveValid => "preserve-valid",
+    PreserveDrift => "preserve-drift",
+    SyncSkill => "sync-skill",
+    ReplaceSymlink => "replace-symlink",
+    RemoveStale => "remove-stale",
+    CreateDir => "create-dir",
+    ReplaceDir => "replace-dir",
+    CreateSymlink => "create-symlink",
+    Chmod => "chmod",
+    Skip => "skip",
+    LinkPlugin => "link-plugin",
+});
+
+string_enum!(ReleaseCheckId {
+    ReleaseFilePresent => "release-file-present",
+    StalePathAbsent => "stale-path-absent",
+    ReleaseVersionConsistent => "release-version-consistent",
+    TrackedForCiPresent => "tracked-for-ci-present",
+    ReleaseSchemaValid => "release-schema-valid",
+});
+
+string_enum!(VersionFileFormat {
+    Plain => "plain",
+    Json => "json",
+    Toml => "toml",
+});
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct ReceiptEvent {
+    pub(crate) schema_version: i64,
+    pub(crate) timestamp: String,
+    pub(crate) command: CliCommand,
+    pub(crate) outcome: EventOutcome,
+    pub(crate) duration_ms: u128,
+    pub(crate) detail: String,
+}
+
+impl ReceiptEvent {
+    pub(crate) fn new(
+        timestamp: String,
+        command: CliCommand,
+        outcome: EventOutcome,
+        duration_ms: u128,
+        detail: String,
+    ) -> Self {
+        Self {
+            schema_version: 1,
+            timestamp,
+            command,
+            outcome,
+            duration_ms,
+            detail,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct Diagnostic {
+    pub(crate) check_id: String,
+    pub(crate) surface: String,
+    pub(crate) path: String,
+    pub(crate) severity: DiagnosticSeverity,
+    pub(crate) status: CheckStatus,
+    pub(crate) expected: String,
+    pub(crate) actual: String,
+    pub(crate) remediation: String,
+}
+
+impl Diagnostic {
+    pub(crate) fn pass(
+        check_id: impl Into<String>,
+        surface: impl Into<String>,
+        path: impl Into<String>,
+        expected: impl Into<String>,
+    ) -> Self {
+        let expected = expected.into();
+        Self {
+            check_id: check_id.into(),
+            surface: surface.into(),
+            path: path.into(),
+            severity: DiagnosticSeverity::Info,
+            status: CheckStatus::Pass,
+            expected: expected.clone(),
+            actual: expected,
+            remediation: "none".to_string(),
+        }
+    }
+
+    pub(crate) fn fail(
+        check_id: impl Into<String>,
+        surface: impl Into<String>,
+        path: impl Into<String>,
+        expected: impl Into<String>,
+        actual: impl Into<String>,
+        remediation: impl Into<String>,
+    ) -> Self {
+        Self {
+            check_id: check_id.into(),
+            surface: surface.into(),
+            path: path.into(),
+            severity: DiagnosticSeverity::Error,
+            status: CheckStatus::Fail,
+            expected: expected.into(),
+            actual: actual.into(),
+            remediation: remediation.into(),
+        }
+    }
+
+    pub(crate) fn validate(&self) -> Result<(), String> {
+        for (field, value) in [
+            ("check_id", &self.check_id),
+            ("surface", &self.surface),
+            ("path", &self.path),
+            ("expected", &self.expected),
+            ("actual", &self.actual),
+            ("remediation", &self.remediation),
+        ] {
+            if value.trim().is_empty() {
+                return Err(format!("diagnostic {field} must not be empty"));
+            }
+        }
+        if self.status == CheckStatus::Fail && self.severity != DiagnosticSeverity::Error {
+            return Err("failing diagnostic severity must be error".to_string());
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct CheckSummary {
+    pub(crate) pass: usize,
+    pub(crate) warn: usize,
+    pub(crate) fail: usize,
+    pub(crate) skip: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct CheckReport {
+    pub(crate) schema_version: i64,
+    pub(crate) surface: String,
+    pub(crate) summary: CheckSummary,
+    pub(crate) checks: Vec<Diagnostic>,
+}
+
+impl CheckReport {
+    pub(crate) fn new(surface: impl Into<String>, checks: Vec<Diagnostic>) -> Result<Self, String> {
+        let mut summary = CheckSummary {
+            pass: 0,
+            warn: 0,
+            fail: 0,
+            skip: 0,
+        };
+        for check in &checks {
+            check.validate()?;
+            match check.status {
+                CheckStatus::Pass => summary.pass += 1,
+                CheckStatus::Warn => summary.warn += 1,
+                CheckStatus::Fail => summary.fail += 1,
+                CheckStatus::Skip => summary.skip += 1,
+            }
+        }
+        Ok(Self {
+            schema_version: 1,
+            surface: surface.into(),
+            summary,
+            checks,
+        })
+    }
+
+    pub(crate) fn has_failures(&self) -> bool {
+        self.summary.fail > 0
+    }
+
+    pub(crate) fn to_json(&self) -> Result<String, String> {
+        serde_json::to_string_pretty(self).map_err(|error| format!("serialize report: {error}"))
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type", deny_unknown_fields)]
+pub(crate) enum BehaviorVerifier {
+    #[serde(rename = "command")]
+    Command {
+        command: String,
+        #[serde(default = "default_expected_exit")]
+        expected_exit: i32,
+    },
+    #[serde(rename = "file_exists")]
+    FileExists { path: String },
+    #[serde(rename = "file_absent")]
+    FileAbsent { path: String },
+    #[serde(rename = "contains")]
+    Contains { path: String, needle: String },
+    #[serde(rename = "not_contains")]
+    NotContains { path: String, needle: String },
+    #[serde(rename = "json_valid")]
+    JsonValid { path: String },
+    #[serde(rename = "json_schema")]
+    JsonSchema { path: String, schema_path: String },
+}
+
+impl BehaviorVerifier {
+    pub(crate) fn verifier_type(&self) -> VerifierType {
+        match self {
+            Self::Command { .. } => VerifierType::Command,
+            Self::FileExists { .. } => VerifierType::FileExists,
+            Self::FileAbsent { .. } => VerifierType::FileAbsent,
+            Self::Contains { .. } => VerifierType::Contains,
+            Self::NotContains { .. } => VerifierType::NotContains,
+            Self::JsonValid { .. } => VerifierType::JsonValid,
+            Self::JsonSchema { .. } => VerifierType::JsonSchema,
+        }
+    }
+
+    pub(crate) fn validate(&self) -> Result<(), String> {
+        match self {
+            Self::Command { command, .. } => reject_empty("command verifier command", command),
+            Self::FileExists { path } | Self::FileAbsent { path } | Self::JsonValid { path } => {
+                reject_empty_path(self.verifier_type(), path)
+            }
+            Self::Contains { path, needle } | Self::NotContains { path, needle } => {
+                reject_empty_path(self.verifier_type(), path)?;
+                if needle.is_empty() {
+                    return Err(format!("{} verifier requires needle", self.verifier_type()));
+                }
+                Ok(())
+            }
+            Self::JsonSchema { path, schema_path } => {
+                reject_empty_path(self.verifier_type(), path)?;
+                if schema_path.trim().is_empty() {
+                    return Err("json_schema verifier requires schema_path".to_string());
+                }
+                Ok(())
+            }
+        }
+    }
+}
+
+fn default_expected_exit() -> i32 {
+    0
+}
+
+fn reject_empty_path(verifier_type: VerifierType, path: &str) -> Result<(), String> {
+    if path.trim().is_empty() {
+        return Err(format!("{verifier_type} verifier requires path"));
+    }
+    Ok(())
+}
+
+fn reject_empty(field: &str, value: &str) -> Result<(), String> {
+    if value.trim().is_empty() {
+        return Err(format!("{field} must not be empty"));
+    }
+    Ok(())
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct MutationScope {
+    pub(crate) kind: MutationScopeKind,
+    pub(crate) path: String,
+}
+
+impl MutationScope {
+    pub(crate) fn from_task_target(path: &str) -> Result<Self, String> {
+        let normalized = normalize_scope_path(path)?;
+        reject_broad_target(&normalized)?;
+        if normalized.ends_with('/') {
+            return Ok(Self {
+                kind: MutationScopeKind::DirectoryTree,
+                path: normalized,
+            });
+        }
+        Ok(Self {
+            kind: MutationScopeKind::ExactFile,
+            path: normalized,
+        })
+    }
+
+    pub(crate) fn allows(&self, candidate: &str) -> bool {
+        let Ok(candidate) = normalize_scope_path(candidate) else {
+            return false;
+        };
+        match self.kind {
+            MutationScopeKind::ExactFile | MutationScopeKind::GeneratedArtifact => {
+                candidate == self.path
+            }
+            MutationScopeKind::DirectoryTree | MutationScopeKind::GovernanceRepair => {
+                candidate.starts_with(&self.path) && candidate.len() > self.path.len()
+            }
+        }
+    }
+}
+
+fn normalize_scope_path(path: &str) -> Result<String, String> {
+    let path = path.replace('\\', "/");
+    let mut normalized = path.trim().trim_start_matches("./").to_string();
+    while normalized.contains("//") {
+        normalized = normalized.replace("//", "/");
+    }
+    if normalized.is_empty() || normalized == "." || normalized.starts_with('/') {
+        return Err(format!("invalid mutation scope path: {path}"));
+    }
+    if normalized.split('/').any(|part| part == "..") {
+        return Err(format!("mutation scope path must not contain '..': {path}"));
+    }
+    Ok(normalized)
+}
+
+fn reject_broad_target(path: &str) -> Result<(), String> {
+    let trimmed = path.trim_end_matches('/');
+    if matches!(
+        trimmed,
+        "." | "" | "src" | "docs" | ".codex" | ".agents" | ".cursor" | "tools"
+    ) {
+        return Err(format!("mutation target is too broad: {path}"));
+    }
+    Ok(())
+}
