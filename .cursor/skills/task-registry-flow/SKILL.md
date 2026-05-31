@@ -26,6 +26,7 @@ Manages `docs/task-registry.toml` — authoritative status ledger for approved p
 | `TASK_METRICS` | Summarize local workflow receipts and registry state |
 | `SOURCE_LIMIT_CHECK` | Enforce the 1600-line source/governance file limit |
 | `SOURCE_LIMIT_PLAN` | Produce deterministic split guidance for violating files |
+| `VERIFY_CHAIN` | Validate and repair the receipt hash chain in events.jsonl |
 
 Exact command strings live in `.codex/agent-governance.toml`; the canonical pattern is `.codex/scripts/task-registry activate|status|defer|report|validate|archive-completed|verify-behaviors|verify-mutation-hook|metrics|source-limit ...`.
 

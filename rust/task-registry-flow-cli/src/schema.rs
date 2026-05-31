@@ -58,6 +58,7 @@ string_enum!(CliCommand {
     Report => "report",
     ArchiveCompleted => "archive-completed",
     VerifyBehaviors => "verify-behaviors",
+    VerifyChain => "verify-chain",
     VerifyMutationHook => "verify-mutation-hook",
     Metrics => "metrics",
     SourceLimit => "source-limit",
@@ -71,6 +72,7 @@ string_enum!(HookFormat {
     Antigravity => "antigravity",
     Codex => "codex",
     Cursor => "cursor",
+    Claude => "claude",
 });
 
 string_enum!(TaskStatus {
@@ -392,6 +394,25 @@ impl Diagnostic {
         }
     }
 
+    pub(crate) fn warn(
+        check_id: impl Into<String>,
+        surface: impl Into<String>,
+        path: impl Into<String>,
+        actual: impl Into<String>,
+    ) -> Self {
+        let actual = actual.into();
+        Self {
+            check_id: check_id.into(),
+            surface: surface.into(),
+            path: path.into(),
+            severity: DiagnosticSeverity::Warning,
+            status: CheckStatus::Warn,
+            expected: String::new(),
+            actual,
+            remediation: String::new(),
+        }
+    }
+
     pub(crate) fn fail(
         check_id: impl Into<String>,
         surface: impl Into<String>,
@@ -413,6 +434,8 @@ impl Diagnostic {
     }
 
     pub(crate) fn validate(&self) -> Result<(), String> {
+        // Warnings may have empty expected/remediation — the actual state IS the signal.
+        let skip_expected = self.severity == DiagnosticSeverity::Warning;
         for (field, value) in [
             ("check_id", &self.check_id),
             ("surface", &self.surface),
@@ -421,6 +444,9 @@ impl Diagnostic {
             ("actual", &self.actual),
             ("remediation", &self.remediation),
         ] {
+            if (field == "expected" || field == "remediation") && skip_expected {
+                continue;
+            }
             if value.trim().is_empty() {
                 return Err(format!("diagnostic {field} must not be empty"));
             }

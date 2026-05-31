@@ -1,7 +1,7 @@
 {
   "name": "agent-governance",
   "version": "2.0.0",
-  "description": "Portable Codex + Cursor + Antigravity CLI gap-closure contract, plugin-owned task-registry CLI, mutation gates, and 1600-line source limits",
+  "description": "Portable Codex + Claude Code + Cursor + Antigravity CLI gap-closure contract, plugin-owned task-registry CLI, mutation gates, and 1600-line source limits",
   "author": "Qu3ltron",
   "license": "MIT",
   "repository": "https://github.com/Qu3ltron/Governance-plugin",
@@ -11,6 +11,7 @@
     "gap-closure",
     "task-registry",
     "codex",
+    "claude-code",
     "cursor",
     "antigravity"
   ],
@@ -42,6 +43,9 @@
     "GEMINI.md",
     ".cursor/skills/gap-closure-contract/PROJECT.md",
     ".cursor/skills/task-registry-flow/PROJECT.md",
+    ".claude/settings.json",
+    ".claude/skills/gap-closure-contract/PROJECT.md",
+    ".claude/skills/task-registry-flow/PROJECT.md",
     "docs/task-registry.toml",
     "docs/task-registry/events.jsonl"
   ]

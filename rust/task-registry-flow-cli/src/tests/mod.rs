@@ -4,16 +4,18 @@ use crate::mutation_hook::{
 };
 use crate::schema::{
     BehaviorPolarity, CheckReport, CheckStatus, CliCommand, Diagnostic, DiagnosticSeverity,
-    EventOutcome, HookFormat, InstallAction, MutationScope, TaskKind, VerifierType,
+    EventOutcome, HookFormat, InstallAction, MutationScope, TaskKind, TaskStatus, VerifierType,
 };
 use std::env;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 use std::str::FromStr;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::sync::atomic::{AtomicU64, Ordering};
 
 mod metrics_tests;
+mod state_transition_tests;
 mod status_check_tests;
+mod verify_chain_tests;
 
 #[test]
 fn activates_and_completes_behavior_backed_task() {
@@ -1535,11 +1537,10 @@ fn set_executable(path: &Path, executable: bool) {
 fn set_executable(_path: &Path, _executable: bool) {}
 
 fn temp_root(label: &str) -> PathBuf {
-    let unique = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_nanos();
-    let root = env::temp_dir().join(format!("task-registry-flow-{label}-{unique}"));
+    static COUNTER: AtomicU64 = AtomicU64::new(0);
+    let pid = std::process::id() as u64;
+    let seq = COUNTER.fetch_add(1, Ordering::Relaxed);
+    let root = env::temp_dir().join(format!("task-registry-flow-{label}-{pid}-{seq}"));
     fs::create_dir_all(&root).unwrap();
     root
 }

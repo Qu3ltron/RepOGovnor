@@ -1,0 +1,20 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "GOVERNANCE_HOOK_FORMAT=claude bash \"$(git rev-parse --show-toplevel)/{{MUTATION_HOOK_SCRIPT}}\" --format claude",
+            "timeout": 60,
+            "statusMessage": "Checking registry-bound mutation"
+          }
+        ]
+      }
+    ]
+  },
+  "env": {
+    "GOVERNANCE_VERIFY_HOOK_CMD": "{{VERIFY_HOOK_COMMAND}}"
+  }
+}

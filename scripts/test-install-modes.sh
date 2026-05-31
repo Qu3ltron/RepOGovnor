@@ -13,7 +13,7 @@ trap cleanup EXIT
 
 git init -q "$TARGET_ROOT"
 mkdir -p "$TARGET_ROOT/.codex" "$TARGET_ROOT/.agents/plugins" "$TARGET_ROOT/tools/antigravity"
-mkdir -p "$TARGET_ROOT/.agents/skills" "$TARGET_ROOT/.cursor/skills"
+mkdir -p "$TARGET_ROOT/.agents/skills" "$TARGET_ROOT/.cursor/skills" "$TARGET_ROOT/.claude/skills"
 
 printf 'custom agents\n' > "$TARGET_ROOT/AGENTS.md"
 printf 'custom gemini\n<!-- agent-governance:begin -->\nold\n<!-- agent-governance:end -->\n' > "$TARGET_ROOT/GEMINI.md"
@@ -28,6 +28,8 @@ for skill in gap-closure-contract task-registry-flow; do
   printf 'legacy cursor skill\n' > "$TARGET_ROOT/.cursor/skills/$skill/SKILL.md"
   printf 'legacy symlink target project\n' > "$TARGET_ROOT/.cursor/skills/$skill/PROJECT.md"
   ln -s "../../.cursor/skills/$skill" "$TARGET_ROOT/.agents/skills/$skill"
+  mkdir -p "$TARGET_ROOT/.claude/skills/$skill"
+  printf 'legacy claude skill\n' > "$TARGET_ROOT/.claude/skills/$skill/SKILL.md"
 done
 
 hash_workspace() {
@@ -78,6 +80,7 @@ grep -q '.agents/skills/gap-closure-contract: would-replace-symlink' "$OUT_DIR/d
 grep -q '.agents/skills/task-registry-flow: would-replace-symlink' "$OUT_DIR/dry-run.out"
 test -L "$TARGET_ROOT/.agents/skills/gap-closure-contract"
 test -L "$TARGET_ROOT/.agents/skills/task-registry-flow"
+grep -q '.claude/settings.json: would-create' "$OUT_DIR/dry-run.out"
 
 if (cd "$TARGET_ROOT" && "$PLUGIN_ROOT/scripts/status.sh" --strict > "$OUT_DIR/no-marker-status.out" 2>&1); then
   echo "strict status unexpectedly accepted markerless AGENTS.md" >&2
@@ -156,6 +159,23 @@ test -f "$TARGET_ROOT/docs/task-registry/events.jsonl"
 test ! -e "$TARGET_ROOT/nested/work/docs/task-registry.toml"
 test ! -e "$TARGET_ROOT/nested/work/docs/task-registry/events.jsonl"
 
+# Claude Code merge checks
+test -f "$TARGET_ROOT/.claude/settings.json"
+grep -q 'GOVERNANCE_HOOK_FORMAT=claude' "$TARGET_ROOT/.claude/settings.json"
+grep -q 'GOVERNANCE_VERIFY_HOOK_CMD' "$TARGET_ROOT/.claude/settings.json"
+grep -q 'PreToolUse' "$TARGET_ROOT/.claude/settings.json"
+grep -q '"matcher": "Bash|Edit|Write"' "$TARGET_ROOT/.claude/settings.json"
+test -d "$TARGET_ROOT/.claude/skills/gap-closure-contract"
+test -d "$TARGET_ROOT/.claude/skills/task-registry-flow"
+grep -q 'name: gap-closure-contract' "$TARGET_ROOT/.claude/skills/gap-closure-contract/SKILL.md"
+grep -q 'name: task-registry-flow' "$TARGET_ROOT/.claude/skills/task-registry-flow/SKILL.md"
+
+# Explicit Claude Code environment check (tolerate tracked_for_ci failures in test workspace)
+(cd "$TARGET_ROOT" && "$PLUGIN_ROOT/scripts/status.sh" --strict --env claude > "$OUT_DIR/claude-status.out" 2>&1) || true
+grep -q 'claude CLI' "$OUT_DIR/claude-status.out"
+grep -q '.claude/settings.json is valid JSON' "$OUT_DIR/claude-status.out"
+grep -q '.claude/settings.json PreToolUse hook delegates to canonical gate with claude format' "$OUT_DIR/claude-status.out"
+
 for skill in gap-closure-contract task-registry-flow; do
   rm -rf "$TARGET_ROOT/.agents/skills/$skill"
   ln -s "../../.cursor/skills/$skill" "$TARGET_ROOT/.agents/skills/$skill"
@@ -191,5 +211,11 @@ test ! -L "$TARGET_ROOT/.agents/skills/gap-closure-contract"
 test ! -L "$TARGET_ROOT/.agents/skills/task-registry-flow"
 test -d "$TARGET_ROOT/.agents/skills/gap-closure-contract"
 test -d "$TARGET_ROOT/.agents/skills/task-registry-flow"
+
+# Claude Code force checks
+test -f "$TARGET_ROOT/.claude/settings.json"
+grep -q 'GOVERNANCE_HOOK_FORMAT=claude' "$TARGET_ROOT/.claude/settings.json"
+test -d "$TARGET_ROOT/.claude/skills/gap-closure-contract"
+test -d "$TARGET_ROOT/.claude/skills/task-registry-flow"
 
 echo "install mode validation ok"

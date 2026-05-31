@@ -59,7 +59,14 @@ pub(crate) fn main_entry() -> i32 {
             if options.output_format == OutputFormat::Json {
                 println!(
                     "{}",
-                    reports::success_json(command, detail, receipt_recorded).unwrap()
+                    reports::success_json(command, detail, receipt_recorded)
+                        .unwrap_or_else(|error| {
+                            format!(
+                                r#"{{"status":"error","command":"{}","error":"serialization failed: {}"}}"#,
+                                command.as_str(),
+                                error.replace('"', "\\\"")
+                            )
+                        })
                 );
             } else if !detail.is_empty() {
                 println!("{detail}");
@@ -118,7 +125,13 @@ fn render_error(
         (OutputFormat::Json, RuntimeFailure::Text(value)) => {
             println!(
                 "{}",
-                reports::failure_json(command, value, receipt_recorded).unwrap()
+                reports::failure_json(command, value, receipt_recorded).unwrap_or_else(|error| {
+                    format!(
+                        r#"{{"status":"error","command":"{}","error":"serialization failed: {}"}}"#,
+                        command.as_str(),
+                        error.replace('"', "\\\"")
+                    )
+                })
             );
         }
         (OutputFormat::Text, RuntimeFailure::Text(value)) => {
@@ -133,5 +146,11 @@ pub(crate) fn failure_json_for_test(
     receipt_recorded: bool,
     error: &str,
 ) -> String {
-    reports::failure_json(command, error, receipt_recorded).unwrap()
+    reports::failure_json(command, error, receipt_recorded).unwrap_or_else(|e| {
+        format!(
+            r#"{{"status":"error","command":"{}","error":"serialization failed: {}"}}"#,
+            command.as_str(),
+            e.replace('"', "\\\"")
+        )
+    })
 }

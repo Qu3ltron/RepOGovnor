@@ -2,6 +2,9 @@
 # Paths may use {{AUTO_REPO_ROOT}} to substitute git rev-parse --show-toplevel at install time.
 
 [project]
+# `repo_name` is used to auto-derive `{{REPO_SLUG}}` for plan templates:
+# lowercased, non-alphanumeric characters replaced with hyphens.
+# `{{REPO_SLUG}}` is available as a substitution variable in all templates.
 repo_name = "my-project"
 repo_root = "{{AUTO_REPO_ROOT}}"
 scratch_root = "/tmp/my-project-gap-closure"
@@ -26,6 +29,7 @@ hook_script_path = "tools/agent-governance/pre-tool-use-gap-closure.sh"
 render_codex = true
 render_antigravity = true
 render_cursor = true
+render_claude_code = true
 install_global_antigravity_plugin = false
 minimum_agy_version = "1.0.3"
 

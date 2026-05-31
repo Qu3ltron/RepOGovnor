@@ -1,0 +1,20 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "GOVERNANCE_HOOK_FORMAT=claude bash \"$(git rev-parse --show-toplevel)/tools/agent-governance/pre-tool-use-gap-closure.sh\" --format claude",
+            "timeout": 60,
+            "statusMessage": "Checking registry-bound mutation"
+          }
+        ]
+      }
+    ]
+  },
+  "env": {
+    "GOVERNANCE_VERIFY_HOOK_CMD": ".codex/scripts/task-registry verify-mutation-hook"
+  }
+}

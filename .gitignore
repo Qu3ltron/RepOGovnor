@@ -14,3 +14,6 @@ project.config.toml
 # Rust build output
 target/
 rust/**/target/
+
+# Antigravity local config symlink
+.antigravitycli/

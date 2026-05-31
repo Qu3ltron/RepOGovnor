@@ -29,7 +29,7 @@ if [[ -z "$CONFIG" ]]; then
 fi
 
 case "$ENV_FILTER" in
-  all|codex|antigravity|cursor) ;;
+  all|codex|antigravity|cursor|claude) ;;
   *) echo "unknown --env: $ENV_FILTER" >&2; exit 2 ;;
 esac
 
@@ -98,8 +98,9 @@ run_status_check_json() {
     return
   fi
   STATUS_CHECK_RAN=1
-  local output
-  if output="$(task_registry status-check --format json 2>/tmp/agent-governance-status-check.err)"; then
+  local output tmp_err
+  tmp_err="$(mktemp)"
+  if output="$(task_registry status-check --format json 2>"$tmp_err")"; then
     STATUS_CHECK_JSON="$output"
   else
     STATUS_CHECK_JSON="$output"
@@ -107,6 +108,7 @@ run_status_check_json() {
       STATUS_CHECK_JSON='{"checks":[]}'
     fi
   fi
+  rm -f "$tmp_err"
 }
 
 check_symlink() {
@@ -517,6 +519,8 @@ skill_diff_hint "gap-closure-contract" ".agents/skills"
 skill_diff_hint "task-registry-flow" ".agents/skills"
 skill_diff_hint "gap-closure-contract" ".cursor/skills"
 skill_diff_hint "task-registry-flow" ".cursor/skills"
+skill_diff_hint "gap-closure-contract" ".claude/skills"
+skill_diff_hint "task-registry-flow" ".claude/skills"
 if [[ -f "${TARGET_ROOT}/.agents/skills/gap-closure-contract.md" ]] && [[ -f "${TARGET_ROOT}/.agents/skills/task-registry-flow.md" ]]; then
   ok "Antigravity markdown skills present"
 else
@@ -600,6 +604,57 @@ if [[ "$ENV_FILTER" == "all" || "$ENV_FILTER" == "cursor" ]]; then
   fi
   check_file_contains "${TARGET_ROOT}/.cursor/hooks.json" 'beforeShellExecution' "Cursor hooks include beforeShellExecution"
   check_file_contains "${TARGET_ROOT}/.cursor/rules/agent-governance.mdc" '1600 lines' "Cursor rule embeds source limit"
+  echo ""
+fi
+
+if [[ "$ENV_FILTER" == "all" || "$ENV_FILTER" == "claude" ]]; then
+  echo "Claude Code environment"
+  if command -v claude >/dev/null 2>&1; then
+    ok "claude CLI present: $(claude --version 2>/dev/null | head -1)"
+  else
+    note "claude CLI not found on PATH"
+  fi
+
+  claude_settings="${TARGET_ROOT}/.claude/settings.json"
+  if [[ -f "$claude_settings" ]]; then
+    if python3 -c "import json; json.loads(open('${claude_settings}').read())" 2>/dev/null; then
+      ok ".claude/settings.json is valid JSON"
+
+      if python3 -c "
+import json, sys
+s = json.loads(open('${claude_settings}').read())
+hooks = s.get('hooks', {}).get('PreToolUse', [])
+for entry in hooks:
+    for hook in entry.get('hooks', []):
+        cmd = hook.get('command', '')
+        if 'GOVERNANCE_HOOK_FORMAT=claude' in cmd and 'pre-tool-use-gap-closure.sh' in cmd:
+            sys.exit(0)
+sys.exit(1)
+" 2>/dev/null; then
+        ok ".claude/settings.json PreToolUse hook delegates to canonical gate with claude format"
+      else
+        bad ".claude/settings.json PreToolUse hook does not delegate to canonical gate with claude format"
+      fi
+
+      if python3 -c "
+import json, sys
+s = json.loads(open('${claude_settings}').read())
+env = s.get('env', {})
+if not env.get('GOVERNANCE_VERIFY_HOOK_CMD'):
+    sys.exit(1)
+sys.exit(0)
+" 2>/dev/null; then
+        ok ".claude/settings.json defines GOVERNANCE_VERIFY_HOOK_CMD in env"
+      else
+        bad ".claude/settings.json missing GOVERNANCE_VERIFY_HOOK_CMD in env"
+      fi
+    else
+      bad ".claude/settings.json is not valid JSON"
+    fi
+  else
+    bad ".claude/settings.json missing"
+  fi
+
   echo ""
 fi
 

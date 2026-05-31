@@ -4,7 +4,7 @@ use serde_json::Value;
 
 pub(crate) fn validate_payload_shape(format: HookFormat, value: &Value) -> Result<()> {
     match format {
-        HookFormat::Codex => {
+        HookFormat::Codex | HookFormat::Claude => {
             if value.get("tool_name").is_some() || value.get("tool_input").is_some() {
                 Ok(())
             } else {

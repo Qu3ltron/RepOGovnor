@@ -63,6 +63,7 @@ allowed_config = {
         "render_codex",
         "render_antigravity",
         "render_cursor",
+        "render_claude_code",
         "install_global_antigravity_plugin",
         "minimum_agy_version",
     },
@@ -129,7 +130,7 @@ if mutation.get("verify_hook_command", ".codex/scripts/task-registry verify-muta
         "noncanonical project.config.toml [mutation_gate].verify_hook_command; expected '.codex/scripts/task-registry verify-mutation-hook'"
     )
 
-for key in ("render_codex", "render_antigravity", "render_cursor"):
+for key in ("render_codex", "render_antigravity", "render_cursor", "render_claude_code"):
     if environments.get(key, True) is not True:
         raise SystemExit(
             f"project.config.toml [environments].{key}=false is not supported by the v2 canonical runtime projection"
@@ -367,11 +368,15 @@ actions: list[str] = []
 if mode == "merge":
     agents_tpl = templates / "AGENTS.overlay.md.template"
     gemini_tpl = templates / "GEMINI.overlay.md.template"
+    claude_tpl = templates / "CLAUDE.overlay.md.template"
     actions.append(
         f"AGENTS.md: {merge_overlay(target_root / 'AGENTS.md', render_template(agents_tpl))}"
     )
     actions.append(
         f"GEMINI.md: {merge_overlay(target_root / 'GEMINI.md', render_template(gemini_tpl))}"
+    )
+    actions.append(
+        f"CLAUDE.md: {merge_overlay(target_root / 'CLAUDE.md', render_template(claude_tpl))}"
     )
 else:
     actions.append(
@@ -379,6 +384,9 @@ else:
     )
     actions.append(
         f"GEMINI.md: {write_file(target_root / 'GEMINI.md', render_template(templates / 'GEMINI.md.template'))}"
+    )
+    actions.append(
+        f"CLAUDE.md: {write_file(target_root / 'CLAUDE.md', render_template(templates / 'CLAUDE.md.template'))}"
     )
 
 infra_files = [
@@ -430,6 +438,11 @@ infra_files = [
     (
         templates / ".cursor/rules/agent-governance.mdc.template",
         target_root / ".cursor/rules/agent-governance.mdc",
+        True,
+    ),
+    (
+        templates / ".claude/settings.json.template",
+        target_root / ".claude/settings.json",
         True,
     ),
     (
@@ -563,6 +576,7 @@ def render_agy_skill(skill: str) -> str:
 for skill in ("gap-closure-contract", "task-registry-flow"):
     actions.append(sync_skill(skill, target_root / ".cursor/skills"))
     actions.append(sync_skill(skill, target_root / ".agents/skills"))
+    actions.append(sync_skill(skill, target_root / ".claude/skills"))
     actions.append(render_agy_skill(skill))
 
 agents_skills = target_root / ".agents/skills"

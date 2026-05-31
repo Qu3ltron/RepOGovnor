@@ -24,7 +24,7 @@ Read [AGENTS.md](AGENTS.md) before feature work.
 
 ## Mandatory skills
 
-Canonical skill content ships from `plugins/agent-governance/skills/`. Antigravity discovers markdown projections in `.agents/skills/*.md`; Codex discovers folder projections in `.agents/skills/<skill>/`; Cursor discovers `.cursor/skills/<skill>/`.
+Canonical skill content ships from `plugins/agent-governance/skills/`. Antigravity discovers markdown projections in `.agents/skills/*.md`; Codex discovers folder projections in `.agents/skills/<skill>/`; Cursor discovers `.cursor/skills/<skill>/`; Claude Code discovers `.claude/skills/<skill>/`.
 
 | Skill | Antigravity path | When |
 |-------|------------------|------|
@@ -62,8 +62,9 @@ Run `agy --version` and require 1.0.3 or newer. Run `agy` in this repo, then `/s
 Plugin: [plugins/agent-governance/](plugins/agent-governance/). **Policy and workflow:** [AGENTS.md](AGENTS.md) and sections above — this block is install posture only.
 
 - Posture: `plugins/agent-governance/scripts/status.sh`
-- Skills: `.agents/skills/*.md` for AGY, `.agents/skills/<skill>/` for Codex, `.cursor/skills/<skill>/` for Cursor
+- Skills: `.agents/skills/*.md` for AGY, `.agents/skills/<skill>/` for Codex, `.cursor/skills/<skill>/` for Cursor, `.claude/skills/<skill>/` for Claude Code
 - Antigravity hook: `.agents/hooks.json` -> `tools/agent-governance/pre-tool-use-gap-closure.sh` via `.codex/scripts/task-registry verify-mutation-hook`
 - Cursor hook: `.cursor/hooks.json` + `.cursor/hooks/gap-closure-gate.sh`
+- Claude Code hook: `.claude/settings.json` PreToolUse -> `tools/agent-governance/pre-tool-use-gap-closure.sh`
 - Source limit: 1600 lines; check `.codex/scripts/task-registry source-limit check`; split existing violations with `.codex/scripts/task-registry source-limit plan --path <file>`
 <!-- agent-governance:end -->

@@ -29,6 +29,17 @@ mode = "overlay"
 meaning = "merge-block"
 
 [[render]]
+template = "templates/CLAUDE.md.template"
+destination = "CLAUDE.md"
+mode = "full"
+
+[[render]]
+template = "templates/CLAUDE.overlay.md.template"
+destination = "CLAUDE.md"
+mode = "overlay"
+meaning = "merge-block"
+
+[[render]]
 template = "templates/.codex/config.toml.template"
 destination = ".codex/config.toml"
 
@@ -76,6 +87,10 @@ template = "templates/.cursor/rules/agent-governance.mdc.template"
 destination = ".cursor/rules/agent-governance.mdc"
 
 [[render]]
+template = "templates/.claude/settings.json.template"
+destination = ".claude/settings.json"
+
+[[render]]
 template = "templates/tools/agent-governance/pre-tool-use-gap-closure.sh.template"
 destination = "tools/agent-governance/pre-tool-use-gap-closure.sh"
 config_key = "mutation_gate.hook_script_path"
@@ -98,6 +113,16 @@ recursive = true
 [[copy]]
 source = "skills/task-registry-flow"
 destination = ".agents/skills/task-registry-flow"
+recursive = true
+
+[[copy]]
+source = "skills/gap-closure-contract"
+destination = ".claude/skills/gap-closure-contract"
+recursive = true
+
+[[copy]]
+source = "skills/task-registry-flow"
+destination = ".claude/skills/task-registry-flow"
 recursive = true
 
 [[generated]]
@@ -177,6 +202,9 @@ tracked_for_ci = [
   "GEMINI.md",
   ".cursor/skills/gap-closure-contract/PROJECT.md",
   ".cursor/skills/task-registry-flow/PROJECT.md",
+  ".claude/settings.json",
+  ".claude/skills/gap-closure-contract/PROJECT.md",
+  ".claude/skills/task-registry-flow/PROJECT.md",
   "docs/task-registry.toml",
   "docs/task-registry/events.jsonl",
 ]

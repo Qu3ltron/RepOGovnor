@@ -14,9 +14,11 @@ Read before feature work:
 | [.agents/skills/gap-closure-contract/](.agents/skills/gap-closure-contract/) | Codex skill for mandatory gap closure contracts before approved implementation |
 | [.agents/skills/task-registry-flow/](.agents/skills/task-registry-flow/) | Codex skill for plugin-owned plan activation and `docs/task-registry.toml` workflow |
 | [.cursor/rules/agent-governance.mdc](.cursor/rules/agent-governance.mdc) | Cursor-native design-time rule |
+| [.claude/skills/gap-closure-contract/](.claude/skills/gap-closure-contract/) | Claude Code skill for mandatory gap closure contracts |
+| [.claude/skills/task-registry-flow/](.claude/skills/task-registry-flow/) | Claude Code skill for plugin-owned plan activation |
 | [GEMINI.md](GEMINI.md) | Antigravity (`agy`) entry — same governance, Antigravity-native paths |
 
-**Active agents:** Codex (this file + [.codex/config.toml](.codex/config.toml) + [.codex/hooks.json](.codex/hooks.json) + [.agents/skills/](.agents/skills/)), Antigravity CLI 1.0.3+ ([GEMINI.md](GEMINI.md) + [.agents/skills/](.agents/skills/) + [.agents/hooks.json](.agents/hooks.json)), and Cursor ([.cursor/rules/agent-governance.mdc](.cursor/rules/agent-governance.mdc) + [.cursor/skills/](.cursor/skills/) + [.cursor/hooks.json](.cursor/hooks.json)).
+**Active agents:** Codex (this file + [.codex/config.toml](.codex/config.toml) + [.codex/hooks.json](.codex/hooks.json) + [.agents/skills/](.agents/skills/)), Antigravity CLI 1.0.3+ ([GEMINI.md](GEMINI.md) + [.agents/skills/](.agents/skills/) + [.agents/hooks.json](.agents/hooks.json)), Cursor ([.cursor/rules/agent-governance.mdc](.cursor/rules/agent-governance.mdc) + [.cursor/skills/](.cursor/skills/) + [.cursor/hooks.json](.cursor/hooks.json)), and Claude Code ([.claude/settings.json](.claude/settings.json) + [.claude/skills/](.claude/skills/)).
 
 **Authority order** (highest first): {{AUTHORITY_ORDER}}. Do not guess across conflicts; ask.
 
@@ -73,6 +75,7 @@ Maintained by [plugins/agent-governance/](plugins/agent-governance/). **Workflow
 | Codex hooks | `.codex/hooks.json` -> canonical gate (`PreToolUse`) |
 | Antigravity hooks | `.agents/hooks.json` -> canonical gate (`run_command` / file edit tools) |
 | Cursor hooks | `.cursor/hooks.json` + `.cursor/hooks/gap-closure-gate.sh` |
-| Skills | `.agents/skills/*`, `.agents/skills/*.md`, `.cursor/skills/*` |
+| Claude Code hooks | `.claude/settings.json` → canonical gate (`PreToolUse`) |
+| Skills | `.agents/skills/*`, `.agents/skills/*.md`, `.cursor/skills/*`, `.claude/skills/*` |
 | Source limit | 1600 lines; check `{{TASK_REGISTRY_CLI}} source-limit check`; split plan `{{TASK_REGISTRY_CLI}} source-limit plan --path <file>` |
 <!-- agent-governance:end -->

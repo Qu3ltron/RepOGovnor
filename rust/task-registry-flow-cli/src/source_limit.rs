@@ -1,10 +1,11 @@
 use crate::model::{Result, SOURCE_LINE_LIMIT};
 use crate::reports::{RuntimeFailure, RuntimeResult};
+use crate::runtime::normalize_relative_path;
 use crate::schema::{CheckReport, Diagnostic};
 use serde::Serialize;
 use std::collections::BTreeMap;
 use std::fs;
-use std::path::{Component, Path, PathBuf};
+use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct Violation {
@@ -587,25 +588,6 @@ fn skip_file(path: &str) -> bool {
             | "go.sum"
     ) || path == "docs/task-registry/events.jsonl"
         || path.starts_with("docs/task-registry/archive/")
-}
-
-fn normalize_relative_path(path: &str) -> Result<String> {
-    let path = path.replace('\\', "/");
-    let mut parts = Vec::new();
-    for component in Path::new(&path).components() {
-        match component {
-            Component::Normal(value) => parts.push(value.to_string_lossy().to_string()),
-            Component::CurDir => {}
-            Component::ParentDir => return Err(format!("path must not contain '..': {path}")),
-            Component::RootDir | Component::Prefix(_) => {
-                return Err(format!("path must be relative: {path}"));
-            }
-        }
-    }
-    if parts.is_empty() {
-        return Err("path must not be empty".to_string());
-    }
-    Ok(parts.join("/"))
 }
 
 fn relative_path(root: &Path, path: &Path) -> Result<String> {

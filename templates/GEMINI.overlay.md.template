@@ -3,7 +3,8 @@
 Plugin: [plugins/agent-governance/](plugins/agent-governance/). **Policy and workflow:** [AGENTS.md](AGENTS.md) and sections above — this block is install posture only.
 
 - Posture: `plugins/agent-governance/scripts/status.sh`
-- Skills: `.agents/skills/*.md` for AGY, `.agents/skills/<skill>/` for Codex, `.cursor/skills/<skill>/` for Cursor
+- Skills: `.agents/skills/*.md` for AGY, `.agents/skills/<skill>/` for Codex, `.cursor/skills/<skill>/` for Cursor, `.claude/skills/<skill>/` for Claude Code
 - Antigravity hook: `.agents/hooks.json` → `{{MUTATION_HOOK_SCRIPT}}` via `{{VERIFY_HOOK_COMMAND}}`
 - Cursor hook: `.cursor/hooks.json` + `.cursor/hooks/gap-closure-gate.sh`
+- Claude Code hook: `.claude/settings.json` PreToolUse → `{{MUTATION_HOOK_SCRIPT}}`
 - Source limit: 1600 lines; check `{{TASK_REGISTRY_CLI}} source-limit check`; split existing violations with `{{TASK_REGISTRY_CLI}} source-limit plan --path <file>`

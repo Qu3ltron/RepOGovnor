@@ -5,7 +5,7 @@ root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 manifest="${root}/plugins/agent-governance/rust/task-registry-flow-cli/Cargo.toml"
 
 if [[ ! -f "$manifest" ]]; then
-  manifest="/home/hasnamuss/reclaimed/work/Governance-plugin/rust/task-registry-flow-cli/Cargo.toml"
+  manifest="/home/hasnamuss/reclaimed/work/Governance-plugin/plugins/agent-governance/rust/task-registry-flow-cli/Cargo.toml"
 fi
 
 cd "$root"

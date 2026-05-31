@@ -16,10 +16,10 @@ emit_json() {
   local escaped_reason
   escaped_reason="$(printf '%s' "$reason" | tr '\n' ' ' | sed 's/\\/\\\\/g; s/"/\\"/g')"
   case "$format:$mode" in
-    codex:deny)
+    codex:deny|claude:deny)
       printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"%s"}}\n' "$escaped_reason"
       ;;
-    codex:allow)
+    codex:allow|claude:allow)
       ;;
     cursor:deny)
       printf '{"permission":"deny","user_message":"%s","agent_message":"%s"}\n' "$escaped_reason" "$escaped_reason"
