@@ -11,9 +11,19 @@ cleanup() {
 }
 trap cleanup EXIT
 
+reject_grep() {
+  local needle="$1"
+  local file="$2"
+  if grep -q "$needle" "$file"; then
+    echo "unexpected match in $file: $needle" >&2
+    exit 1
+  fi
+}
+
 git init -q "$TARGET_ROOT"
-mkdir -p "$TARGET_ROOT/.codex" "$TARGET_ROOT/.agents/plugins" "$TARGET_ROOT/tools/antigravity"
+mkdir -p "$TARGET_ROOT/.codex" "$TARGET_ROOT/.agents/plugins" "$TARGET_ROOT/tools/antigravity" "$TARGET_ROOT/plugins"
 mkdir -p "$TARGET_ROOT/.agents/skills" "$TARGET_ROOT/.cursor/skills" "$TARGET_ROOT/.claude/skills"
+git clone -q "$PLUGIN_ROOT" "$TARGET_ROOT/plugins/agent-governance"
 
 printf 'custom agents\n' > "$TARGET_ROOT/AGENTS.md"
 printf 'custom gemini\n<!-- agent-governance:begin -->\nold\n<!-- agent-governance:end -->\n' > "$TARGET_ROOT/GEMINI.md"
@@ -65,6 +75,16 @@ if "${PLUGIN_ROOT}/scripts/install-to-workspace.sh" \
 fi
 grep -q -- '--overlay has been removed' "$OUT_DIR/overlay.err"
 
+unsafe_config="$OUT_DIR/unsafe-hook-path.toml"
+sed 's#hook_script_path = "tools/agent-governance/pre-tool-use-gap-closure.sh"#hook_script_path = "../outside.sh"#' \
+  "$PLUGIN_ROOT/project.config.example.toml" > "$unsafe_config"
+if MODE=merge "$PLUGIN_ROOT/scripts/render-from-config.sh" \
+  "$unsafe_config" "$TARGET_ROOT" >"$OUT_DIR/unsafe-hook-path.out" 2>"$OUT_DIR/unsafe-hook-path.err"; then
+  echo "unsafe hook_script_path unexpectedly succeeded" >&2
+  exit 1
+fi
+grep -q 'unsafe project.config.toml' "$OUT_DIR/unsafe-hook-path.err"
+
 before_sha="$(hash_workspace)"
 "${PLUGIN_ROOT}/scripts/install-to-workspace.sh" \
   --config "${PLUGIN_ROOT}/project.config.example.toml" \
@@ -97,7 +117,7 @@ if (cd "$TARGET_ROOT" && CARGO_TARGET_DIR="$BAD_CARGO_TARGET" "$PLUGIN_ROOT/scri
 fi
 chmod 0755 "$BAD_CARGO_TARGET"
 grep -q 'AGENTS.md missing governance marker block' "$OUT_DIR/bad-cargo-target-status.out"
-! grep -q 'missing status diagnostic' "$OUT_DIR/bad-cargo-target-status.out"
+reject_grep 'missing status diagnostic' "$OUT_DIR/bad-cargo-target-status.out"
 
 printf 'mentions agent-governance:begin and agent-governance:end in prose\n' > "$TARGET_ROOT/AGENTS.md"
 printf '<!-- agent-governance:end -->\nold\n<!-- agent-governance:begin -->\n' > "$TARGET_ROOT/GEMINI.md"
@@ -131,23 +151,23 @@ test ! -e "$TARGET_ROOT/.codex/settings.toml"
 test ! -e "$TARGET_ROOT/hooks.json"
 test ! -e "$TARGET_ROOT/tools/antigravity/pre-tool-use-gap-closure.sh"
 grep -q 'remove-stale' "$OUT_DIR/merge.out"
-! grep -q 'preserve-stale' "$OUT_DIR/merge.out"
+reject_grep 'preserve-stale' "$OUT_DIR/merge.out"
 grep -q 'preserve-drift' "$OUT_DIR/merge.out"
 grep -q 'hooks = true' "$TARGET_ROOT/.codex/config.toml"
 grep -q '.agents/skills/gap-closure-contract: replace-symlink' "$OUT_DIR/merge.out"
 grep -q '.agents/skills/task-registry-flow: replace-symlink' "$OUT_DIR/merge.out"
-! grep -q '.agents/skills/gap-closure-contract: aligned' "$OUT_DIR/merge.out"
-! grep -q '.agents/skills/task-registry-flow: aligned' "$OUT_DIR/merge.out"
-! grep -q '.agents/skills/gap-closure-contract: preserve-drift' "$OUT_DIR/merge.out"
-! grep -q '.agents/skills/task-registry-flow: preserve-drift' "$OUT_DIR/merge.out"
+reject_grep '.agents/skills/gap-closure-contract: aligned' "$OUT_DIR/merge.out"
+reject_grep '.agents/skills/task-registry-flow: aligned' "$OUT_DIR/merge.out"
+reject_grep '.agents/skills/gap-closure-contract: preserve-drift' "$OUT_DIR/merge.out"
+reject_grep '.agents/skills/task-registry-flow: preserve-drift' "$OUT_DIR/merge.out"
 test ! -L "$TARGET_ROOT/.agents/skills/gap-closure-contract"
 test ! -L "$TARGET_ROOT/.agents/skills/task-registry-flow"
 test -d "$TARGET_ROOT/.agents/skills/gap-closure-contract"
 test -d "$TARGET_ROOT/.agents/skills/task-registry-flow"
 grep -q 'name: gap-closure-contract' "$TARGET_ROOT/.agents/skills/gap-closure-contract/SKILL.md"
 grep -q 'name: task-registry-flow' "$TARGET_ROOT/.agents/skills/task-registry-flow/SKILL.md"
-! grep -q 'legacy symlink target project' "$TARGET_ROOT/.agents/skills/gap-closure-contract/PROJECT.md"
-! grep -q 'legacy symlink target project' "$TARGET_ROOT/.agents/skills/task-registry-flow/PROJECT.md"
+reject_grep 'legacy symlink target project' "$TARGET_ROOT/.agents/skills/gap-closure-contract/PROJECT.md"
+reject_grep 'legacy symlink target project' "$TARGET_ROOT/.agents/skills/task-registry-flow/PROJECT.md"
 test -f "$TARGET_ROOT/docs/task-registry.toml"
 mkdir -p "$TARGET_ROOT/nested/work"
 (
@@ -183,8 +203,7 @@ elif fmt == "cursor":
     reason = payload["user_message"]
 else:
     reason = payload["reason"]
-assert 'quote " slash \\' in reason
-assert "newline" in reason
+assert "noncanonical GOVERNANCE_VERIFY_HOOK_CMD" in reason
 PY
 done
 printf 'GOVERNANCE_VERIFY_HOOK_CMD=".codex/scripts/task-registry verify-mutation-hook"\n' > "$TARGET_ROOT/.codex/governance-cli.env"
@@ -223,7 +242,7 @@ grep -q '.agents/skills/task-registry-flow must be a native directory, not a sym
   --target "$TARGET_ROOT" \
   --force > "$OUT_DIR/force.out"
 
-! grep -q 'custom agents' "$TARGET_ROOT/AGENTS.md"
+reject_grep 'custom agents' "$TARGET_ROOT/AGENTS.md"
 test ! -e "$TARGET_ROOT/.codex/settings.toml"
 test ! -e "$TARGET_ROOT/hooks.json"
 test ! -e "$TARGET_ROOT/tools/antigravity/pre-tool-use-gap-closure.sh"
@@ -233,10 +252,10 @@ grep -q 'agent-governance:begin' "$TARGET_ROOT/AGENTS.md"
 grep -q 'agent-governance:begin' "$TARGET_ROOT/GEMINI.md"
 grep -q '.agents/skills/gap-closure-contract: replace-symlink' "$OUT_DIR/force.out"
 grep -q '.agents/skills/task-registry-flow: replace-symlink' "$OUT_DIR/force.out"
-! grep -q '.agents/skills/gap-closure-contract: aligned' "$OUT_DIR/force.out"
-! grep -q '.agents/skills/task-registry-flow: aligned' "$OUT_DIR/force.out"
-! grep -q '.agents/skills/gap-closure-contract: preserve-drift' "$OUT_DIR/force.out"
-! grep -q '.agents/skills/task-registry-flow: preserve-drift' "$OUT_DIR/force.out"
+reject_grep '.agents/skills/gap-closure-contract: aligned' "$OUT_DIR/force.out"
+reject_grep '.agents/skills/task-registry-flow: aligned' "$OUT_DIR/force.out"
+reject_grep '.agents/skills/gap-closure-contract: preserve-drift' "$OUT_DIR/force.out"
+reject_grep '.agents/skills/task-registry-flow: preserve-drift' "$OUT_DIR/force.out"
 test ! -L "$TARGET_ROOT/.agents/skills/gap-closure-contract"
 test ! -L "$TARGET_ROOT/.agents/skills/task-registry-flow"
 test -d "$TARGET_ROOT/.agents/skills/gap-closure-contract"

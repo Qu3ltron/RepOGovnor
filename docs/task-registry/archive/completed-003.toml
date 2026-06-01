@@ -4,6 +4,13 @@ archive_id = "completed-003"
 archive_authority = "docs/task-registry/archive/completed-003.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-05-31-v2-hardening-followup"
+plan_path = "docs/plans/v2-hardening-followup.md"
+plan_hash_sha256 = "e80365453e837a7b1fa6f8c56e2127c3def82279d3a064de7ab811f183b0638c"
+activated_at = "2026-05-31"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-05-31-strict-marker-block-validation"
 plan_path = "docs/plans/strict-marker-block-validation.md"
 plan_hash_sha256 = "ad84fbf9f6187483c4ba626b35a358a2748231bdc335065ad59130fa7eff4277"
@@ -52,12 +59,203 @@ plan_hash_sha256 = "42d740341582e42d50a6db91b98948d5f982dac6572ccf3db7a4bb5a73f9
 activated_at = "2026-05-30"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-05-30-v2-production-followup-gap-closures"
-plan_path = "docs/plans/v2-production-followup-gap-closures.md"
-plan_hash_sha256 = "ec47228bcaa94d097491b65fe191a7c6607804f923473399a256a11b09f1bf7b"
-activated_at = "2026-05-30"
+[[tasks]]
+task_id = "TASK-2026-05-31-v2-hardening-001"
+plan_id = "PLAN-2026-05-31-v2-hardening-followup"
 status = "completed"
+title = "Split metrics runtime under source limit"
+kind = "implementation"
+source_plan_path = "docs/plans/v2-hardening-followup.md"
+source_plan_hash_sha256 = "e80365453e837a7b1fa6f8c56e2127c3def82279d3a064de7ab811f183b0638c"
+reason = "runtime.rs is near the source limit before receipt-chain behavior is added."
+acceptance_proof = "Behaviors B-009-receipt-chain-positive and B-010-receipt-chain-negative pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-009-receipt-chain-positive",
+    "B-010-receipt-chain-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/runtime.rs"
+object = "metrics_dispatch"
+required_change = "Move metrics implementation to a dedicated module while preserving behavior."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/metrics.rs"
+object = "metrics_runtime"
+required_change = "Own metrics report parsing, formatting, and validation."
+
+[[tasks]]
+task_id = "TASK-2026-05-31-v2-hardening-002"
+plan_id = "PLAN-2026-05-31-v2-hardening-followup"
+status = "completed"
+title = "Make Rust status diagnostics authoritative"
+kind = "implementation"
+source_plan_path = "docs/plans/v2-hardening-followup.md"
+source_plan_hash_sha256 = "e80365453e837a7b1fa6f8c56e2127c3def82279d3a064de7ab811f183b0638c"
+reason = "Shell marker policy can drift from Rust status-check."
+acceptance_proof = "Behaviors B-001-status-rust-owned-positive, B-002-status-rust-owned-negative, B-003-marker-content-positive, and B-004-marker-content-negative pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-001-status-rust-owned-positive",
+    "B-002-status-rust-owned-negative",
+    "B-003-marker-content-positive",
+    "B-004-marker-content-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/status_checks.rs"
+object = "marker_check"
+required_change = "Validate marker shape and managed content."
+
+[[tasks.targets]]
+file = "scripts/status.sh"
+object = "check_markers"
+required_change = "Render Rust status-check diagnostics instead of parsing marker policy locally."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/status_check_tests.rs"
+object = "marker_status_tests"
+required_change = "Add stale-content and malformed-marker negative coverage."
+
+[[tasks.targets]]
+file = "scripts/test-install-modes.sh"
+object = "status_migration_tests"
+required_change = "Add shell migration tests for stale marker content."
+
+[[tasks]]
+task_id = "TASK-2026-05-31-v2-hardening-003"
+plan_id = "PLAN-2026-05-31-v2-hardening-followup"
+status = "completed"
+title = "Complete release executable policy checks"
+kind = "implementation"
+source_plan_path = "docs/plans/v2-hardening-followup.md"
+source_plan_hash_sha256 = "e80365453e837a7b1fa6f8c56e2127c3def82279d3a064de7ab811f183b0638c"
+reason = "Required scripts omitted from release_source.executable can pass release checks."
+acceptance_proof = "Behaviors B-005-release-executable-positive, B-006-release-executable-negative, B-011-platform-positive, and B-012-platform-negative pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-005-release-executable-positive",
+    "B-006-release-executable-negative",
+    "B-011-platform-positive",
+    "B-012-platform-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/release_checks.rs"
+object = "executable_policy_checks"
+required_change = "Detect undeclared script-like release artifacts and explicit platform executable semantics."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/schema.rs"
+object = "ReleaseCheckId"
+required_change = "Add release check IDs for undeclared executable scripts and platform semantics."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/mod.rs"
+object = "release_executable_tests"
+required_change = "Add positive and negative executable policy tests."
+
+[[tasks.targets]]
+file = "scripts/test-release-readiness.sh"
+object = "check_executable"
+required_change = "Add executable-policy omission migration fixture."
+
+[[tasks]]
+task_id = "TASK-2026-05-31-v2-hardening-004"
+plan_id = "PLAN-2026-05-31-v2-hardening-followup"
+status = "completed"
+title = "Require reasoned release waivers"
+kind = "implementation"
+source_plan_path = "docs/plans/v2-hardening-followup.md"
+source_plan_hash_sha256 = "e80365453e837a7b1fa6f8c56e2127c3def82279d3a064de7ab811f183b0638c"
+reason = "Waiver env vars currently lack structured reason and final-release rejection."
+acceptance_proof = "Behaviors B-007-waiver-positive and B-008-waiver-negative pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-007-waiver-positive",
+    "B-008-waiver-negative",
+]
+
+[[tasks.targets]]
+file = "scripts/status.sh"
+object = "release_waivers"
+required_change = "Require waiver reasons and fail waivers in final release mode."
+
+[[tasks.targets]]
+file = "scripts/release-audit.sh"
+object = "audit_waiver"
+required_change = "Require audit waiver reason and fail waiver in final release mode."
+
+[[tasks.targets]]
+file = "scripts/test-release-readiness.sh"
+object = "check_waivers"
+required_change = "Add positive and negative waiver tests."
+
+[[tasks]]
+task_id = "TASK-2026-05-31-v2-hardening-005"
+plan_id = "PLAN-2026-05-31-v2-hardening-followup"
+status = "completed"
+title = "Add local receipt chain validation"
+kind = "implementation"
+source_plan_path = "docs/plans/v2-hardening-followup.md"
+source_plan_hash_sha256 = "e80365453e837a7b1fa6f8c56e2127c3def82279d3a064de7ab811f183b0638c"
+reason = "Receipt metrics do not detect tampering in otherwise valid event logs."
+acceptance_proof = "Behaviors B-009-receipt-chain-positive and B-010-receipt-chain-negative pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-009-receipt-chain-positive",
+    "B-010-receipt-chain-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/schema.rs"
+object = "ReceiptEvent"
+required_change = "Add optional previous/current receipt hash fields."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/receipts.rs"
+object = "append_command_event"
+required_change = "Append hash-chained receipt events."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/metrics.rs"
+object = "chain_validation"
+required_change = "Validate receipt chains and report legacy unchained receipts."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/mod.rs"
+object = "receipt_chain_tests"
+required_change = "Add chained and tampered receipt tests."
+
+[[tasks]]
+task_id = "TASK-2026-05-31-v2-hardening-006"
+plan_id = "PLAN-2026-05-31-v2-hardening-followup"
+status = "completed"
+title = "Document v2 hardening runtime contracts"
+kind = "documentation"
+source_plan_path = "docs/plans/v2-hardening-followup.md"
+source_plan_hash_sha256 = "e80365453e837a7b1fa6f8c56e2127c3def82279d3a064de7ab811f183b0638c"
+reason = "Changed status, release, waiver, platform, and receipt contracts must be documented."
+acceptance_proof = "Behavior B-013-v2-hardening-validation passes and docs name receipt chain, reasoned waivers, and executable completeness."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = ["B-013-v2-hardening-validation"]
+
+[[tasks.targets]]
+file = "docs/runtime-schemas.md"
+object = "runtime_contracts"
+required_change = "Document status, release executable completeness, waiver, platform, and receipt-chain behavior."
+
+[[tasks.targets]]
+file = "README.md"
+object = "v2_hardening_note"
+required_change = "Document user-facing waiver/status behavior changes."
 
 [[tasks]]
 task_id = "TASK-2026-05-31-strict-marker-block-001"
@@ -1308,76 +1506,3 @@ required_change = "Ensure license scans cover live docs and exclude historical a
 file = "docs/runtime-schemas.md"
 object = "historical_evidence_policy"
 required_change = "Document that historical evidence changes require registry-aware migration."
-
-[[tasks]]
-task_id = "TASK-2026-05-30-v2-followup-001"
-plan_id = "PLAN-2026-05-30-v2-production-followup-gap-closures"
-status = "completed"
-title = "Replace legacy skill symlinks with native v2 directories"
-kind = "migration"
-source_plan_path = "docs/plans/v2-production-followup-gap-closures.md"
-source_plan_hash_sha256 = "ec47228bcaa94d097491b65fe191a7c6607804f923473399a256a11b09f1bf7b"
-reason = "Legacy v0.3 skill symlinks can be treated as aligned and survive v2 installs."
-acceptance_proof = "Behavior B-2026-05-30-v2-followup-skill-symlink-replacement passes."
-created_at = "2026-05-30"
-updated_at = "2026-05-30"
-behavior_ids = ["B-2026-05-30-v2-followup-skill-symlink-replacement"]
-
-[[tasks.targets]]
-file = "scripts/render-from-config.sh"
-object = "sync_skill"
-required_change = "Detect symlink destinations before directory alignment and replace them as stale migration artifacts."
-
-[[tasks.targets]]
-file = "scripts/status.sh"
-object = "skill_diff_hint"
-required_change = "Fail strict status for symlinked native skill projection paths."
-
-[[tasks.targets]]
-file = "scripts/test-install-modes.sh"
-object = "legacy_skill_symlink_migration_tests"
-required_change = "Add dry-run, merge, force, and negative assertions for legacy skill symlink replacement."
-
-[[tasks]]
-task_id = "TASK-2026-05-30-v2-followup-002"
-plan_id = "PLAN-2026-05-30-v2-production-followup-gap-closures"
-status = "completed"
-title = "Anchor release audit source-limit checks at repo root"
-kind = "release"
-source_plan_path = "docs/plans/v2-production-followup-gap-closures.md"
-source_plan_hash_sha256 = "ec47228bcaa94d097491b65fe191a7c6607804f923473399a256a11b09f1bf7b"
-reason = "release-audit.sh can run source-limit against a subdirectory because the CLI ignored the extra --root argument."
-acceptance_proof = "Behavior B-2026-05-30-v2-followup-release-audit-root passes."
-created_at = "2026-05-30"
-updated_at = "2026-05-30"
-behavior_ids = ["B-2026-05-30-v2-followup-release-audit-root"]
-
-[[tasks.targets]]
-file = "scripts/release-audit.sh"
-object = "repo_root_execution"
-required_change = "cd to repo root before source-limit and remove ignored --root argument."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/source_limit.rs"
-object = "source_limit_check_args"
-required_change = "Reject unexpected arguments for source-limit check."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests.rs"
-object = "source_limit_check_arg_tests"
-required_change = "Add negative unit test proving extra check args fail."
-
-[[tasks.targets]]
-file = "scripts/test-release-readiness.sh"
-object = "nested_release_audit_tests"
-required_change = "Add nested positive audit test and over-limit root-file negative test."
-
-[[tasks.targets]]
-file = "docs/releases/v2.md"
-object = "release_audit_policy"
-required_change = "Document cwd-independent release audit behavior."
-
-[[tasks.targets]]
-file = "CHANGELOG.md"
-object = "v2_followup_notes"
-required_change = "Record production-blocker fixes for skill symlinks and release audit root scanning."

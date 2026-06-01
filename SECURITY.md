@@ -20,3 +20,12 @@ Include:
 
 We will triage reports against the latest v2 release and publish fixes through a
 new patch release when needed.
+
+## Local Trust Boundary
+
+This plugin installs repo-local hooks and scripts that run in the consumer
+workspace. Treat a repository checkout as executable input. The installer and
+posture checks are hardened to avoid writing outside the target repo, sourcing
+repo-controlled env files, or executing target-controlled wrappers during
+status checks, but users should still review untrusted repositories before
+enabling their hooks.

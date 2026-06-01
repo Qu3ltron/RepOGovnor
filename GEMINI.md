@@ -1,4 +1,4 @@
-# Antigravity — Governance-plugin Agent Instructions
+# Antigravity — RepOGovnor Agent Instructions
 
 Antigravity (`agy`) entry point. Shared repo rules: [AGENTS.md](AGENTS.md) (Codex uses that file as its primary entry).
 
@@ -23,7 +23,7 @@ repo-local Gemini settings file.
 
 Read [AGENTS.md](AGENTS.md) before feature work.
 
-- **Repo boundary.** Work only in `/home/hasnamuss/reclaimed/work/Governance-plugin`. Scratch: `/home/hasnamuss/reclaimed/work/tmp/governance-plugin-gap-closure/<short-slug>/`.
+- **Repo boundary.** Work only in `/home/hasnamuss/reclaimed/work/RepOGovnor`. Scratch: `/home/hasnamuss/reclaimed/work/tmp/repogovnor-gap-closure/<short-slug>/`.
 - **Architecture and product rules** live in project docs — not in this file.
 
 ## Mandatory skills

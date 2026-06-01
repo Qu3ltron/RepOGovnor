@@ -10,7 +10,7 @@ in
     package = lib.mkOption {
       type = lib.types.package;
       default = pkgs.callPackage ../../package.nix { };
-      defaultText = lib.literalExpression "pkgs.callPackage <Governance-plugin>/package.nix { }";
+      defaultText = lib.literalExpression "pkgs.callPackage <RepOGovnor>/package.nix { }";
       description = "Agent-governance package that provides the CLI and runtime assets.";
     };
 

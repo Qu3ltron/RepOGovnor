@@ -111,6 +111,20 @@ for section in ("render", "copy", "generated", "symlinks", "plugin_only"):
             if key in entry:
                 validate_manifest_path(str(entry[key]), f"{section}.{key}")
 
+def validate_hook_script_path(path: str) -> None:
+    candidate = Path(path)
+    if (
+        not path
+        or candidate.is_absolute()
+        or ".." in candidate.parts
+        or not path.startswith("tools/agent-governance/")
+        or not path.endswith(".sh")
+        or re.search(r"[^A-Za-z0-9._/-]", path)
+    ):
+        raise SystemExit(
+            f"unsafe project.config.toml [mutation_gate].hook_script_path: {path!r}; expected repo-relative tools/agent-governance/*.sh"
+        )
+
 project = cfg.get("project", {})
 task_registry = cfg.get("task_registry", {})
 mutation = cfg.get("mutation_gate", {})
@@ -177,6 +191,7 @@ hook_script = mutation.get(
     "hook_script_path",
     "tools/agent-governance/pre-tool-use-gap-closure.sh",
 )
+validate_hook_script_path(hook_script)
 
 authority_order = authority.get("order", [constitution_path, vision_path, f"{design_docs_path}/*"])
 authority_order_md = " → ".join(f"`{item}`" for item in authority_order)

@@ -39,7 +39,7 @@
             pkgs.python3
           ];
           shellHook = ''
-            echo "Governance-plugin dev shell"
+            echo "RepOGovnor dev shell"
             echo "  cargo test --locked --manifest-path rust/task-registry-flow-cli/Cargo.toml"
             echo "  cargo run --locked --manifest-path rust/task-registry-flow-cli/Cargo.toml -- validate"
           '';

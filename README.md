@@ -83,7 +83,7 @@ Vendoring or submodule installation is recommended.
 
 ```bash
 mkdir -p plugins
-git submodule add https://github.com/Qu3ltron/Governance-plugin.git plugins/agent-governance
+git submodule add https://github.com/Qu3ltron/RepOGovnor.git plugins/agent-governance
 
 cp plugins/agent-governance/project.config.example.toml project.config.toml
 # edit project.config.toml for your repo

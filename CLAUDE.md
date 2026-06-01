@@ -1,4 +1,4 @@
-# Governance-plugin — Agent Instructions
+# RepOGovnor — Agent Instructions
 
 Portable governance entry installed by the **agent-governance** plugin. Project-specific architecture, CI, and product rules belong in your constitution, vision, and AGENTS extensions — not in the plugin.
 
@@ -70,8 +70,8 @@ Run the smallest honest subset that proves the approved scope; broaden when shar
 
 ## Workspace boundary
 
-- **Repo root:** `/home/hasnamuss/reclaimed/work/Governance-plugin`
-- **Scratch:** `/home/hasnamuss/reclaimed/work/tmp/governance-plugin-gap-closure/<short-slug>/`
+- **Repo root:** `/home/hasnamuss/reclaimed/work/RepOGovnor`
+- **Scratch:** `/home/hasnamuss/reclaimed/work/tmp/repogovnor-gap-closure/<short-slug>/`
 - Confirm `git rev-parse --show-toplevel` matches repo root before mutating files.
 
 <!-- agent-governance:begin -->

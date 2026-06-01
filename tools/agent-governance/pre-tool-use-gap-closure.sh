@@ -9,6 +9,10 @@ format="${GOVERNANCE_HOOK_FORMAT:-antigravity}"
 if [[ "${1:-}" == "--format" ]]; then
   format="${2:-antigravity}"
 fi
+case "$format" in
+  antigravity|codex|cursor|claude) ;;
+  *) format="antigravity" ;;
+esac
 
 emit_json() {
   local mode="$1"
@@ -44,23 +48,47 @@ emit_deny() {
   emit_json deny "$reason"
 }
 
-if [[ -f .codex/governance-cli.env ]]; then
-  # shellcheck disable=SC1091
-  source .codex/governance-cli.env
-fi
-
-base_verify_cmd="${GOVERNANCE_VERIFY_HOOK_CMD:-.codex/scripts/task-registry verify-mutation-hook}"
+canonical_verify_cmd=".codex/scripts/task-registry verify-mutation-hook"
+base_verify_cmd="${GOVERNANCE_VERIFY_HOOK_CMD:-$canonical_verify_cmd}"
 placeholder="{{"
 placeholder="${placeholder}VERIFY_HOOK_COMMAND}}"
+
+load_governance_env() {
+  local env_path=".codex/governance-cli.env"
+  local line value
+  [[ -f "$env_path" ]] || return 0
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    case "$line" in
+      ""|"#"*) continue ;;
+      GOVERNANCE_VERIFY_HOOK_CMD=*)
+        value="${line#GOVERNANCE_VERIFY_HOOK_CMD=}"
+        value="${value%\"}"
+        value="${value#\"}"
+        value="${value%\'}"
+        value="${value#\'}"
+        base_verify_cmd="$value"
+        ;;
+      *)
+        emit_deny "invalid governance-cli.env content; run plugins/agent-governance/scripts/install-to-workspace.sh --merge"
+        exit 0
+        ;;
+    esac
+  done < "$env_path"
+}
+
+load_governance_env
 
 if [[ -z "$base_verify_cmd" || "$base_verify_cmd" == *"$placeholder"* ]]; then
   emit_deny "GOVERNANCE_VERIFY_HOOK_CMD not configured; run plugins/agent-governance/scripts/install-to-workspace.sh --merge or set .codex/governance-cli.env"
   exit 0
 fi
 
-verify_cmd="${base_verify_cmd} --format ${format}"
+if [[ "$base_verify_cmd" != "$canonical_verify_cmd" ]]; then
+  emit_deny "noncanonical GOVERNANCE_VERIFY_HOOK_CMD; run plugins/agent-governance/scripts/install-to-workspace.sh --merge"
+  exit 0
+fi
 
-if output="$(bash -lc "$verify_cmd" 2>&1)"; then
+if output="$(.codex/scripts/task-registry verify-mutation-hook --format "$format" 2>&1)"; then
   emit_json allow
 else
   emit_deny "mutation gate failed: ${output}"

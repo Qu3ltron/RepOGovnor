@@ -45,15 +45,10 @@ note() { printf '  NOTE %s\n' "$1"; warn=$((warn + 1)); }
 bad()  { printf '  FAIL %s\n' "$1"; fail=$((fail + 1)); }
 
 task_registry() {
-  local wrapper="${TARGET_ROOT}/.codex/scripts/task-registry"
-  if [[ -x "$wrapper" ]]; then
-    (cd "$TARGET_ROOT" && "$wrapper" "$@")
-    return
-  fi
-
   local manifest="${PLUGIN_ROOT}/rust/task-registry-flow-cli/Cargo.toml"
   if [[ ! -f "$manifest" ]]; then
-    manifest="${TARGET_ROOT}/rust/task-registry-flow-cli/Cargo.toml"
+    echo "plugin-owned task registry manifest missing: $manifest" >&2
+    return 1
   fi
   (
     cd "$TARGET_ROOT"
@@ -674,12 +669,12 @@ if [[ "$STRICT" -eq 1 ]]; then
 fi
 
 echo "Registry CLI"
-if (cd "$TARGET_ROOT" && .codex/scripts/task-registry validate >/dev/null 2>&1); then
+if task_registry validate >/dev/null 2>&1; then
   ok ".codex/scripts/task-registry validate"
 else
   bad ".codex/scripts/task-registry validate failed"
 fi
-if (cd "$TARGET_ROOT" && .codex/scripts/task-registry source-limit check >/dev/null 2>&1); then
+if task_registry source-limit check >/dev/null 2>&1; then
   ok ".codex/scripts/task-registry source-limit check"
 else
   bad ".codex/scripts/task-registry source-limit check failed"

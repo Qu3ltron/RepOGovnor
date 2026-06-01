@@ -4,6 +4,13 @@ archive_id = "completed-002"
 archive_authority = "docs/task-registry/archive/completed-002.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-05-31-post-rollback-hardening"
+plan_path = "docs/plans/post-rollback-hardening-2026-05-31.md"
+plan_hash_sha256 = "1e38fead936ff4841618988780658c17a9f7f255ccffe0c00d615ae8545af336"
+activated_at = "2026-05-31"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-05-31-gap-closure-batch-1"
 plan_path = "docs/plans/gap-closure-2026-05-31.md"
 plan_hash_sha256 = "c36ad94618699298f2e99c4d5a0be22c0c7eadcfef7ae5a4881569e3e1c1039e"
@@ -52,12 +59,273 @@ plan_hash_sha256 = "0a1d648af75fe2dfc56dd5465c5aafd5964d8eb7ce251689bb0661ebbb8f
 activated_at = "2026-05-31"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-05-31-v2-hardening-followup"
-plan_path = "docs/plans/v2-hardening-followup.md"
-plan_hash_sha256 = "e80365453e837a7b1fa6f8c56e2127c3def82279d3a064de7ab811f183b0638c"
-activated_at = "2026-05-31"
+[[tasks]]
+task_id = "TASK-2026-05-31-H01"
+plan_id = "PLAN-2026-05-31-post-rollback-hardening"
 status = "completed"
+title = "Harden mutation hook command parsing and template JSON"
+kind = "authorization"
+source_plan_path = "docs/plans/post-rollback-hardening-2026-05-31.md"
+source_plan_hash_sha256 = "1e38fead936ff4841618988780658c17a9f7f255ccffe0c00d615ae8545af336"
+reason = "Mutation hooks must fail closed for ambiguous write-intent payloads before implementation writes can bypass registry targets."
+acceptance_proof = "Behaviors B-H01-positive, B-H01-negative, B-H04-positive, and B-H04-negative pass their verifier commands."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-H01-positive",
+    "B-H01-negative",
+    "B-H04-positive",
+    "B-H04-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/mutation_hook.rs"
+object = "shell_write_detection"
+required_change = "Deny write-intent shell commands without deterministic target extraction."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/hook_io.rs"
+object = "payload_contract"
+required_change = "Preserve canonical payload shape validation for stricter hook denial."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/hook_command_tests.rs"
+object = "hook_command_negative_suite"
+required_change = "Add shell write-intent positive and negative tests."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/mod.rs"
+object = "hook_command_module_registration"
+required_change = "Register hook command tests without adding behavior to the monolithic test file."
+
+[[tasks.targets]]
+file = "templates/tools/agent-governance/pre-tool-use-gap-closure.sh.template"
+object = "json_escape"
+required_change = "Use canonical JSON serialization for denial reasons."
+
+[[tasks.targets]]
+file = "tools/agent-governance/pre-tool-use-gap-closure.sh"
+object = "json_escape_parity"
+required_change = "Keep live hook aligned with the template."
+
+[[tasks.targets]]
+file = "scripts/test-install-modes.sh"
+object = "rendered_hook_json_negative"
+required_change = "Verify rendered hook denial JSON handles control characters."
+
+[[tasks]]
+task_id = "TASK-2026-05-31-H02"
+plan_id = "PLAN-2026-05-31-post-rollback-hardening"
+status = "completed"
+title = "Make receipt writes atomic and receipt chain strict"
+kind = "implementation"
+source_plan_path = "docs/plans/post-rollback-hardening-2026-05-31.md"
+source_plan_hash_sha256 = "1e38fead936ff4841618988780658c17a9f7f255ccffe0c00d615ae8545af336"
+reason = "Receipt writes must be durable, required receipt failures must fail, and strict chain verification must reject unchained receipts."
+acceptance_proof = "Behaviors B-H02-positive, B-H02-negative, B-H03-positive, B-H03-negative, B-H08-positive, and B-H08-negative pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-H02-positive",
+    "B-H02-negative",
+    "B-H03-positive",
+    "B-H03-negative",
+    "B-H08-positive",
+    "B-H08-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/runtime.rs"
+object = "append_event_lock_order"
+required_change = "Lock receipt file before reading previous hash and appending."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/cli.rs"
+object = "required_receipt_errors"
+required_change = "Propagate required receipt append failures."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/receipts.rs"
+object = "receipt_policy"
+required_change = "Represent required receipt append results accurately."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/metrics.rs"
+object = "unchained_failure_accounting"
+required_change = "Count unchained v2 receipts as failed receipt state."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/verify_chain.rs"
+object = "strict_chain_and_repair"
+required_change = "Fail on unchained v2 receipts and repair parseable v2 chain fields."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/receipt_chain_tests.rs"
+object = "receipt_chain_suite"
+required_change = "Add concurrency, lock, and receipt failure tests."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/verify_chain_tests.rs"
+object = "strict_unchained_suite"
+required_change = "Add unchained strict failure and repair tests."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/mod.rs"
+object = "receipt_chain_module_registration"
+required_change = "Register receipt chain tests."
+
+[[tasks.targets]]
+file = "docs/task-registry/events.jsonl"
+object = "receipt_ledger_migration"
+required_change = "Migrate local ledger to fully chained schema v2 receipts."
+
+[[tasks.targets]]
+file = "docs/runtime-schemas.md"
+object = "receipt_chain_contract"
+required_change = "Document strict chained v2 receipt state."
+
+[[tasks.targets]]
+file = "scripts/status.sh"
+object = "chain_gate"
+required_change = "Run verify-chain in strict and release-source status."
+
+[[tasks]]
+task_id = "TASK-2026-05-31-H03"
+plan_id = "PLAN-2026-05-31-post-rollback-hardening"
+status = "completed"
+title = "Expand release-source coverage and governed-source checks"
+kind = "release"
+source_plan_path = "docs/plans/post-rollback-hardening-2026-05-31.md"
+source_plan_hash_sha256 = "1e38fead936ff4841618988780658c17a9f7f255ccffe0c00d615ae8545af336"
+reason = "Release-source checks must govern every tracked Nix, Claude, hook, and template release surface."
+acceptance_proof = "Behaviors B-H05-positive and B-H05-negative pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-H05-positive",
+    "B-H05-negative",
+]
+
+[[tasks.targets]]
+file = "REQUIREMENTS.toml"
+object = "release_source_required"
+required_change = "Declare all governed release surfaces and new test modules."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/release_checks.rs"
+object = "governed_source_discovery"
+required_change = "Discover non-Rust governed release surfaces and fail omissions."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/schema.rs"
+object = "release_check_id"
+required_change = "Add canonical governed-source release check id."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/release_source_tests.rs"
+object = "release_source_negative_suite"
+required_change = "Add omitted Nix, Claude, hook, and template negative tests."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/mod.rs"
+object = "release_source_module_registration"
+required_change = "Register release source tests."
+
+[[tasks.targets]]
+file = "scripts/test-release-readiness.sh"
+object = "governed_source_negative_fixtures"
+required_change = "Assert governed-source omissions fail release readiness."
+
+[[tasks.targets]]
+file = "scripts/status.sh"
+object = "release_source_gate"
+required_change = "Surface governed-source checks in release-source status."
+
+[[tasks]]
+task_id = "TASK-2026-05-31-H04"
+plan_id = "PLAN-2026-05-31-post-rollback-hardening"
+status = "completed"
+title = "Package runtime assets and harden Nix modules"
+kind = "implementation"
+source_plan_path = "docs/plans/post-rollback-hardening-2026-05-31.md"
+source_plan_hash_sha256 = "1e38fead936ff4841618988780658c17a9f7f255ccffe0c00d615ae8545af336"
+reason = "Nix consumers must receive a complete runtime package and safe update module without relying on the mutable checkout."
+acceptance_proof = "Behaviors B-H06-positive, B-H06-negative, B-H07-positive, and B-H07-negative pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-H06-positive",
+    "B-H06-negative",
+    "B-H07-positive",
+    "B-H07-negative",
+]
+
+[[tasks.targets]]
+file = "package.nix"
+object = "runtime_asset_output"
+required_change = "Install runtime assets under stable share paths."
+
+[[tasks.targets]]
+file = "flake.nix"
+object = "module_exports"
+required_change = "Export agent-governance and auto-update NixOS modules."
+
+[[tasks.targets]]
+file = "modules/nixos/agent-governance.nix"
+object = "runtime_install_module"
+required_change = "Add module for packaged CLI and asset root."
+
+[[tasks.targets]]
+file = "modules/nixos/agent-governance-auto-update.nix"
+object = "root_safe_rollback"
+required_change = "Add root-safe rebuild, validation, lock backup, restore, rollback, and dev-lock behavior."
+
+[[tasks.targets]]
+file = "scripts/test-release-readiness.sh"
+object = "nix_asset_negative_fixtures"
+required_change = "Assert package assets and auto-update guards."
+
+[[tasks.targets]]
+file = "README.md"
+object = "nix_consumption_contract"
+required_change = "Document Nix package asset layout and modules."
+
+[[tasks]]
+task_id = "TASK-2026-05-31-H05"
+plan_id = "PLAN-2026-05-31-post-rollback-hardening"
+status = "completed"
+title = "Enforce terminal task immutability on activation"
+kind = "governance"
+source_plan_path = "docs/plans/post-rollback-hardening-2026-05-31.md"
+source_plan_hash_sha256 = "1e38fead936ff4841618988780658c17a9f7f255ccffe0c00d615ae8545af336"
+reason = "Completed and cancelled registry tasks must remain immutable after closure."
+acceptance_proof = "Behaviors B-H09-positive and B-H09-negative pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-H09-positive",
+    "B-H09-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/activation.rs"
+object = "terminal_reactivation_guard"
+required_change = "Reject terminal task rewrites unless reactivation is idempotent."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/validation.rs"
+object = "terminal_hash_policy"
+required_change = "Remove terminal hash exceptions that permit metadata drift."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/activation_terminal_tests.rs"
+object = "terminal_task_suite"
+required_change = "Add completed and cancelled task immutability tests."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/mod.rs"
+object = "activation_terminal_module_registration"
+required_change = "Register terminal activation tests."
 
 [[tasks]]
 task_id = "TASK-2026-05-31-001"
@@ -720,201 +988,3 @@ required_change = "Document Rust source completeness and release-rust-source-und
 file = "docs/task-registry.toml"
 object = "task_completion"
 required_change = "Record completion after focused and full validation pass."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-v2-hardening-001"
-plan_id = "PLAN-2026-05-31-v2-hardening-followup"
-status = "completed"
-title = "Split metrics runtime under source limit"
-kind = "implementation"
-source_plan_path = "docs/plans/v2-hardening-followup.md"
-source_plan_hash_sha256 = "e80365453e837a7b1fa6f8c56e2127c3def82279d3a064de7ab811f183b0638c"
-reason = "runtime.rs is near the source limit before receipt-chain behavior is added."
-acceptance_proof = "Behaviors B-009-receipt-chain-positive and B-010-receipt-chain-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-009-receipt-chain-positive",
-    "B-010-receipt-chain-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/runtime.rs"
-object = "metrics_dispatch"
-required_change = "Move metrics implementation to a dedicated module while preserving behavior."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/metrics.rs"
-object = "metrics_runtime"
-required_change = "Own metrics report parsing, formatting, and validation."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-v2-hardening-002"
-plan_id = "PLAN-2026-05-31-v2-hardening-followup"
-status = "completed"
-title = "Make Rust status diagnostics authoritative"
-kind = "implementation"
-source_plan_path = "docs/plans/v2-hardening-followup.md"
-source_plan_hash_sha256 = "e80365453e837a7b1fa6f8c56e2127c3def82279d3a064de7ab811f183b0638c"
-reason = "Shell marker policy can drift from Rust status-check."
-acceptance_proof = "Behaviors B-001-status-rust-owned-positive, B-002-status-rust-owned-negative, B-003-marker-content-positive, and B-004-marker-content-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-001-status-rust-owned-positive",
-    "B-002-status-rust-owned-negative",
-    "B-003-marker-content-positive",
-    "B-004-marker-content-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/status_checks.rs"
-object = "marker_check"
-required_change = "Validate marker shape and managed content."
-
-[[tasks.targets]]
-file = "scripts/status.sh"
-object = "check_markers"
-required_change = "Render Rust status-check diagnostics instead of parsing marker policy locally."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/status_check_tests.rs"
-object = "marker_status_tests"
-required_change = "Add stale-content and malformed-marker negative coverage."
-
-[[tasks.targets]]
-file = "scripts/test-install-modes.sh"
-object = "status_migration_tests"
-required_change = "Add shell migration tests for stale marker content."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-v2-hardening-003"
-plan_id = "PLAN-2026-05-31-v2-hardening-followup"
-status = "completed"
-title = "Complete release executable policy checks"
-kind = "implementation"
-source_plan_path = "docs/plans/v2-hardening-followup.md"
-source_plan_hash_sha256 = "e80365453e837a7b1fa6f8c56e2127c3def82279d3a064de7ab811f183b0638c"
-reason = "Required scripts omitted from release_source.executable can pass release checks."
-acceptance_proof = "Behaviors B-005-release-executable-positive, B-006-release-executable-negative, B-011-platform-positive, and B-012-platform-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-005-release-executable-positive",
-    "B-006-release-executable-negative",
-    "B-011-platform-positive",
-    "B-012-platform-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/release_checks.rs"
-object = "executable_policy_checks"
-required_change = "Detect undeclared script-like release artifacts and explicit platform executable semantics."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/schema.rs"
-object = "ReleaseCheckId"
-required_change = "Add release check IDs for undeclared executable scripts and platform semantics."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/mod.rs"
-object = "release_executable_tests"
-required_change = "Add positive and negative executable policy tests."
-
-[[tasks.targets]]
-file = "scripts/test-release-readiness.sh"
-object = "check_executable"
-required_change = "Add executable-policy omission migration fixture."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-v2-hardening-004"
-plan_id = "PLAN-2026-05-31-v2-hardening-followup"
-status = "completed"
-title = "Require reasoned release waivers"
-kind = "implementation"
-source_plan_path = "docs/plans/v2-hardening-followup.md"
-source_plan_hash_sha256 = "e80365453e837a7b1fa6f8c56e2127c3def82279d3a064de7ab811f183b0638c"
-reason = "Waiver env vars currently lack structured reason and final-release rejection."
-acceptance_proof = "Behaviors B-007-waiver-positive and B-008-waiver-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-007-waiver-positive",
-    "B-008-waiver-negative",
-]
-
-[[tasks.targets]]
-file = "scripts/status.sh"
-object = "release_waivers"
-required_change = "Require waiver reasons and fail waivers in final release mode."
-
-[[tasks.targets]]
-file = "scripts/release-audit.sh"
-object = "audit_waiver"
-required_change = "Require audit waiver reason and fail waiver in final release mode."
-
-[[tasks.targets]]
-file = "scripts/test-release-readiness.sh"
-object = "check_waivers"
-required_change = "Add positive and negative waiver tests."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-v2-hardening-005"
-plan_id = "PLAN-2026-05-31-v2-hardening-followup"
-status = "completed"
-title = "Add local receipt chain validation"
-kind = "implementation"
-source_plan_path = "docs/plans/v2-hardening-followup.md"
-source_plan_hash_sha256 = "e80365453e837a7b1fa6f8c56e2127c3def82279d3a064de7ab811f183b0638c"
-reason = "Receipt metrics do not detect tampering in otherwise valid event logs."
-acceptance_proof = "Behaviors B-009-receipt-chain-positive and B-010-receipt-chain-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-009-receipt-chain-positive",
-    "B-010-receipt-chain-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/schema.rs"
-object = "ReceiptEvent"
-required_change = "Add optional previous/current receipt hash fields."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/receipts.rs"
-object = "append_command_event"
-required_change = "Append hash-chained receipt events."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/metrics.rs"
-object = "chain_validation"
-required_change = "Validate receipt chains and report legacy unchained receipts."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/mod.rs"
-object = "receipt_chain_tests"
-required_change = "Add chained and tampered receipt tests."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-v2-hardening-006"
-plan_id = "PLAN-2026-05-31-v2-hardening-followup"
-status = "completed"
-title = "Document v2 hardening runtime contracts"
-kind = "documentation"
-source_plan_path = "docs/plans/v2-hardening-followup.md"
-source_plan_hash_sha256 = "e80365453e837a7b1fa6f8c56e2127c3def82279d3a064de7ab811f183b0638c"
-reason = "Changed status, release, waiver, platform, and receipt contracts must be documented."
-acceptance_proof = "Behavior B-013-v2-hardening-validation passes and docs name receipt chain, reasoned waivers, and executable completeness."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = ["B-013-v2-hardening-validation"]
-
-[[tasks.targets]]
-file = "docs/runtime-schemas.md"
-object = "runtime_contracts"
-required_change = "Document status, release executable completeness, waiver, platform, and receipt-chain behavior."
-
-[[tasks.targets]]
-file = "README.md"
-object = "v2_hardening_note"
-required_change = "Document user-facing waiver/status behavior changes."

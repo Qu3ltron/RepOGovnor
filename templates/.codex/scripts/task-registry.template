@@ -5,7 +5,8 @@ root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 manifest="${root}/plugins/agent-governance/rust/task-registry-flow-cli/Cargo.toml"
 
 if [[ ! -f "$manifest" ]]; then
-  manifest="{{PLUGIN_ROOT}}/rust/task-registry-flow-cli/Cargo.toml"
+  echo "agent-governance plugin checkout missing at ${root}/plugins/agent-governance" >&2
+  exit 1
 fi
 
 cd "$root"

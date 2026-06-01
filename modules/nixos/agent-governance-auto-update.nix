@@ -3,9 +3,10 @@
 let
   cfg = config.services.agent-governance-auto-update;
 
-  # The flake input name that points to the Governance-plugin repo.
+  # The flake input name that points to the RepOGovnor repo.
   # Consumers add this repo as a flake input; the timer updates it.
   flakeInput = cfg.flakeInput;
+  flakeInputNameSafe = builtins.match "[A-Za-z0-9._-]+" flakeInput != null;
 
   # Path to the flake whose lock file contains the governance-plugin input.
   flakeDir = cfg.flakeDir;
@@ -30,6 +31,7 @@ let
     set -euo pipefail
 
     LOCK_FILE="${flakeDir}/flake.lock"
+    flake_input=${lib.escapeShellArg flakeInput}
     backup_lock="$(mktemp)"
     validation_cmd=${lib.escapeShellArg validationCommand}
     rebuild_cmd=${lib.escapeShellArg rebuildCommand}
@@ -58,17 +60,18 @@ let
 
     # Snapshot the current lock hash for the governance-plugin input.
     old_rev="$(${pkgs.jq}/bin/jq -r \
-      ".nodes.\"${flakeInput}\".locked.rev // empty" \
+      --arg input "$flake_input" \
+      '.nodes[$input].locked.rev // empty' \
       "$LOCK_FILE")"
 
     if [[ -z "$old_rev" ]]; then
-      echo "agent-governance-update: input ${flakeInput} not found in lock" >&2
+      echo "agent-governance-update: input $flake_input not found in lock" >&2
       exit 1
     fi
 
     # Update only the governance-plugin input.
     if ! ${pkgs.nix}/bin/nix flake lock \
-      --update-input "${flakeInput}" \
+      --update-input "$flake_input" \
       "$flakeDir" 2>&1; then
       rollback_lock "flake lock failure"
       exit 1
@@ -76,15 +79,16 @@ let
 
     # Snapshot the new lock hash.
     new_rev="$(${pkgs.jq}/bin/jq -r \
-      ".nodes.\"${flakeInput}\".locked.rev // empty" \
+      --arg input "$flake_input" \
+      '.nodes[$input].locked.rev // empty' \
       "$LOCK_FILE")"
 
     if [[ "$old_rev" == "$new_rev" ]]; then
-      echo "agent-governance-update: ${flakeInput} unchanged at $old_rev"
+      echo "agent-governance-update: $flake_input unchanged at $old_rev"
       exit 0
     fi
 
-    echo "agent-governance-update: ${flakeInput} updated $old_rev -> $new_rev"
+    echo "agent-governance-update: $flake_input updated $old_rev -> $new_rev"
 
     if ! bash -lc "$validation_cmd"; then
       rollback_lock "validation failure"
@@ -116,7 +120,7 @@ in
     flakeInput = lib.mkOption {
       type = lib.types.str;
       default = "governance-plugin";
-      description = "Name of the flake input pointing to the Governance-plugin repo";
+      description = "Name of the flake input pointing to the RepOGovnor repo";
     };
 
     devLockFile = lib.mkOption {
@@ -163,6 +167,13 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    assertions = [
+      {
+        assertion = flakeInputNameSafe;
+        message = "services.agent-governance-auto-update.flakeInput must match [A-Za-z0-9._-]+";
+      }
+    ];
+
     systemd.services.agent-governance-update = {
       description = "Update agent-governance plugin flake input and rebuild";
       after = [ "network-online.target" ];

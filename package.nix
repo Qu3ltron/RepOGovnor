@@ -21,7 +21,6 @@ let
         ".codex"
         ".cursor"
         ".git"
-        ".github"
         "target"
         "plugins"
       ];

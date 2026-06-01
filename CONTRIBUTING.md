@@ -1,6 +1,6 @@
 # Contributing
 
-Governance-plugin is intentionally strict: changes that affect runtime
+RepOGovnor is intentionally strict: changes that affect runtime
 behavior, release posture, or governance workflow need a governed closure plan
 before implementation.
 

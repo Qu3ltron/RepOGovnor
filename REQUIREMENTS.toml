@@ -131,6 +131,7 @@ required = [
   "rust/task-registry-flow-cli/src/tests/mod.rs",
   "rust/task-registry-flow-cli/src/tests/receipt_chain_tests.rs",
   "rust/task-registry-flow-cli/src/tests/release_source_tests.rs",
+  "rust/task-registry-flow-cli/src/tests/security_tests.rs",
   "rust/task-registry-flow-cli/src/tests/status_check_tests.rs",
   "rust/task-registry-flow-cli/src/activation.rs",
   "rust/task-registry-flow-cli/src/registry_io.rs",
