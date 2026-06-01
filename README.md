@@ -34,7 +34,7 @@ This is probably not the right tool if you want:
 
 ## What you get today
 
-Current release: `2.0.0`
+Current release: `2.0.1`
 
 License: MIT. The plugin is free to use, copy, modify, and distribute under
 the terms in [LICENSE](LICENSE).

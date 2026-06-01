@@ -67,7 +67,7 @@ split_plan_command = ".codex/scripts/task-registry source-limit plan --path <fil
 design_rule = "Source, scripts, configs, docs, templates, and governance files must stay at or below 1600 lines. Use the split planner before adding behavior to a violating file."
 
 [release_source]
-version = "2.0.0"
+version = "2.0.1"
 status_command = "scripts/status.sh --release-source"
 version_check_command = "scripts/release-version-check.sh"
 audit_command = "scripts/release-audit.sh"
@@ -77,7 +77,9 @@ required = [
   "ROADMAP.md",
   "LICENSE",
   "CHANGELOG.md",
+  "CONTRIBUTING.md",
   "README.md",
+  "SECURITY.md",
   "MANIFEST.toml",
   "REQUIREMENTS.toml",
   "plugin.json",

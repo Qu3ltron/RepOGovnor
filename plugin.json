@@ -1,6 +1,6 @@
 {
   "name": "agent-governance",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Portable Codex + Claude Code + Cursor + Antigravity CLI gap-closure contract, plugin-owned task-registry CLI, mutation gates, and 1600-line source limits",
   "author": "Qu3ltron",
   "license": "MIT",

@@ -4,6 +4,13 @@ archive_id = "completed-003"
 archive_authority = "docs/task-registry/archive/completed-003.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-05-31-strict-marker-block-validation"
+plan_path = "docs/plans/strict-marker-block-validation.md"
+plan_hash_sha256 = "ad84fbf9f6187483c4ba626b35a358a2748231bdc335065ad59130fa7eff4277"
+activated_at = "2026-05-31"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-05-31-release-executable-enforcement"
 plan_path = "docs/plans/release-executable-enforcement.md"
 plan_hash_sha256 = "3ad7520f1e9de72abd5e7e704399e4588d00628a3487ef271c337e362b4be72c"
@@ -52,12 +59,59 @@ plan_hash_sha256 = "ec47228bcaa94d097491b65fe191a7c6607804f923473399a256a11b09f1
 activated_at = "2026-05-30"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-05-30-v2-release-readiness"
-plan_path = "docs/plans/v2-release-readiness.md"
-plan_hash_sha256 = "a07ccef32b7ff44fe8138a092bc91c6524ec8e207019f4ce2dfd7c590b2d0e60"
-activated_at = "2026-05-30"
+[[tasks]]
+task_id = "TASK-2026-05-31-strict-marker-block-001"
+plan_id = "PLAN-2026-05-31-strict-marker-block-validation"
 status = "completed"
+title = "Enforce exact ordered marker blocks"
+kind = "implementation"
+source_plan_path = "docs/plans/strict-marker-block-validation.md"
+source_plan_hash_sha256 = "ad84fbf9f6187483c4ba626b35a358a2748231bdc335065ad59130fa7eff4277"
+reason = "Count-only marker validation accepts prose-only and reversed marker tokens."
+acceptance_proof = "Behaviors B-001-marker-block-positive and B-002-marker-block-negative pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-001-marker-block-positive",
+    "B-002-marker-block-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/status_checks.rs"
+object = "marker_check"
+required_change = "Validate exact ordered HTML comment marker lines."
+
+[[tasks.targets]]
+file = "scripts/status.sh"
+object = "check_markers"
+required_change = "Reject prose-only tokens and end-before-begin marker order."
+
+[[tasks]]
+task_id = "TASK-2026-05-31-strict-marker-block-002"
+plan_id = "PLAN-2026-05-31-strict-marker-block-validation"
+status = "completed"
+title = "Add strict marker negative tests"
+kind = "validation"
+source_plan_path = "docs/plans/strict-marker-block-validation.md"
+source_plan_hash_sha256 = "ad84fbf9f6187483c4ba626b35a358a2748231bdc335065ad59130fa7eff4277"
+reason = "Malformed marker bypasses must be locked by behavioral tests."
+acceptance_proof = "Behaviors B-002-marker-block-negative and B-003-shell-marker-block-negative pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-002-marker-block-negative",
+    "B-003-shell-marker-block-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/status_check_tests.rs"
+object = "status_check_json_rejects_non_block_marker_tokens"
+required_change = "Assert prose-only tokens and reversed comment markers fail JSON status."
+
+[[tasks.targets]]
+file = "scripts/test-install-modes.sh"
+object = "strict_marker_negative_cases"
+required_change = "Assert shell status rejects markerless, prose-only, and reversed-marker workspaces."
 
 [[tasks]]
 task_id = "TASK-2026-05-31-release-executable-001"
@@ -1327,149 +1381,3 @@ required_change = "Document cwd-independent release audit behavior."
 file = "CHANGELOG.md"
 object = "v2_followup_notes"
 required_change = "Record production-blocker fixes for skill symlinks and release audit root scanning."
-
-[[tasks]]
-task_id = "TASK-2026-05-30-v2-release-readiness-001"
-plan_id = "PLAN-2026-05-30-v2-release-readiness"
-status = "completed"
-title = "Align v2 version metadata"
-kind = "release"
-source_plan_path = "docs/plans/v2-release-readiness.md"
-source_plan_hash_sha256 = "a07ccef32b7ff44fe8138a092bc91c6524ec8e207019f4ce2dfd7c590b2d0e60"
-reason = "Release metadata is still pre-v2."
-acceptance_proof = "Behavior B-2026-05-30-v2-version-consistency passes."
-created_at = "2026-05-30"
-updated_at = "2026-05-30"
-behavior_ids = ["B-2026-05-30-v2-version-consistency"]
-
-[[tasks.targets]]
-file = "plugin.json"
-object = "package_version"
-required_change = "Set version to 2.0.0."
-
-[[tasks.targets]]
-file = ".codex-plugin/plugin.json"
-object = "codex_plugin_version"
-required_change = "Set version to 2.0.0."
-
-[[tasks.targets]]
-file = "MANIFEST.toml"
-object = "plugin_version"
-required_change = "Set plugin_version to 2.0.0 and remove stale mode wording."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/Cargo.toml"
-object = "rust_cli_version"
-required_change = "Set package version to 2.0.0."
-
-[[tasks.targets]]
-file = "VERSION"
-object = "release_version_file"
-required_change = "Add 2.0.0 release version file."
-
-[[tasks.targets]]
-file = "scripts/release-version-check.sh"
-object = "version_consistency_gate"
-required_change = "Add version drift and missing file checks."
-
-[[tasks]]
-task_id = "TASK-2026-05-30-v2-release-readiness-002"
-plan_id = "PLAN-2026-05-30-v2-release-readiness"
-status = "completed"
-title = "Add v2 release artifacts"
-kind = "release"
-source_plan_path = "docs/plans/v2-release-readiness.md"
-source_plan_hash_sha256 = "a07ccef32b7ff44fe8138a092bc91c6524ec8e207019f4ce2dfd7c590b2d0e60"
-reason = "Release notes, license artifact, and v2 release checklist are missing."
-acceptance_proof = "Behavior B-2026-05-30-v2-release-artifacts passes."
-created_at = "2026-05-30"
-updated_at = "2026-05-30"
-behavior_ids = ["B-2026-05-30-v2-release-artifacts"]
-
-[[tasks.targets]]
-file = "CHANGELOG.md"
-object = "v2_release_notes"
-required_change = "Add v2 release notes with breaking changes, migration notes, and validation proof."
-
-[[tasks.targets]]
-file = "LICENSE"
-object = "license_artifact"
-required_change = "Add all-rights-reserved license artifact."
-
-[[tasks.targets]]
-file = "docs/releases/v2.md"
-object = "v2_release_checklist"
-required_change = "Add v2 release readiness checklist."
-
-[[tasks.targets]]
-file = "README.md"
-object = "release_artifact_links"
-required_change = "Link v2 release artifacts and clarify release-source checks."
-
-[[tasks]]
-task_id = "TASK-2026-05-30-v2-release-readiness-003"
-plan_id = "PLAN-2026-05-30-v2-release-readiness"
-status = "completed"
-title = "Add plugin-source release status"
-kind = "release"
-source_plan_path = "docs/plans/v2-release-readiness.md"
-source_plan_hash_sha256 = "a07ccef32b7ff44fe8138a092bc91c6524ec8e207019f4ce2dfd7c590b2d0e60"
-reason = "Consumer strict status cannot be used as plugin-source release readiness."
-acceptance_proof = "Behavior B-2026-05-30-v2-source-status passes."
-created_at = "2026-05-30"
-updated_at = "2026-05-30"
-behavior_ids = ["B-2026-05-30-v2-source-status"]
-
-[[tasks.targets]]
-file = "scripts/status.sh"
-object = "release_source_mode"
-required_change = "Add --release-source mode that checks plugin-source package readiness separately from consumer install posture."
-
-[[tasks.targets]]
-file = "scripts/test-release-readiness.sh"
-object = "release_status_tests"
-required_change = "Add positive and negative tests for release-source and consumer strict status separation."
-
-[[tasks.targets]]
-file = "REQUIREMENTS.toml"
-object = "release_source_artifacts"
-required_change = "Document plugin-source release artifacts."
-
-[[tasks.targets]]
-file = "rules/tracked-for-ci.md"
-object = "source_vs_consumer_tracking"
-required_change = "Clarify consumer tracked artifacts and plugin-source release artifacts."
-
-[[tasks]]
-task_id = "TASK-2026-05-30-v2-release-readiness-004"
-plan_id = "PLAN-2026-05-30-v2-release-readiness"
-status = "completed"
-title = "Add deterministic release audit gate"
-kind = "release"
-source_plan_path = "docs/plans/v2-release-readiness.md"
-source_plan_hash_sha256 = "a07ccef32b7ff44fe8138a092bc91c6524ec8e207019f4ce2dfd7c590b2d0e60"
-reason = "Dependency and security audit tooling was missing or undocumented during the v2 sweep."
-acceptance_proof = "Behavior B-2026-05-30-v2-audit-gate passes."
-created_at = "2026-05-30"
-updated_at = "2026-05-30"
-behavior_ids = ["B-2026-05-30-v2-audit-gate"]
-
-[[tasks.targets]]
-file = "scripts/release-audit.sh"
-object = "release_audit_gate"
-required_change = "Add Rust gates, duplicate dependency detection, audit tool checks, and explicit waiver behavior."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/deny.toml"
-object = "release_dependency_policy"
-required_change = "Add explicit cargo-deny policy for licenses, bans, advisories, and source registries."
-
-[[tasks.targets]]
-file = ".github/workflows/ci.yml"
-object = "release_ci_gates"
-required_change = "Run release readiness tests and audit gate in CI."
-
-[[tasks.targets]]
-file = "scripts/test-release-readiness.sh"
-object = "audit_negative_tests"
-required_change = "Add negative tests for missing audit tools without waiver and positive waiver behavior."

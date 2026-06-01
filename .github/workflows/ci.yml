@@ -9,7 +9,7 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6.0.2
       - uses: dtolnay/rust-toolchain@stable
       - name: Source-file limit
         run: cargo run --locked --quiet --manifest-path rust/task-registry-flow-cli/Cargo.toml -- source-limit check

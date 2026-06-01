@@ -1,6 +1,6 @@
 {
   "name": "agent-governance",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Portable governed implementation workflow with a plugin-owned task registry CLI and 1600-line source limit.",
   "author": {
     "name": "Qu3ltron"

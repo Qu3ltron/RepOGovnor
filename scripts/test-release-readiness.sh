@@ -34,7 +34,7 @@ check_version() {
 
   local drift
   drift="$(tmp_copy)"
-  printf '2.0.1\n' > "$drift/VERSION"
+  printf '2.0.0\n' > "$drift/VERSION"
   if "$ROOT/scripts/release-version-check.sh" "$drift" >/tmp/release-version-drift.out 2>&1; then
     echo "version drift unexpectedly passed" >&2
     exit 1

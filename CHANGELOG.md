@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 2.0.1 - 2026-06-01
+
 ### Changed
 
 - Switched the project license to MIT.
@@ -20,6 +22,15 @@
 - Hardened activation plans: new v2 plans require phased checklists,
   behavior `gap_id`, behavior `polarity`, typed positive and negative
   verifier coverage, exact task targets, and placeholder-free plan text.
+- Updated GitHub workflow checkout actions to `actions/checkout@v6.0.2` for
+  Node 24 execution.
+- Added public contribution and security reporting documents.
+
+### Fixed
+
+- `verify-landing` now selects only active task targets before running behavior
+  verifiers, so planned tasks cannot fail after verifier execution.
+- GitHub CI now installs Nix before strict release readiness runs.
 
 ## 2.0.0 - 2026-05-30
 
