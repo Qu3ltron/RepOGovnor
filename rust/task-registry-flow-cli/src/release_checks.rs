@@ -1,6 +1,8 @@
 use crate::model::Result;
 use crate::reports::{RuntimeFailure, RuntimeResult};
-use crate::schema::{CheckReport, Diagnostic, ReleaseCheckId, VersionFileFormat};
+use crate::schema::{
+    CheckReport, Diagnostic, FailureCode, ReleaseCheckId, ReportSurface, VersionFileFormat,
+};
 #[cfg(not(unix))]
 use crate::schema::{CheckStatus, DiagnosticSeverity};
 use serde::Deserialize;
@@ -109,7 +111,7 @@ pub(crate) fn run_command(root: &Path, args: &[String]) -> RuntimeResult<String>
     if json {
         let output = report.to_json()?;
         if report.has_failures() {
-            return Err(RuntimeFailure::json(output));
+            return Err(RuntimeFailure::json(FailureCode::DiagnosticReport, output));
         }
         Ok(output)
     } else {
@@ -139,7 +141,7 @@ pub(crate) fn report(root: &Path, mode: Mode) -> Result<CheckReport> {
     if matches!(mode, Mode::Tracked) {
         checks.extend(tracked_checks(root, &requirements));
     }
-    CheckReport::new("release-source", checks)
+    CheckReport::new(ReportSurface::ReleaseSource, checks)
 }
 
 fn load_requirements(root: &Path) -> Result<Requirements> {
@@ -158,7 +160,7 @@ fn required_checks(root: &Path, requirements: &Requirements) -> Vec<Diagnostic> 
             match fs::symlink_metadata(root.join(path)) {
                 Ok(metadata) if metadata.file_type().is_symlink() => Diagnostic::fail(
                     ReleaseCheckId::ReleaseFilePresent.as_str(),
-                    "release-source",
+                    ReportSurface::ReleaseSource,
                     path,
                     "native file present",
                     "symlink",
@@ -166,13 +168,13 @@ fn required_checks(root: &Path, requirements: &Requirements) -> Vec<Diagnostic> 
                 ),
                 Ok(metadata) if metadata.is_file() => Diagnostic::pass(
                     ReleaseCheckId::ReleaseFilePresent.as_str(),
-                    "release-source",
+                    ReportSurface::ReleaseSource,
                     path,
                     "native file present",
                 ),
                 Ok(_) => Diagnostic::fail(
                     ReleaseCheckId::ReleaseFilePresent.as_str(),
-                    "release-source",
+                    ReportSurface::ReleaseSource,
                     path,
                     "native file present",
                     "not a file",
@@ -180,7 +182,7 @@ fn required_checks(root: &Path, requirements: &Requirements) -> Vec<Diagnostic> 
                 ),
                 Err(_) => Diagnostic::fail(
                     ReleaseCheckId::ReleaseFilePresent.as_str(),
-                    "release-source",
+                    ReportSurface::ReleaseSource,
                     path,
                     "native file present",
                     "missing",
@@ -204,7 +206,7 @@ fn executable_checks(root: &Path, requirements: &Requirements) -> Vec<Diagnostic
                 }
                 Ok(metadata) if metadata.is_file() => Diagnostic::fail(
                     ReleaseCheckId::ReleaseFileExecutable.as_str(),
-                    "release-source",
+                    ReportSurface::ReleaseSource,
                     path,
                     "executable file",
                     "not executable",
@@ -212,7 +214,7 @@ fn executable_checks(root: &Path, requirements: &Requirements) -> Vec<Diagnostic
                 ),
                 Ok(_) => Diagnostic::fail(
                     ReleaseCheckId::ReleaseFileExecutable.as_str(),
-                    "release-source",
+                    ReportSurface::ReleaseSource,
                     path,
                     "executable file",
                     "not a file",
@@ -220,7 +222,7 @@ fn executable_checks(root: &Path, requirements: &Requirements) -> Vec<Diagnostic
                 ),
                 Err(_) => Diagnostic::fail(
                     ReleaseCheckId::ReleaseFileExecutable.as_str(),
-                    "release-source",
+                    ReportSurface::ReleaseSource,
                     path,
                     "executable file",
                     "missing",
@@ -245,7 +247,7 @@ fn metadata_is_executable(_metadata: &fs::Metadata) -> bool {
 fn executable_file_pass(path: &str) -> Diagnostic {
     Diagnostic::pass(
         ReleaseCheckId::ReleaseFileExecutable.as_str(),
-        "release-source",
+        ReportSurface::ReleaseSource,
         path,
         "executable file",
     )
@@ -255,7 +257,7 @@ fn executable_file_pass(path: &str) -> Diagnostic {
 fn executable_file_pass(path: &str) -> Diagnostic {
     Diagnostic::pass(
         ReleaseCheckId::ReleaseFileExecutable.as_str(),
-        "release-source",
+        ReportSurface::ReleaseSource,
         path,
         "configured executable file present; mode not enforced on this platform",
     )
@@ -273,7 +275,7 @@ fn executable_policy_checks(root: &Path, requirements: &Requirements) -> Vec<Dia
         if release_required_path_is_script(root, path) && !executable.contains(path.as_str()) {
             checks.push(Diagnostic::fail(
                 ReleaseCheckId::ReleaseScriptExecutableUndeclared.as_str(),
-                "release-source",
+                ReportSurface::ReleaseSource,
                 path,
                 "script declared in release_source.executable",
                 "missing executable policy",
@@ -315,7 +317,7 @@ fn rust_source_policy_checks(root: &Path, requirements: &Requirements) -> Vec<Di
         .map(|path| {
             Diagnostic::fail(
                 ReleaseCheckId::ReleaseRustSourceUndeclared.as_str(),
-                "release-source",
+                ReportSurface::ReleaseSource,
                 path,
                 "rust source declared in release_source.required",
                 "missing release policy",
@@ -338,7 +340,7 @@ fn governed_source_policy_checks(root: &Path, requirements: &Requirements) -> Ve
         .map(|path| {
             Diagnostic::fail(
                 ReleaseCheckId::ReleaseGovernedSourceUndeclared.as_str(),
-                "release-source",
+                ReportSurface::ReleaseSource,
                 path,
                 "governed source declared in release_source.required",
                 "missing release policy",
@@ -418,7 +420,7 @@ fn platform_executable_checks(paths: &[String]) -> Vec<Diagnostic> {
         .map(|path| {
             Diagnostic::pass(
                 ReleaseCheckId::ReleaseExecutablePlatform.as_str(),
-                "release-source",
+                ReportSurface::ReleaseSource,
                 path,
                 "unix executable mode enforced",
             )
@@ -434,7 +436,7 @@ fn platform_executable_checks(paths: &[String]) -> Vec<Diagnostic> {
             check_id: ReleaseCheckId::ReleaseExecutablePlatform
                 .as_str()
                 .to_string(),
-            surface: "release-source".to_string(),
+            surface: ReportSurface::ReleaseSource,
             path: path.clone(),
             severity: DiagnosticSeverity::Warning,
             status: CheckStatus::Skip,
@@ -455,14 +457,14 @@ fn stale_absent_checks(root: &Path, requirements: &Requirements) -> Vec<Diagnost
             if !root.join(path).exists() {
                 Diagnostic::pass(
                     ReleaseCheckId::StalePathAbsent.as_str(),
-                    "release-source",
+                    ReportSurface::ReleaseSource,
                     path,
                     "path absent",
                 )
             } else {
                 Diagnostic::fail(
                     ReleaseCheckId::StalePathAbsent.as_str(),
-                    "release-source",
+                    ReportSurface::ReleaseSource,
                     path,
                     "path absent",
                     "present",
@@ -478,14 +480,14 @@ fn schema_checks(requirements: &Requirements) -> Vec<Diagnostic> {
     if requirements.schema_version == 1 {
         checks.push(Diagnostic::pass(
             ReleaseCheckId::ReleaseSchemaValid.as_str(),
-            "release-source",
+            ReportSurface::ReleaseSource,
             "schema_version",
             "schema_version 1",
         ));
     } else {
         checks.push(Diagnostic::fail(
             ReleaseCheckId::ReleaseSchemaValid.as_str(),
-            "release-source",
+            ReportSurface::ReleaseSource,
             "schema_version",
             "schema_version 1",
             format!("schema_version {}", requirements.schema_version),
@@ -495,7 +497,7 @@ fn schema_checks(requirements: &Requirements) -> Vec<Diagnostic> {
     if requirements.plugin_name.trim().is_empty() {
         checks.push(Diagnostic::fail(
             ReleaseCheckId::ReleaseSchemaValid.as_str(),
-            "release-source",
+            ReportSurface::ReleaseSource,
             "plugin_name",
             "non-empty plugin name",
             "empty",
@@ -506,14 +508,14 @@ fn schema_checks(requirements: &Requirements) -> Vec<Diagnostic> {
         if ReleaseCheckId::from_str(check_id).is_ok() {
             checks.push(Diagnostic::pass(
                 ReleaseCheckId::ReleaseSchemaValid.as_str(),
-                "release-source",
+                ReportSurface::ReleaseSource,
                 check_id,
                 "known release check id",
             ));
         } else {
             checks.push(Diagnostic::fail(
                 ReleaseCheckId::ReleaseSchemaValid.as_str(),
-                "release-source",
+                ReportSurface::ReleaseSource,
                 check_id,
                 "known release check id",
                 "unknown",
@@ -524,7 +526,7 @@ fn schema_checks(requirements: &Requirements) -> Vec<Diagnostic> {
     if requirements.release_source.version_files.is_empty() {
         checks.push(Diagnostic::fail(
             ReleaseCheckId::ReleaseSchemaValid.as_str(),
-            "release-source",
+            ReportSurface::ReleaseSource,
             "release_source.version_files",
             "at least one version-bearing file",
             "missing",
@@ -543,13 +545,13 @@ fn version_checks(root: &Path, requirements: &Requirements) -> Vec<Diagnostic> {
         .map(|version_file| match extract_version(root, version_file) {
             Ok(actual) if actual == expected => Diagnostic::pass(
                 ReleaseCheckId::ReleaseVersionConsistent.as_str(),
-                "release-source",
+                ReportSurface::ReleaseSource,
                 &version_file.path,
                 format!("version {expected}"),
             ),
             Ok(actual) => Diagnostic::fail(
                 ReleaseCheckId::ReleaseVersionConsistent.as_str(),
-                "release-source",
+                ReportSurface::ReleaseSource,
                 &version_file.path,
                 format!("version {expected}"),
                 format!("version {actual}"),
@@ -557,7 +559,7 @@ fn version_checks(root: &Path, requirements: &Requirements) -> Vec<Diagnostic> {
             ),
             Err(error) => Diagnostic::fail(
                 ReleaseCheckId::ReleaseVersionConsistent.as_str(),
-                "release-source",
+                ReportSurface::ReleaseSource,
                 &version_file.path,
                 format!("version {expected}"),
                 error,
@@ -578,14 +580,14 @@ fn tracked_checks(root: &Path, requirements: &Requirements) -> Vec<Diagnostic> {
             if root.join(path).exists() {
                 Diagnostic::pass(
                     ReleaseCheckId::TrackedForCiPresent.as_str(),
-                    "tracked-for-ci",
+                    ReportSurface::TrackedForCi,
                     path,
                     "path present",
                 )
             } else {
                 Diagnostic::fail(
                     ReleaseCheckId::TrackedForCiPresent.as_str(),
-                    "tracked-for-ci",
+                    ReportSurface::TrackedForCi,
                     path,
                     "path present",
                     "missing",

@@ -1,6 +1,6 @@
 use crate::model::Result;
 use crate::reports::{RuntimeFailure, RuntimeResult};
-use crate::schema::{CheckReport, Diagnostic};
+use crate::schema::{CheckReport, Diagnostic, FailureCode, ReportSurface};
 use std::fs;
 use std::path::Path;
 
@@ -18,7 +18,7 @@ pub(crate) fn run_command(root: &Path, args: &[String]) -> RuntimeResult<String>
     let skill_path = ".agents/skills/task-registry-flow";
     let path = root.join(skill_path);
     let report = report(
-        "status",
+        ReportSurface::Status,
         vec![
             marker_check(root, "AGENTS.md"),
             marker_check(root, "GEMINI.md"),
@@ -28,7 +28,7 @@ pub(crate) fn run_command(root: &Path, args: &[String]) -> RuntimeResult<String>
     if json {
         let output = report.to_json()?;
         if report.has_failures() {
-            Err(RuntimeFailure::json(output))
+            Err(RuntimeFailure::json(FailureCode::DiagnosticReport, output))
         } else {
             Ok(output)
         }
@@ -42,7 +42,7 @@ pub(crate) fn run_command(root: &Path, args: &[String]) -> RuntimeResult<String>
     }
 }
 
-pub(crate) fn report(surface: &str, checks: Vec<Diagnostic>) -> Result<CheckReport> {
+pub(crate) fn report(surface: ReportSurface, checks: Vec<Diagnostic>) -> Result<CheckReport> {
     CheckReport::new(surface, checks)
 }
 
@@ -51,7 +51,7 @@ pub(crate) fn marker_check(root: &Path, path: &str) -> Diagnostic {
     let Ok(body) = fs::read_to_string(&full_path) else {
         return Diagnostic::fail(
             "governance-marker",
-            "status",
+            ReportSurface::Status,
             path,
             "single governance marker block",
             "missing file",
@@ -65,7 +65,7 @@ pub(crate) fn marker_check(root: &Path, path: &str) -> Diagnostic {
         if !marker_content_valid(path, &block) {
             return Diagnostic::fail(
                 "governance-marker",
-                "status",
+                ReportSurface::Status,
                 path,
                 "current managed marker block",
                 "stale marker content",
@@ -74,7 +74,7 @@ pub(crate) fn marker_check(root: &Path, path: &str) -> Diagnostic {
         }
         Diagnostic::pass(
             "governance-marker",
-            "status",
+            ReportSurface::Status,
             path,
             "single governance marker block",
         )
@@ -88,7 +88,7 @@ pub(crate) fn marker_check(root: &Path, path: &str) -> Diagnostic {
         };
         Diagnostic::fail(
             "governance-marker",
-            "status",
+            ReportSurface::Status,
             path,
             "single governance marker block",
             actual,
@@ -126,11 +126,16 @@ fn marker_content_valid(path: &str, block: &str) -> bool {
 
 pub(crate) fn native_skill_check(path: &str, is_native_directory: bool) -> Diagnostic {
     if is_native_directory {
-        Diagnostic::pass("native-skill", "status", path, "native directory")
+        Diagnostic::pass(
+            "native-skill",
+            ReportSurface::Status,
+            path,
+            "native directory",
+        )
     } else {
         Diagnostic::fail(
             "native-skill",
-            "status",
+            ReportSurface::Status,
             path,
             "native directory",
             "missing or symlink",

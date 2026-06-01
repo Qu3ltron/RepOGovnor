@@ -1,4 +1,5 @@
-use serde::{Deserialize, Serialize};
+use serde::de::{self, Visitor};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt;
 use std::str::FromStr;
 
@@ -74,6 +75,33 @@ string_enum!(HookFormat {
     Codex => "codex",
     Cursor => "cursor",
     Claude => "claude",
+});
+
+string_enum!(RuntimeSubjectKind {
+    Command => "command",
+    MutationTarget => "mutation-target",
+    VerifierTarget => "verifier-target",
+});
+
+string_enum!(ReportSurface {
+    Cli => "cli",
+    Manifest => "manifest",
+    Migration => "migration",
+    ReleaseSource => "release-source",
+    TrackedForCi => "tracked-for-ci",
+    SourceLimit => "source-limit",
+    SourceLimitPlan => "source-limit-plan",
+    Status => "status",
+    ReceiptChain => "receipt-chain",
+    ReceiptChainFix => "receipt-chain-fix",
+});
+
+string_enum!(FailureCode {
+    Usage => "usage",
+    Runtime => "runtime",
+    Serialization => "serialization",
+    ReceiptAppend => "receipt-append",
+    DiagnosticReport => "diagnostic-report",
 });
 
 string_enum!(TaskStatus {
@@ -186,10 +214,75 @@ string_enum!(VersionFileFormat {
     Toml => "toml",
 });
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub(crate) enum SchemaVersion {
+    V1,
+    V2,
+}
+
+impl SchemaVersion {
+    pub(crate) fn as_i64(self) -> i64 {
+        match self {
+            Self::V1 => 1,
+            Self::V2 => 2,
+        }
+    }
+}
+
+impl Serialize for SchemaVersion {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_i64(self.as_i64())
+    }
+}
+
+impl<'de> Deserialize<'de> for SchemaVersion {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct SchemaVersionVisitor;
+
+        impl Visitor<'_> for SchemaVersionVisitor {
+            type Value = SchemaVersion;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                formatter.write_str("schema version 1 or 2")
+            }
+
+            fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E>
+            where
+                E: de::Error,
+            {
+                match value {
+                    1 => Ok(SchemaVersion::V1),
+                    2 => Ok(SchemaVersion::V2),
+                    _ => Err(E::custom(format!("unsupported schema_version {value}"))),
+                }
+            }
+
+            fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
+            where
+                E: de::Error,
+            {
+                match value {
+                    1 => Ok(SchemaVersion::V1),
+                    2 => Ok(SchemaVersion::V2),
+                    _ => Err(E::custom(format!("unsupported schema_version {value}"))),
+                }
+            }
+        }
+
+        deserializer.deserialize_any(SchemaVersionVisitor)
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct ReceiptEvent {
-    pub(crate) schema_version: i64,
+    pub(crate) schema_version: SchemaVersion,
     pub(crate) timestamp: String,
     pub(crate) command: CliCommand,
     pub(crate) outcome: EventOutcome,
@@ -217,7 +310,7 @@ impl ReceiptEvent {
         summary: String,
     ) -> Self {
         Self {
-            schema_version: 2,
+            schema_version: SchemaVersion::V2,
             timestamp,
             command,
             outcome,
@@ -239,12 +332,12 @@ impl ReceiptEvent {
         reason: String,
     ) -> Self {
         Self {
-            schema_version: 2,
+            schema_version: SchemaVersion::V2,
             timestamp,
             command: CliCommand::VerifyMutationHook,
             outcome: EventOutcome::MutationDenied,
             duration_ms,
-            subject: RuntimeSubject::path("mutation-target", path.clone()),
+            subject: RuntimeSubject::path(RuntimeSubjectKind::MutationTarget, path.clone()),
             summary: reason.clone(),
             previous_event_hash_sha256: None,
             event_hash_sha256: None,
@@ -258,7 +351,7 @@ impl ReceiptEvent {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct RuntimeSubject {
-    pub(crate) kind: String,
+    pub(crate) kind: RuntimeSubjectKind,
     pub(crate) id: String,
     pub(crate) path: String,
 }
@@ -266,16 +359,16 @@ pub(crate) struct RuntimeSubject {
 impl RuntimeSubject {
     pub(crate) fn command(command: CliCommand) -> Self {
         Self {
-            kind: "command".to_string(),
+            kind: RuntimeSubjectKind::Command,
             id: command.as_str().to_string(),
             path: ".".to_string(),
         }
     }
 
-    pub(crate) fn path(kind: impl Into<String>, path: impl Into<String>) -> Self {
+    pub(crate) fn path(kind: RuntimeSubjectKind, path: impl Into<String>) -> Self {
         let path = path.into();
         Self {
-            kind: kind.into(),
+            kind,
             id: path.clone(),
             path,
         }
@@ -303,10 +396,12 @@ pub(crate) struct MutationDenial {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct CommandReport {
-    pub(crate) schema_version: i64,
+    pub(crate) schema_version: SchemaVersion,
     pub(crate) command: CliCommand,
     pub(crate) status: CommandStatus,
     pub(crate) summary: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) failure_code: Option<FailureCode>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub(crate) diagnostics: Vec<Diagnostic>,
     pub(crate) receipt_recorded: bool,
@@ -319,10 +414,11 @@ impl CommandReport {
         receipt_recorded: bool,
     ) -> Self {
         Self {
-            schema_version: 2,
+            schema_version: SchemaVersion::V2,
             command,
             status: CommandStatus::Pass,
             summary: summary.into(),
+            failure_code: None,
             diagnostics: Vec::new(),
             receipt_recorded,
         }
@@ -330,18 +426,20 @@ impl CommandReport {
 
     pub(crate) fn fail(
         command: CliCommand,
+        failure_code: FailureCode,
         actual: impl Into<String>,
         receipt_recorded: bool,
     ) -> Self {
         let actual = actual.into();
         Self {
-            schema_version: 2,
+            schema_version: SchemaVersion::V2,
             command,
             status: CommandStatus::Fail,
             summary: actual.clone(),
+            failure_code: Some(failure_code),
             diagnostics: vec![Diagnostic::fail(
                 "cli-usage",
-                "cli",
+                ReportSurface::Cli,
                 ".",
                 "valid command",
                 actual,
@@ -367,7 +465,7 @@ pub(crate) struct InstallActionReport {
 #[serde(deny_unknown_fields)]
 pub(crate) struct Diagnostic {
     pub(crate) check_id: String,
-    pub(crate) surface: String,
+    pub(crate) surface: ReportSurface,
     pub(crate) path: String,
     pub(crate) severity: DiagnosticSeverity,
     pub(crate) status: CheckStatus,
@@ -379,14 +477,14 @@ pub(crate) struct Diagnostic {
 impl Diagnostic {
     pub(crate) fn pass(
         check_id: impl Into<String>,
-        surface: impl Into<String>,
+        surface: ReportSurface,
         path: impl Into<String>,
         expected: impl Into<String>,
     ) -> Self {
         let expected = expected.into();
         Self {
             check_id: check_id.into(),
-            surface: surface.into(),
+            surface,
             path: path.into(),
             severity: DiagnosticSeverity::Info,
             status: CheckStatus::Pass,
@@ -399,14 +497,14 @@ impl Diagnostic {
     #[allow(dead_code)]
     pub(crate) fn warn(
         check_id: impl Into<String>,
-        surface: impl Into<String>,
+        surface: ReportSurface,
         path: impl Into<String>,
         actual: impl Into<String>,
     ) -> Self {
         let actual = actual.into();
         Self {
             check_id: check_id.into(),
-            surface: surface.into(),
+            surface,
             path: path.into(),
             severity: DiagnosticSeverity::Warning,
             status: CheckStatus::Warn,
@@ -418,7 +516,7 @@ impl Diagnostic {
 
     pub(crate) fn fail(
         check_id: impl Into<String>,
-        surface: impl Into<String>,
+        surface: ReportSurface,
         path: impl Into<String>,
         expected: impl Into<String>,
         actual: impl Into<String>,
@@ -426,7 +524,7 @@ impl Diagnostic {
     ) -> Self {
         Self {
             check_id: check_id.into(),
-            surface: surface.into(),
+            surface,
             path: path.into(),
             severity: DiagnosticSeverity::Error,
             status: CheckStatus::Fail,
@@ -440,12 +538,12 @@ impl Diagnostic {
         // Warnings may have empty expected/remediation — the actual state IS the signal.
         let skip_expected = self.severity == DiagnosticSeverity::Warning;
         for (field, value) in [
-            ("check_id", &self.check_id),
-            ("surface", &self.surface),
-            ("path", &self.path),
-            ("expected", &self.expected),
-            ("actual", &self.actual),
-            ("remediation", &self.remediation),
+            ("check_id", self.check_id.as_str()),
+            ("surface", self.surface.as_str()),
+            ("path", self.path.as_str()),
+            ("expected", self.expected.as_str()),
+            ("actual", self.actual.as_str()),
+            ("remediation", self.remediation.as_str()),
         ] {
             if (field == "expected" || field == "remediation") && skip_expected {
                 continue;
@@ -473,14 +571,16 @@ pub(crate) struct CheckSummary {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct CheckReport {
-    pub(crate) schema_version: i64,
-    pub(crate) surface: String,
+    pub(crate) schema_version: SchemaVersion,
+    pub(crate) surface: ReportSurface,
     pub(crate) summary: CheckSummary,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) failure_code: Option<FailureCode>,
     pub(crate) checks: Vec<Diagnostic>,
 }
 
 impl CheckReport {
-    pub(crate) fn new(surface: impl Into<String>, checks: Vec<Diagnostic>) -> Result<Self, String> {
+    pub(crate) fn new(surface: ReportSurface, checks: Vec<Diagnostic>) -> Result<Self, String> {
         let mut summary = CheckSummary {
             pass: 0,
             warn: 0,
@@ -496,10 +596,12 @@ impl CheckReport {
                 CheckStatus::Skip => summary.skip += 1,
             }
         }
+        let failure_code = (summary.fail > 0).then_some(FailureCode::DiagnosticReport);
         Ok(Self {
-            schema_version: 1,
-            surface: surface.into(),
+            schema_version: SchemaVersion::V1,
+            surface,
             summary,
+            failure_code,
             checks,
         })
     }

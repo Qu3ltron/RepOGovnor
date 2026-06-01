@@ -1,7 +1,7 @@
 use crate::model::{Result, SOURCE_LINE_LIMIT};
 use crate::reports::{RuntimeFailure, RuntimeResult};
 use crate::runtime::normalize_relative_path;
-use crate::schema::{CheckReport, Diagnostic};
+use crate::schema::{CheckReport, Diagnostic, FailureCode, ReportSurface, SchemaVersion};
 use serde::Serialize;
 use std::collections::BTreeMap;
 use std::fs;
@@ -24,8 +24,8 @@ struct SplitPlan {
 
 #[derive(Debug, Clone, Serialize)]
 struct SplitPlanReport {
-    schema_version: i64,
-    surface: String,
+    schema_version: SchemaVersion,
+    surface: ReportSurface,
     plans: Vec<SplitPlan>,
 }
 
@@ -58,7 +58,7 @@ pub(crate) fn run_command(root: &Path, args: &[String]) -> RuntimeResult<String>
                 let report = check_report(root)?;
                 let output = report.to_json()?;
                 if report.has_failures() {
-                    Err(RuntimeFailure::json(output))
+                    Err(RuntimeFailure::json(FailureCode::DiagnosticReport, output))
                 } else {
                     Ok(output)
                 }
@@ -116,7 +116,7 @@ pub(crate) fn check_report(root: &Path) -> Result<CheckReport> {
     let checks = if violations.is_empty() {
         vec![Diagnostic::pass(
             "source-limit",
-            "source-limit",
+            ReportSurface::SourceLimit,
             ".",
             format!("all source files at or below {SOURCE_LINE_LIMIT} lines"),
         )]
@@ -126,7 +126,7 @@ pub(crate) fn check_report(root: &Path) -> Result<CheckReport> {
             .map(|violation| {
                 Diagnostic::fail(
                     "source-limit",
-                    "source-limit",
+                    ReportSurface::SourceLimit,
                     violation.path,
                     format!("at most {} lines", violation.limit),
                     format!("{} lines", violation.lines),
@@ -135,7 +135,7 @@ pub(crate) fn check_report(root: &Path) -> Result<CheckReport> {
             })
             .collect()
     };
-    CheckReport::new("source-limit", checks)
+    CheckReport::new(ReportSurface::SourceLimit, checks)
 }
 
 pub(crate) fn plan(root: &Path, path: Option<&str>, json: bool) -> Result<String> {
@@ -156,8 +156,8 @@ pub(crate) fn plan(root: &Path, path: Option<&str>, json: bool) -> Result<String
 
     if json {
         return serde_json::to_string_pretty(&SplitPlanReport {
-            schema_version: 1,
-            surface: "source-limit-plan".to_string(),
+            schema_version: SchemaVersion::V1,
+            surface: ReportSurface::SourceLimitPlan,
             plans,
         })
         .map_err(|error| format!("serialize source-limit plan: {error}"));

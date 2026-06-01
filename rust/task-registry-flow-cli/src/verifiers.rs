@@ -8,7 +8,9 @@ use crate::model::{Behavior, Result};
 use crate::registry_io::load_registry;
 use crate::runtime::{behavior_map, discover_manifests, normalize_relative_path};
 use crate::schema::TaskStatus;
-use crate::schema::{BehaviorVerifier, CheckStatus, RuntimeSubject, VerifierResult, VerifierType};
+use crate::schema::{
+    BehaviorVerifier, CheckStatus, RuntimeSubject, RuntimeSubjectKind, VerifierResult, VerifierType,
+};
 
 pub(crate) fn verifier_result(
     behavior_id: impl Into<String>,
@@ -23,7 +25,7 @@ pub(crate) fn verifier_result(
         behavior_id: behavior_id.into(),
         verifier_type,
         status,
-        subject: RuntimeSubject::path("verifier-target", path),
+        subject: RuntimeSubject::path(RuntimeSubjectKind::VerifierTarget, path),
         expected: expected.into(),
         actual: actual.into(),
     }

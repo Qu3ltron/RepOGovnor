@@ -7,7 +7,7 @@ use serde_json::Value;
 use crate::metrics::receipt_value_hash;
 use crate::model::{EVENTS_PATH, Result};
 use crate::reports::{RuntimeFailure, RuntimeResult};
-use crate::schema::{CheckReport, CheckStatus, Diagnostic};
+use crate::schema::{CheckReport, CheckStatus, Diagnostic, FailureCode, ReportSurface};
 
 pub(crate) fn run_verify_chain(root: &Path, args: &[String]) -> RuntimeResult<String> {
     let (repair, json) = parse_verify_chain_args(args)?;
@@ -19,26 +19,30 @@ pub(crate) fn run_verify_chain(root: &Path, args: &[String]) -> RuntimeResult<St
         if json {
             return fixed
                 .to_json()
-                .map_err(|e| RuntimeFailure::Text(e.to_string()));
+                .map_err(|e| RuntimeFailure::text(FailureCode::Serialization, e.to_string()));
         }
         return Ok(format_chain_report(&fixed));
     }
 
     if report.has_failures() {
         if json {
-            return Err(RuntimeFailure::Json(
+            return Err(RuntimeFailure::json(
+                FailureCode::DiagnosticReport,
                 report
                     .to_json()
-                    .map_err(|e| RuntimeFailure::Text(e.to_string()))?,
+                    .map_err(|e| RuntimeFailure::text(FailureCode::Serialization, e.to_string()))?,
             ));
         }
-        return Err(RuntimeFailure::Text(format_chain_report(&report)));
+        return Err(RuntimeFailure::text(
+            FailureCode::DiagnosticReport,
+            format_chain_report(&report),
+        ));
     }
 
     if json {
         return report
             .to_json()
-            .map_err(|e| RuntimeFailure::Text(e.to_string()));
+            .map_err(|e| RuntimeFailure::text(FailureCode::Serialization, e.to_string()));
     }
     Ok(format_chain_report(&report))
 }
@@ -88,7 +92,7 @@ fn parse_verify_chain_args(args: &[String]) -> Result<(bool, bool)> {
 fn check_chain(root: &Path) -> Result<CheckReport> {
     let events_path = root.join(EVENTS_PATH);
     if !events_path.is_file() {
-        return CheckReport::new("receipt-chain", vec![]);
+        return CheckReport::new(ReportSurface::ReceiptChain, vec![]);
     }
     let body = fs::read_to_string(&events_path)
         .map_err(|error| format!("read {}: {error}", events_path.display()))?;
@@ -107,7 +111,7 @@ fn check_chain(root: &Path) -> Result<CheckReport> {
             Err(e) => {
                 diagnostics.push(Diagnostic::fail(
                     "receipt-chain-parse",
-                    "receipt-chain",
+                    ReportSurface::ReceiptChain,
                     events_path.display().to_string(),
                     "valid JSON event",
                     format!("line {line_num}: {e}"),
@@ -120,7 +124,7 @@ fn check_chain(root: &Path) -> Result<CheckReport> {
         if value.get("schema_version").and_then(|value| value.as_i64()) != Some(2) {
             diagnostics.push(Diagnostic::fail(
                 "receipt-chain-schema",
-                "receipt-chain",
+                ReportSurface::ReceiptChain,
                 events_path.display().to_string(),
                 format!("line {line_num}: schema_version 2 receipt"),
                 format!(
@@ -145,7 +149,7 @@ fn check_chain(root: &Path) -> Result<CheckReport> {
         if declared_event_hash.is_none() {
             diagnostics.push(Diagnostic::fail(
                 "receipt-chain-unchained",
-                "receipt-chain",
+                ReportSurface::ReceiptChain,
                 events_path.display().to_string(),
                 "chained event_hash_sha256",
                 format!("line {line_num}: unchained event"),
@@ -160,7 +164,7 @@ fn check_chain(root: &Path) -> Result<CheckReport> {
         if declared_previous_hash != expected_previous_hash {
             diagnostics.push(Diagnostic::fail(
                 "receipt-chain-break",
-                "receipt-chain",
+                ReportSurface::ReceiptChain,
                 events_path.display().to_string(),
                 format!(
                     "line {line_num}: previous_event_hash_sha256 expected {:?}, got {:?}",
@@ -180,7 +184,7 @@ fn check_chain(root: &Path) -> Result<CheckReport> {
         {
             diagnostics.push(Diagnostic::fail(
                 "receipt-chain-tamper",
-                "receipt-chain",
+                ReportSurface::ReceiptChain,
                 events_path.display().to_string(),
                 format!("line {line_num}: event_hash_sha256 mismatch"),
                 format!("declared {declared}, computed {computed}"),
@@ -191,7 +195,7 @@ fn check_chain(root: &Path) -> Result<CheckReport> {
         expected_previous_hash = Some(computed);
     }
 
-    CheckReport::new("receipt-chain", diagnostics)
+    CheckReport::new(ReportSurface::ReceiptChain, diagnostics)
 }
 
 /// Repair the receipt chain by recomputing every event hash from scratch.
@@ -242,7 +246,7 @@ fn repair_chain(root: &Path, _broken: &CheckReport) -> Result<CheckReport> {
         if original_line != new_line {
             fixed_diagnostics.push(Diagnostic::pass(
                 "receipt-chain-repaired",
-                "receipt-chain",
+                ReportSurface::ReceiptChain,
                 events_path.display().to_string(),
                 format!("line {line_num} hash chain repaired"),
             ));
@@ -283,7 +287,7 @@ fn repair_chain(root: &Path, _broken: &CheckReport) -> Result<CheckReport> {
         )
     })?;
 
-    CheckReport::new("receipt-chain-fix", fixed_diagnostics)
+    CheckReport::new(ReportSurface::ReceiptChainFix, fixed_diagnostics)
 }
 
 fn format_chain_report(report: &CheckReport) -> String {

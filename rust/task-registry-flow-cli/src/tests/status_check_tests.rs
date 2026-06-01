@@ -1,11 +1,12 @@
 use super::*;
+use crate::schema::ReportSurface;
 
 #[test]
 fn status_check_reports_marker_skill_hook_ci_facts() {
     let root = temp_root("status-marker-facts");
     write_marker_docs(&root);
     let report = crate::status_checks::report(
-        "status",
+        ReportSurface::Status,
         vec![
             crate::status_checks::marker_check(&root, "AGENTS.md"),
             crate::status_checks::native_skill_check(".agents/skills/task-registry-flow", true),
@@ -52,7 +53,10 @@ fn status_check_json_failure_exits_nonzero() {
     let error = crate::status_checks::run_command(&root, &args)
         .expect_err("missing native skill must fail JSON status");
 
-    let crate::reports::RuntimeFailure::Json(output) = error else {
+    let crate::reports::RuntimeFailure::Json {
+        payload: output, ..
+    } = error
+    else {
         panic!("status JSON failure must preserve raw JSON");
     };
     let value = serde_json::from_str::<serde_json::Value>(&output).unwrap();
@@ -82,7 +86,10 @@ fn status_check_json_symlink_failure_exits_nonzero() {
     let error = crate::status_checks::run_command(&root, &args)
         .expect_err("legacy skill symlink must fail JSON status");
 
-    let crate::reports::RuntimeFailure::Json(output) = error else {
+    let crate::reports::RuntimeFailure::Json {
+        payload: output, ..
+    } = error
+    else {
         panic!("status symlink JSON failure must preserve raw JSON");
     };
     let value = serde_json::from_str::<serde_json::Value>(&output).unwrap();
@@ -110,7 +117,10 @@ fn status_check_json_missing_marker_failure_exits_nonzero() {
     let error = crate::status_checks::run_command(&root, &args)
         .expect_err("missing or malformed governance markers must fail JSON status");
 
-    let crate::reports::RuntimeFailure::Json(output) = error else {
+    let crate::reports::RuntimeFailure::Json {
+        payload: output, ..
+    } = error
+    else {
         panic!("status marker JSON failure must preserve raw JSON");
     };
     let value = serde_json::from_str::<serde_json::Value>(&output).unwrap();
@@ -149,7 +159,10 @@ fn status_check_json_rejects_non_block_marker_tokens() {
     let error = crate::status_checks::run_command(&root, &args)
         .expect_err("prose-only and reversed markers must fail JSON status");
 
-    let crate::reports::RuntimeFailure::Json(output) = error else {
+    let crate::reports::RuntimeFailure::Json {
+        payload: output, ..
+    } = error
+    else {
         panic!("status marker JSON failure must preserve raw JSON");
     };
     let value = serde_json::from_str::<serde_json::Value>(&output).unwrap();
@@ -182,7 +195,10 @@ fn status_check_json_rejects_stale_marker_content() {
     let error = crate::status_checks::run_command(&root, &args)
         .expect_err("stale marker content must fail JSON status");
 
-    let crate::reports::RuntimeFailure::Json(output) = error else {
+    let crate::reports::RuntimeFailure::Json {
+        payload: output, ..
+    } = error
+    else {
         panic!("status marker JSON failure must preserve raw JSON");
     };
     let value = serde_json::from_str::<serde_json::Value>(&output).unwrap();
@@ -205,7 +221,7 @@ fn status_check_json_rejects_stale_marker_content() {
 #[test]
 fn status_check_fails_missing_native_skill_projection() {
     let report = crate::status_checks::report(
-        "status",
+        ReportSurface::Status,
         vec![crate::status_checks::native_skill_check(
             ".agents/skills/task-registry-flow",
             false,

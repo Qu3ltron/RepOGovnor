@@ -4,6 +4,13 @@ archive_id = "completed-002"
 archive_authority = "docs/task-registry/archive/completed-002.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-05-31-secondary-hardening"
+plan_path = "docs/plans/secondary-hardening-2026-05-31.md"
+plan_hash_sha256 = "d2d2f67837a23e7c786c9d4bff81e697318556741cde726a079bd1dcf223450f"
+activated_at = "2026-05-31"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-05-31-post-rollback-hardening"
 plan_path = "docs/plans/post-rollback-hardening-2026-05-31.md"
 plan_hash_sha256 = "1e38fead936ff4841618988780658c17a9f7f255ccffe0c00d615ae8545af336"
@@ -52,12 +59,70 @@ plan_hash_sha256 = "1c224e86b5cce474f1d457c0f390eb15d70d450213e440e0d6e9ad6eef1a
 activated_at = "2026-05-31"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-05-31-v2-review-gap-closure"
-plan_path = "docs/plans/v2-review-gap-closure.md"
-plan_hash_sha256 = "0a1d648af75fe2dfc56dd5465c5aafd5964d8eb7ce251689bb0661ebbb8f9c9a"
-activated_at = "2026-05-31"
+[[tasks]]
+task_id = "TASK-2026-05-31-SH01"
+plan_id = "PLAN-2026-05-31-secondary-hardening"
 status = "completed"
+title = "Harden command write-target extraction"
+kind = "authorization"
+source_plan_path = "docs/plans/secondary-hardening-2026-05-31.md"
+source_plan_hash_sha256 = "d2d2f67837a23e7c786c9d4bff81e697318556741cde726a079bd1dcf223450f"
+reason = "Mutation hooks must fail closed for compact shell redirections and hidden inline write targets."
+acceptance_proof = "Behaviors B-SH01-positive, B-SH01-negative-compact, and B-SH01-negative-open pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-SH01-positive",
+    "B-SH01-negative-compact",
+    "B-SH01-negative-open",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/mutation_hook.rs"
+object = "compact_redirection_detection"
+required_change = "Extract compact redirect targets and mark variable compact redirects as ambiguous writes."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/mutation_hook.rs"
+object = "inline_open_write_detection"
+required_change = "Scan every inline open call and reject write-mode calls whose target is not deterministic."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/hook_command_tests.rs"
+object = "command_write_negative_suite"
+required_change = "Add compact redirect and mixed inline open tests."
+
+[[tasks]]
+task_id = "TASK-2026-05-31-SH02"
+plan_id = "PLAN-2026-05-31-secondary-hardening"
+status = "completed"
+title = "Reject symlinked release-source required files"
+kind = "release"
+source_plan_path = "docs/plans/secondary-hardening-2026-05-31.md"
+source_plan_hash_sha256 = "d2d2f67837a23e7c786c9d4bff81e697318556741cde726a079bd1dcf223450f"
+reason = "Release-source required files must be native files, not symlink indirections."
+acceptance_proof = "Behaviors B-SH02-positive and B-SH02-negative pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-SH02-positive",
+    "B-SH02-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/release_checks.rs"
+object = "required_file_native_source"
+required_change = "Use symlink metadata and fail required release-source paths that are symlinks."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/release_source_tests.rs"
+object = "required_symlink_negative"
+required_change = "Add a symlinked required-file negative fixture."
+
+[[tasks.targets]]
+file = "docs/runtime-schemas.md"
+object = "release_native_file_contract"
+required_change = "Document that release-source required artifacts must be native files."
 
 [[tasks]]
 task_id = "TASK-2026-05-31-H01"
@@ -887,104 +952,3 @@ behavior_ids = [
 file = "scripts/status.sh"
 object = "run_status_check_json"
 required_change = "Replace hardcoded /tmp/agent-governance-status-check.err with mktemp"
-
-[[tasks]]
-task_id = "TASK-2026-05-31-v2-review-001"
-plan_id = "PLAN-2026-05-31-v2-review-gap-closure"
-status = "completed"
-title = "Restore canonical status-check target handling"
-kind = "implementation"
-source_plan_path = "docs/plans/v2-review-gap-closure.md"
-source_plan_hash_sha256 = "0a1d648af75fe2dfc56dd5465c5aafd5964d8eb7ce251689bb0661ebbb8f9c9a"
-reason = "Close review gap where strict status bypassed the task-registry wrapper target-dir contract."
-acceptance_proof = "Behaviors B-001 and B-002: scripts/status.sh --strict; scripts/test-install-modes.sh"
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-001-status-canonical-positive",
-    "B-002-status-target-dir-negative",
-]
-
-[[tasks.targets]]
-file = "scripts/status.sh"
-object = "task_registry"
-required_change = "Route status-check and internal release-source CLI calls through canonical task-registry execution with safe target-dir fallback."
-
-[[tasks.targets]]
-file = "scripts/test-install-modes.sh"
-object = "status_target_dir_regression"
-required_change = "Add an inherited unwritable CARGO_TARGET_DIR regression that expects marker-specific diagnostics."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-v2-review-002"
-plan_id = "PLAN-2026-05-31-v2-review-gap-closure"
-status = "completed"
-title = "Govern metrics Rust sources in release checks"
-kind = "release"
-source_plan_path = "docs/plans/v2-review-gap-closure.md"
-source_plan_hash_sha256 = "0a1d648af75fe2dfc56dd5465c5aafd5964d8eb7ce251689bb0661ebbb8f9c9a"
-reason = "Close review gap where new metrics source files could be omitted from release-source governance."
-acceptance_proof = "Behaviors B-003 and B-004: bash scripts/test-release-readiness.sh executable; cargo test --locked --manifest-path rust/task-registry-flow-cli/Cargo.toml release_schema_rejects_undeclared_rust_sources"
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-003-release-source-positive",
-    "B-004-release-source-negative",
-]
-
-[[tasks.targets]]
-file = "REQUIREMENTS.toml"
-object = "release_source.required"
-required_change = "Add metrics.rs, metrics_tests.rs, and any currently omitted Rust source file surfaced by the completeness check to required release artifacts."
-
-[[tasks.targets]]
-file = "REQUIREMENTS.toml"
-object = "release_source.check_ids"
-required_change = "Declare release-rust-source-undeclared as a known release check."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/schema.rs"
-object = "ReleaseCheckId"
-required_change = "Add release-rust-source-undeclared canonical check ID."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/release_checks.rs"
-object = "rust_source_policy_checks"
-required_change = "Fail release checks when Rust source files under src are absent from release_source.required."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/mod.rs"
-object = "release_schema_rejects_undeclared_rust_sources"
-required_change = "Add negative coverage for undeclared Rust source files."
-
-[[tasks.targets]]
-file = "scripts/test-release-readiness.sh"
-object = "release_manifest_assertions"
-required_change = "Assert metrics source files are release-listed and omission fails closed."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-v2-review-003"
-plan_id = "PLAN-2026-05-31-v2-review-gap-closure"
-status = "completed"
-title = "Document release-source completeness and validate"
-kind = "documentation"
-source_plan_path = "docs/plans/v2-review-gap-closure.md"
-source_plan_hash_sha256 = "0a1d648af75fe2dfc56dd5465c5aafd5964d8eb7ce251689bb0661ebbb8f9c9a"
-reason = "Keep runtime schema docs aligned with the reinforced release-source contract."
-acceptance_proof = "Behaviors B-003 and B-005: bash scripts/test-release-readiness.sh executable; .codex/scripts/task-registry source-limit check && .codex/scripts/task-registry validate"
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-003-release-source-positive",
-    "B-005-review-validation",
-]
-
-[[tasks.targets]]
-file = "docs/runtime-schemas.md"
-object = "Release Contract"
-required_change = "Document Rust source completeness and release-rust-source-undeclared diagnostics."
-
-[[tasks.targets]]
-file = "docs/task-registry.toml"
-object = "task_completion"
-required_change = "Record completion after focused and full validation pass."

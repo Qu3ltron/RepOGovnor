@@ -4,7 +4,8 @@ use crate::mutation_hook::{
 };
 use crate::schema::{
     BehaviorPolarity, CheckReport, CheckStatus, CliCommand, Diagnostic, DiagnosticSeverity,
-    EventOutcome, HookFormat, InstallAction, MutationScope, TaskKind, TaskStatus, VerifierType,
+    EventOutcome, HookFormat, InstallAction, MutationScope, ReportSurface, TaskKind, TaskStatus,
+    VerifierType,
 };
 use std::env;
 #[cfg(unix)]
@@ -21,6 +22,7 @@ mod release_source_tests;
 mod security_tests;
 mod state_transition_tests;
 mod status_check_tests;
+mod typed_runtime_surface_tests;
 mod verify_chain_tests;
 
 #[test]
@@ -595,7 +597,7 @@ fn verifier_failed_assertion_returns_structured_error() {
 fn diagnostics_reject_missing_failure_fields() {
     let diagnostic = Diagnostic {
         check_id: "release-file-present".to_string(),
-        surface: "release-source".to_string(),
+        surface: ReportSurface::ReleaseSource,
         path: "".to_string(),
         severity: DiagnosticSeverity::Error,
         status: CheckStatus::Fail,
@@ -604,7 +606,7 @@ fn diagnostics_reject_missing_failure_fields() {
         remediation: "restore file".to_string(),
     };
 
-    let error = CheckReport::new("release-source", vec![diagnostic])
+    let error = CheckReport::new(ReportSurface::ReleaseSource, vec![diagnostic])
         .expect_err("empty diagnostic path must fail");
 
     assert!(error.contains("path"), "{error}");
@@ -613,17 +615,17 @@ fn diagnostics_reject_missing_failure_fields() {
 #[test]
 fn diagnostics_mixed_report_records_failures() {
     let report = CheckReport::new(
-        "release-source",
+        ReportSurface::ReleaseSource,
         vec![
             Diagnostic::pass(
                 "release-file-present",
-                "release-source",
+                ReportSurface::ReleaseSource,
                 "README.md",
                 "file present",
             ),
             Diagnostic::fail(
                 "release-file-present",
-                "release-source",
+                ReportSurface::ReleaseSource,
                 "MISSING.md",
                 "file present",
                 "missing",
@@ -1071,10 +1073,10 @@ unknown = true
 #[test]
 fn negative_tests_parse_json_contracts() {
     let report = CheckReport::new(
-        "migration",
+        ReportSurface::Migration,
         vec![Diagnostic::fail(
             "task-manifest-schema-version",
-            "manifest",
+            ReportSurface::Manifest,
             "docs/plans/legacy.md",
             "schema_version 2",
             "schema_version 1",
@@ -1122,7 +1124,10 @@ fn source_limit_json_failure_preserves_diagnostics() {
     let error = source_limit::run_command(root.as_path(), &args)
         .expect_err("over-limit JSON check must fail");
 
-    let crate::reports::RuntimeFailure::Json(output) = error else {
+    let crate::reports::RuntimeFailure::Json {
+        payload: output, ..
+    } = error
+    else {
         panic!("source-limit JSON failure must preserve raw JSON");
     };
     let value = serde_json::from_str::<serde_json::Value>(&output).unwrap();
@@ -1164,7 +1169,10 @@ fn release_check_json_failure_preserves_report() {
     let error = release_checks::run_command(root.as_path(), &args)
         .expect_err("failing release JSON check must fail");
 
-    let crate::reports::RuntimeFailure::Json(output) = error else {
+    let crate::reports::RuntimeFailure::Json {
+        payload: output, ..
+    } = error
+    else {
         panic!("release-check JSON failure must preserve raw JSON");
     };
     let value = serde_json::from_str::<serde_json::Value>(&output).unwrap();

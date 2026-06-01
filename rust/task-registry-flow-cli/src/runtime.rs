@@ -7,7 +7,7 @@ use crate::metrics::{format_metrics, metrics, receipt_value_hash};
 use crate::model::*;
 use crate::mutation_hook::verify_mutation_hook;
 use crate::reports::RuntimeResult;
-use crate::schema::{CliCommand, HookFormat, TaskStatus};
+use crate::schema::{CliCommand, FailureCode, HookFormat, TaskStatus};
 use crate::{install, landing, policy, release_checks, source_limit, status_checks};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -116,7 +116,10 @@ pub(crate) fn run(mut args: Vec<String>) -> RuntimeResult<String> {
                 let output = serde_json::to_string_pretty(&report)
                     .map_err(|error| format!("serialize metrics report: {error}"))?;
                 if report.receipt_chain_breaks > 0 {
-                    Err(crate::reports::RuntimeFailure::json(output))
+                    Err(crate::reports::RuntimeFailure::json(
+                        FailureCode::DiagnosticReport,
+                        output,
+                    ))
                 } else {
                     Ok(output)
                 }

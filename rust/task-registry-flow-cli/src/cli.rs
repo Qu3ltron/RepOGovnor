@@ -1,4 +1,4 @@
-use crate::schema::{CliCommand, EventOutcome};
+use crate::schema::{CliCommand, EventOutcome, FailureCode};
 use crate::{receipts, reports, runtime};
 use reports::RuntimeFailure;
 use std::env;
@@ -28,7 +28,7 @@ pub(crate) fn main_entry() -> i32 {
                 OutputFormat::Text,
                 CliCommand::Usage,
                 false,
-                &RuntimeFailure::from(error),
+                &RuntimeFailure::text(FailureCode::Usage, error),
             );
             return 1;
         }
@@ -61,7 +61,7 @@ pub(crate) fn main_entry() -> i32 {
                     reports::success_json(command, detail, receipt_recorded)
                         .unwrap_or_else(|error| {
                             format!(
-                                r#"{{"status":"error","command":"{}","error":"serialization failed: {}"}}"#,
+                                r#"{{"schema_version":2,"command":"{}","status":"fail","summary":"serialization failed: {}","failure_code":"serialization","receipt_recorded":false}}"#,
                                 command.as_str(),
                                 error.replace('"', "\\\"")
                             )
@@ -89,8 +89,12 @@ pub(crate) fn record_command_receipt(
     let summary = result
         .as_ref()
         .map_or_else(|error| error.summary().to_string(), Clone::clone);
-    receipts::append_command_event(root, command, outcome, duration_ms, &summary)
-        .map_err(|error| RuntimeFailure::Text(format!("required receipt append failed: {error}")))
+    receipts::append_command_event(root, command, outcome, duration_ms, &summary).map_err(|error| {
+        RuntimeFailure::text(
+            FailureCode::ReceiptAppend,
+            format!("required receipt append failed: {error}"),
+        )
+    })
 }
 
 fn parse_global_options(args: Vec<String>) -> Result<(CliOptions, Vec<String>), String> {
@@ -134,21 +138,22 @@ fn render_error(
     error: &RuntimeFailure,
 ) {
     match (output_format, error) {
-        (_, RuntimeFailure::Json(value)) => println!("{value}"),
-        (OutputFormat::Json, RuntimeFailure::Text(value)) => {
+        (_, RuntimeFailure::Json { payload, .. }) => println!("{payload}"),
+        (OutputFormat::Json, RuntimeFailure::Text { message, .. }) => {
             println!(
                 "{}",
-                reports::failure_json(command, value, receipt_recorded).unwrap_or_else(|error| {
-                    format!(
-                        r#"{{"status":"error","command":"{}","error":"serialization failed: {}"}}"#,
-                        command.as_str(),
-                        error.replace('"', "\\\"")
-                    )
-                })
+                reports::failure_json(command, error.code(), message, receipt_recorded)
+                    .unwrap_or_else(|error| {
+                        format!(
+                            r#"{{"schema_version":2,"command":"{}","status":"fail","summary":"serialization failed: {}","failure_code":"serialization","receipt_recorded":false}}"#,
+                            command.as_str(),
+                            error.replace('"', "\\\"")
+                        )
+                    })
             );
         }
-        (OutputFormat::Text, RuntimeFailure::Text(value)) => {
-            eprintln!("task-registry-flow error: {value}");
+        (OutputFormat::Text, RuntimeFailure::Text { message, .. }) => {
+            eprintln!("task-registry-flow error: {message}");
         }
     }
 }
@@ -159,9 +164,9 @@ pub(crate) fn failure_json_for_test(
     receipt_recorded: bool,
     error: &str,
 ) -> String {
-    reports::failure_json(command, error, receipt_recorded).unwrap_or_else(|e| {
+    reports::failure_json(command, FailureCode::Runtime, error, receipt_recorded).unwrap_or_else(|e| {
         format!(
-            r#"{{"status":"error","command":"{}","error":"serialization failed: {}"}}"#,
+            r#"{{"schema_version":2,"command":"{}","status":"fail","summary":"serialization failed: {}","failure_code":"serialization","receipt_recorded":false}}"#,
             command.as_str(),
             e.replace('"', "\\\"")
         )

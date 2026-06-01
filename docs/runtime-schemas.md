@@ -13,7 +13,8 @@ command:
   "schema_version": 2,
   "command": "metrics",
   "status": "pass",
-  "summary": "Task registry metrics: plans=1"
+  "summary": "Task registry metrics: plans=1",
+  "receipt_recorded": false
 }
 ```
 
@@ -31,7 +32,13 @@ diagnostic payload:
 For command-specific diagnostic JSON, failures still emit the raw diagnostic
 report and exit nonzero. The output is not wrapped in `task-registry-flow
 error:`. For global `--format json` failures, the CLI emits a schema version 2
-`CommandReport` with the parsed command and whether a receipt was recorded.
+`CommandReport` with the parsed command, typed `failure_code`, and whether a
+receipt was recorded.
+
+Known command values are the `CliCommand` enum values in the CLI help. Unknown
+command strings fail before execution. Known `failure_code` values are:
+`usage`, `runtime`, `serialization`, `receipt-append`, and
+`diagnostic-report`.
 
 ## Receipt Event
 
@@ -46,12 +53,17 @@ receipts by default.
   "command": "activate",
   "outcome": "ok",
   "duration_ms": 7,
-  "subject": {"kind": "plan", "id": "PLAN-...", "path": "docs/plans/x.md"},
+  "subject": {"kind": "command", "id": "activate", "path": "."},
   "summary": "PLAN_ACTIVATE docs/plans/x.md ok",
   "previous_event_hash_sha256": "0f...",
   "event_hash_sha256": "5a..."
 }
 ```
+
+Receipt events use typed command, outcome, subject-kind, diagnostic-surface,
+verifier-type, and status enums. Known subject kinds are `command`,
+`mutation-target`, and `verifier-target`. Unknown values fail deserialization
+and are not accepted as runtime evidence.
 
 Schema version 1 receipt lines are invalid for current runtime verification.
 Metrics count them as malformed, `verify-chain` fails them, and `--repair`
@@ -116,6 +128,11 @@ JSON reports use this shape:
 
 Required fields: `check_id`, `surface`, `path`, `severity`, `status`,
 `expected`, `actual`, and `remediation`.
+
+Known surfaces: `cli`, `manifest`, `migration`, `release-source`,
+`tracked-for-ci`, `source-limit`, `source-limit-plan`, `status`,
+`receipt-chain`, and `receipt-chain-fix`. Unknown surfaces fail
+deserialization.
 
 Known statuses: `pass`, `warn`, `fail`, `skip`.
 
