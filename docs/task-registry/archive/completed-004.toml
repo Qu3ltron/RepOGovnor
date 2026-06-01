@@ -4,6 +4,13 @@ archive_id = "completed-004"
 archive_authority = "docs/task-registry/archive/completed-004.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-05-31-v2-review-gap-closure"
+plan_path = "docs/plans/v2-review-gap-closure.md"
+plan_hash_sha256 = "0a1d648af75fe2dfc56dd5465c5aafd5964d8eb7ce251689bb0661ebbb8f9c9a"
+activated_at = "2026-05-31"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-05-31-v2-hardening-followup"
 plan_path = "docs/plans/v2-hardening-followup.md"
 plan_hash_sha256 = "e80365453e837a7b1fa6f8c56e2127c3def82279d3a064de7ab811f183b0638c"
@@ -38,12 +45,106 @@ plan_hash_sha256 = "ff964ad41e4ecdbeb73838404e940caf899ab1a2faf6f7e7679ef94f95cf
 activated_at = "2026-05-30"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-05-31-runtime-api-production-hardening"
-plan_path = "docs/plans/runtime-api-production-hardening.md"
-plan_hash_sha256 = "1dd4ad4f595cf5d4cae6a3f058c8cd3a9a1e93edf443f39b7c5bc27f41ad5e9b"
-activated_at = "2026-05-30"
+[[tasks]]
+task_id = "TASK-2026-05-31-v2-review-001"
+plan_id = "PLAN-2026-05-31-v2-review-gap-closure"
 status = "completed"
+title = "Restore canonical status-check target handling"
+kind = "implementation"
+source_plan_path = "docs/plans/v2-review-gap-closure.md"
+source_plan_hash_sha256 = "0a1d648af75fe2dfc56dd5465c5aafd5964d8eb7ce251689bb0661ebbb8f9c9a"
+reason = "Close review gap where strict status bypassed the task-registry wrapper target-dir contract."
+acceptance_proof = "Behaviors B-001 and B-002: scripts/status.sh --strict; scripts/test-install-modes.sh"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-001-status-canonical-positive",
+    "B-002-status-target-dir-negative",
+]
+
+[[tasks.targets]]
+file = "scripts/status.sh"
+object = "task_registry"
+required_change = "Route status-check and internal release-source CLI calls through canonical task-registry execution with safe target-dir fallback."
+
+[[tasks.targets]]
+file = "scripts/test-install-modes.sh"
+object = "status_target_dir_regression"
+required_change = "Add an inherited unwritable CARGO_TARGET_DIR regression that expects marker-specific diagnostics."
+
+[[tasks]]
+task_id = "TASK-2026-05-31-v2-review-002"
+plan_id = "PLAN-2026-05-31-v2-review-gap-closure"
+status = "completed"
+title = "Govern metrics Rust sources in release checks"
+kind = "release"
+source_plan_path = "docs/plans/v2-review-gap-closure.md"
+source_plan_hash_sha256 = "0a1d648af75fe2dfc56dd5465c5aafd5964d8eb7ce251689bb0661ebbb8f9c9a"
+reason = "Close review gap where new metrics source files could be omitted from release-source governance."
+acceptance_proof = "Behaviors B-003 and B-004: bash scripts/test-release-readiness.sh executable; cargo test --locked --manifest-path rust/task-registry-flow-cli/Cargo.toml release_schema_rejects_undeclared_rust_sources"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-003-release-source-positive",
+    "B-004-release-source-negative",
+]
+
+[[tasks.targets]]
+file = "REQUIREMENTS.toml"
+object = "release_source.required"
+required_change = "Add metrics.rs, metrics_tests.rs, and any currently omitted Rust source file surfaced by the completeness check to required release artifacts."
+
+[[tasks.targets]]
+file = "REQUIREMENTS.toml"
+object = "release_source.check_ids"
+required_change = "Declare release-rust-source-undeclared as a known release check."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/schema.rs"
+object = "ReleaseCheckId"
+required_change = "Add release-rust-source-undeclared canonical check ID."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/release_checks.rs"
+object = "rust_source_policy_checks"
+required_change = "Fail release checks when Rust source files under src are absent from release_source.required."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/mod.rs"
+object = "release_schema_rejects_undeclared_rust_sources"
+required_change = "Add negative coverage for undeclared Rust source files."
+
+[[tasks.targets]]
+file = "scripts/test-release-readiness.sh"
+object = "release_manifest_assertions"
+required_change = "Assert metrics source files are release-listed and omission fails closed."
+
+[[tasks]]
+task_id = "TASK-2026-05-31-v2-review-003"
+plan_id = "PLAN-2026-05-31-v2-review-gap-closure"
+status = "completed"
+title = "Document release-source completeness and validate"
+kind = "documentation"
+source_plan_path = "docs/plans/v2-review-gap-closure.md"
+source_plan_hash_sha256 = "0a1d648af75fe2dfc56dd5465c5aafd5964d8eb7ce251689bb0661ebbb8f9c9a"
+reason = "Keep runtime schema docs aligned with the reinforced release-source contract."
+acceptance_proof = "Behaviors B-003 and B-005: bash scripts/test-release-readiness.sh executable; .codex/scripts/task-registry source-limit check && .codex/scripts/task-registry validate"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-003-release-source-positive",
+    "B-005-review-validation",
+]
+
+[[tasks.targets]]
+file = "docs/runtime-schemas.md"
+object = "Release Contract"
+required_change = "Document Rust source completeness and release-rust-source-undeclared diagnostics."
+
+[[tasks.targets]]
+file = "docs/task-registry.toml"
+object = "task_completion"
+required_change = "Record completion after focused and full validation pass."
 
 [[tasks]]
 task_id = "TASK-2026-05-31-v2-hardening-001"
@@ -634,418 +735,3 @@ required_change = "Document command-local raw JSON failures and global failure e
 file = "README.md"
 object = "json_failure_examples"
 required_change = "Keep user examples aligned with real JSON semantics."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-runtime-api-001"
-plan_id = "PLAN-2026-05-31-runtime-api-production-hardening"
-status = "completed"
-title = "Make receipt writes explicit and side-effect safe"
-kind = "schema"
-source_plan_path = "docs/plans/runtime-api-production-hardening.md"
-source_plan_hash_sha256 = "1dd4ad4f595cf5d4cae6a3f058c8cd3a9a1e93edf443f39b7c5bc27f41ad5e9b"
-reason = "Read-only runtime commands append local receipts without explicit authorization."
-acceptance_proof = "Behaviors B-2026-05-31-G01-positive and B-2026-05-31-G01-negative pass."
-created_at = "2026-05-30"
-updated_at = "2026-05-30"
-behavior_ids = [
-    "B-2026-05-31-G01-positive",
-    "B-2026-05-31-G01-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/cli.rs"
-object = "receipt_policy_flags"
-required_change = "Parse and pass record-receipt policy explicitly."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/receipts.rs"
-object = "read_only_receipt_policy"
-required_change = "Write receipts only for mutating commands by default and only for read-only commands when requested."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/main.rs"
-object = "receipt_dispatch"
-required_change = "Remove unconditional append_event behavior from command exit handling."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/receipts.rs"
-object = "receipt_side_effect_tests"
-required_change = "Assert read-only commands do not mutate events without record-receipt."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-runtime-api-002"
-plan_id = "PLAN-2026-05-31-runtime-api-production-hardening"
-status = "completed"
-title = "Replace prose receipts with typed v2 receipt schema"
-kind = "schema"
-source_plan_path = "docs/plans/runtime-api-production-hardening.md"
-source_plan_hash_sha256 = "1dd4ad4f595cf5d4cae6a3f058c8cd3a9a1e93edf443f39b7c5bc27f41ad5e9b"
-reason = "Receipt diagnostics and verifier facts are hidden in truncated prose."
-acceptance_proof = "Behaviors B-2026-05-31-G02-positive and B-2026-05-31-G02-negative pass."
-created_at = "2026-05-30"
-updated_at = "2026-05-30"
-behavior_ids = [
-    "B-2026-05-31-G02-positive",
-    "B-2026-05-31-G02-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/schema.rs"
-object = "receipt_v2_schema"
-required_change = "Define typed receipt v2 subjects, outcome data, diagnostics, verifier results, and mutation denial data."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/receipts.rs"
-object = "receipt_v2_parser_writer"
-required_change = "Serialize v2 receipts and reject or count legacy receipt lines as malformed."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/verifiers.rs"
-object = "typed_verifier_results"
-required_change = "Return verifier result data that can be embedded in reports and receipts."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/receipts.rs"
-object = "receipt_schema_tests"
-required_change = "Assert typed v2 receipt structure and legacy receipt rejection."
-
-[[tasks.targets]]
-file = "docs/task-registry/events.jsonl"
-object = "receipt_ledger_migration"
-required_change = "Reset or migrate local receipt lines to schema version 2 only."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-runtime-api-003"
-plan_id = "PLAN-2026-05-31-runtime-api-production-hardening"
-status = "completed"
-title = "Move installer behavior into Rust schema API"
-kind = "migration"
-source_plan_path = "docs/plans/runtime-api-production-hardening.md"
-source_plan_hash_sha256 = "1dd4ad4f595cf5d4cae6a3f058c8cd3a9a1e93edf443f39b7c5bc27f41ad5e9b"
-reason = "Installer behavior is duplicated in shell/Python instead of one clean runtime API."
-acceptance_proof = "Behaviors B-2026-05-31-G03-positive and B-2026-05-31-G03-negative pass."
-created_at = "2026-05-30"
-updated_at = "2026-05-30"
-behavior_ids = [
-    "B-2026-05-31-G03-positive",
-    "B-2026-05-31-G03-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/install.rs"
-object = "installer_runtime_api"
-required_change = "Parse config and manifest, produce typed install plans, and apply actions from Rust."
-
-[[tasks.targets]]
-file = "scripts/render-from-config.sh"
-object = "installer_renderer_wrapper"
-required_change = "Delegate renderer work to Rust installer commands."
-
-[[tasks.targets]]
-file = "scripts/install-to-workspace.sh"
-object = "installer_user_wrapper"
-required_change = "Preserve install CLI while delegating runtime policy to Rust."
-
-[[tasks.targets]]
-file = "scripts/test-install-modes.sh"
-object = "installer_migration_suite"
-required_change = "Assert typed installer JSON, dry-run immutability, and symlink replacement."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/install_status.rs"
-object = "installer_unit_tests"
-required_change = "Add positive and negative Rust installer behavior tests."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-runtime-api-004"
-plan_id = "PLAN-2026-05-31-runtime-api-production-hardening"
-status = "completed"
-title = "Make mutation hook input and output format typed"
-kind = "authorization"
-source_plan_path = "docs/plans/runtime-api-production-hardening.md"
-source_plan_hash_sha256 = "1dd4ad4f595cf5d4cae6a3f058c8cd3a9a1e93edf443f39b7c5bc27f41ad5e9b"
-reason = "Hook format is currently not a real parser or response contract."
-acceptance_proof = "Behaviors B-2026-05-31-G04-positive and B-2026-05-31-G04-negative pass."
-created_at = "2026-05-30"
-updated_at = "2026-05-30"
-behavior_ids = [
-    "B-2026-05-31-G04-positive",
-    "B-2026-05-31-G04-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/hook_io.rs"
-object = "hook_format_schemas"
-required_change = "Define typed input parsers and output envelopes for Codex, Cursor, and Antigravity."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/mutation_hook.rs"
-object = "format_typed_authorization"
-required_change = "Use HookFormat to parse and authorize concrete hook payloads."
-
-[[tasks.targets]]
-file = "tools/agent-governance/pre-tool-use-gap-closure.sh"
-object = "canonical_hook_wrapper"
-required_change = "Delegate hook response JSON to Rust."
-
-[[tasks.targets]]
-file = "templates/tools/agent-governance/pre-tool-use-gap-closure.sh.template"
-object = "installed_hook_wrapper"
-required_change = "Align installed hook wrapper with canonical Rust response generation."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/hook_api.rs"
-object = "hook_format_tests"
-required_change = "Add positive and negative hook format tests."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-runtime-api-005"
-plan_id = "PLAN-2026-05-31-runtime-api-production-hardening"
-status = "completed"
-title = "Move status checks to typed Rust diagnostics"
-kind = "diagnostics"
-source_plan_path = "docs/plans/runtime-api-production-hardening.md"
-source_plan_hash_sha256 = "1dd4ad4f595cf5d4cae6a3f058c8cd3a9a1e93edf443f39b7c5bc27f41ad5e9b"
-reason = "Status and release checks are currently shell-owned prose checks."
-acceptance_proof = "Behaviors B-2026-05-31-G05-positive and B-2026-05-31-G05-negative pass."
-created_at = "2026-05-30"
-updated_at = "2026-05-30"
-behavior_ids = [
-    "B-2026-05-31-G05-positive",
-    "B-2026-05-31-G05-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/status_checks.rs"
-object = "status_check_reports"
-required_change = "Emit typed install, environment, tracked-for-CI, stale-path, and release-source diagnostics."
-
-[[tasks.targets]]
-file = "scripts/status.sh"
-object = "status_wrapper"
-required_change = "Delegate status logic to Rust and render the report."
-
-[[tasks.targets]]
-file = "scripts/release-version-check.sh"
-object = "version_wrapper"
-required_change = "Delegate version consistency to typed Rust reports."
-
-[[tasks.targets]]
-file = "scripts/release-audit.sh"
-object = "audit_wrapper"
-required_change = "Use Rust status and release checks from repository root."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/release_source.rs"
-object = "release_status_tests"
-required_change = "Assert release and status diagnostics by typed check id."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-runtime-api-006"
-plan_id = "PLAN-2026-05-31-runtime-api-production-hardening"
-status = "completed"
-title = "Hard cut all Task Manifests to schema version 2"
-kind = "migration"
-source_plan_path = "docs/plans/runtime-api-production-hardening.md"
-source_plan_hash_sha256 = "1dd4ad4f595cf5d4cae6a3f058c8cd3a9a1e93edf443f39b7c5bc27f41ad5e9b"
-reason = "Runtime validation still accepts completed or cancelled schema version 1 manifest evidence."
-acceptance_proof = "Behaviors B-2026-05-31-G06-positive and B-2026-05-31-G06-negative pass."
-created_at = "2026-05-30"
-updated_at = "2026-05-30"
-behavior_ids = [
-    "B-2026-05-31-G06-positive",
-    "B-2026-05-31-G06-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/manifest.rs"
-object = "v2_only_manifest_validation"
-required_change = "Reject schema version 1 manifests in every registry status."
-
-[[tasks.targets]]
-file = "docs/plans/production-gap-closures.md"
-object = "historical_manifest_v2"
-required_change = "Migrate Task Manifest to schema version 2 with gap metadata and typed verifiers."
-
-[[tasks.targets]]
-file = "docs/plans/v2-release-readiness.md"
-object = "historical_manifest_v2"
-required_change = "Migrate Task Manifest to schema version 2 with gap metadata and typed verifiers."
-
-[[tasks.targets]]
-file = "docs/plans/v2-production-followup-gap-closures.md"
-object = "historical_manifest_v2"
-required_change = "Migrate Task Manifest to schema version 2 with gap metadata and typed verifiers."
-
-[[tasks.targets]]
-file = "docs/plans/runtime-schema-production-closures.md"
-object = "historical_manifest_v2"
-required_change = "Migrate Task Manifest to schema version 2 with gap metadata and typed verifiers."
-
-[[tasks.targets]]
-file = "docs/task-registry/archive/completed-001.toml"
-object = "migrated_plan_hashes"
-required_change = "Refresh archived plan hashes after manifest migration."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/migration.rs"
-object = "v1_rejection_tests"
-required_change = "Assert completed schema version 1 manifests fail validation."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-runtime-api-007"
-plan_id = "PLAN-2026-05-31-runtime-api-production-hardening"
-status = "completed"
-title = "Add JSON command report API to all commands"
-kind = "schema"
-source_plan_path = "docs/plans/runtime-api-production-hardening.md"
-source_plan_hash_sha256 = "1dd4ad4f595cf5d4cae6a3f058c8cd3a9a1e93edf443f39b7c5bc27f41ad5e9b"
-reason = "Core command results are still mostly text-only."
-acceptance_proof = "Behaviors B-2026-05-31-G07-positive and B-2026-05-31-G07-negative pass."
-created_at = "2026-05-30"
-updated_at = "2026-05-30"
-behavior_ids = [
-    "B-2026-05-31-G07-positive",
-    "B-2026-05-31-G07-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/cli.rs"
-object = "json_command_envelope"
-required_change = "Parse global format flags and return one command report envelope for every command."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/reports.rs"
-object = "command_report_renderer"
-required_change = "Render text and JSON from typed command reports."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/schema.rs"
-object = "command_report_schema"
-required_change = "Define command report and command data schemas."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/cli_api.rs"
-object = "json_cli_tests"
-required_change = "Assert JSON envelope success and parser failure behavior."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-runtime-api-008"
-plan_id = "PLAN-2026-05-31-runtime-api-production-hardening"
-status = "completed"
-title = "Capsulize Rust runtime modules"
-kind = "implementation"
-source_plan_path = "docs/plans/runtime-api-production-hardening.md"
-source_plan_hash_sha256 = "1dd4ad4f595cf5d4cae6a3f058c8cd3a9a1e93edf443f39b7c5bc27f41ad5e9b"
-reason = "Runtime domains are concentrated in monolithic source and test files."
-acceptance_proof = "Behaviors B-2026-05-31-G08-positive and B-2026-05-31-G08-negative pass."
-created_at = "2026-05-30"
-updated_at = "2026-05-30"
-behavior_ids = [
-    "B-2026-05-31-G08-positive",
-    "B-2026-05-31-G08-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/registry.rs"
-object = "registry_domain"
-required_change = "Own registry lifecycle, task status, archive, metrics, and persistence behavior."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/manifest.rs"
-object = "manifest_domain"
-required_change = "Own manifest parsing, validation, hash, and plan path behavior."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/main.rs"
-object = "thin_runtime_entrypoint"
-required_change = "Keep only module declarations, top-level dispatch wiring, and process exit."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/mod.rs"
-object = "split_test_root"
-required_change = "Load focused test modules instead of a monolithic tests file."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests.rs"
-object = "remove_monolith"
-required_change = "Delete after tests are moved into focused modules."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-runtime-api-009"
-plan_id = "PLAN-2026-05-31-runtime-api-production-hardening"
-status = "completed"
-title = "Load mutable policy from typed config"
-kind = "schema"
-source_plan_path = "docs/plans/runtime-api-production-hardening.md"
-source_plan_hash_sha256 = "1dd4ad4f595cf5d4cae6a3f058c8cd3a9a1e93edf443f39b7c5bc27f41ad5e9b"
-reason = "Mutable policy lists are duplicated across code, scripts, and config."
-acceptance_proof = "Behaviors B-2026-05-31-G09-positive and B-2026-05-31-G09-negative pass."
-created_at = "2026-05-30"
-updated_at = "2026-05-30"
-behavior_ids = [
-    "B-2026-05-31-G09-positive",
-    "B-2026-05-31-G09-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/policy.rs"
-object = "typed_policy_loaders"
-required_change = "Load plan contract, source-limit, installer, release, and tracked-for-CI policy from typed config sources."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/plan_contract.rs"
-object = "contract_policy_loader"
-required_change = "Use policy API for required sections and placeholder rules where beneficial."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/source_limit.rs"
-object = "source_policy_loader"
-required_change = "Use policy API for source-limit coverage and exclusions where beneficial."
-
-[[tasks.targets]]
-file = "MANIFEST.toml"
-object = "installer_policy_source"
-required_change = "Remain the typed source for installer action vocabulary and stale install paths."
-
-[[tasks.targets]]
-file = "REQUIREMENTS.toml"
-object = "release_policy_source"
-required_change = "Remain the typed source for release and tracked-for-CI policy."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-runtime-api-010"
-plan_id = "PLAN-2026-05-31-runtime-api-production-hardening"
-status = "completed"
-title = "Convert negative migration tests to typed assertions"
-kind = "test"
-source_plan_path = "docs/plans/runtime-api-production-hardening.md"
-source_plan_hash_sha256 = "1dd4ad4f595cf5d4cae6a3f058c8cd3a9a1e93edf443f39b7c5bc27f41ad5e9b"
-reason = "Several migration tests prove behavior through prose grep instead of typed contracts."
-acceptance_proof = "Behaviors B-2026-05-31-G10-positive and B-2026-05-31-G10-negative pass."
-created_at = "2026-05-30"
-updated_at = "2026-05-30"
-behavior_ids = [
-    "B-2026-05-31-G10-positive",
-    "B-2026-05-31-G10-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/fixtures.rs"
-object = "typed_negative_fixtures"
-required_change = "Provide fixtures that assert JSON fields and file-state boundaries."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/cli_api.rs"
-object = "typed_negative_cli_tests"
-required_change = "Assert parser and command failures through typed JSON reports."
-
-[[tasks.targets]]
-file = "scripts/test-release-readiness.sh"
-object = "typed_negative_release_tests"
-required_change = "Parse JSON diagnostics or inspect state for migration negatives."
-
-[[tasks.targets]]
-file = "scripts/test-install-modes.sh"
-object = "typed_negative_install_tests"
-required_change = "Parse installer JSON for action and dry-run mutation assertions."

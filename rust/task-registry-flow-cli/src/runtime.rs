@@ -378,7 +378,9 @@ pub(crate) fn append_event(root: &Path, mut event: EventRecord) -> Result<()> {
     writeln!(file, "{line}").map_err(|error| format!("write {}: {error}", path.display()))?;
     // fsync after append — ensures the new event is durable before returning.
     file.sync_all()
-        .map_err(|error| format!("sync {}: {error}", path.display()))
+        .map_err(|error| format!("sync {}: {error}", path.display()))?;
+    file.unlock()
+        .map_err(|error| format!("unlock {}: {error}", path.display()))
 }
 
 fn previous_receipt_hash(path: &Path) -> Result<Option<String>> {
