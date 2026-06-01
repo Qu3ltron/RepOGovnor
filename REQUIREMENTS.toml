@@ -125,6 +125,7 @@ required = [
   "rust/task-registry-flow-cli/src/schema.rs",
   "rust/task-registry-flow-cli/src/source_limit.rs",
   "rust/task-registry-flow-cli/src/status_checks.rs",
+  "rust/task-registry-flow-cli/src/tests/archive_tests.rs",
   "rust/task-registry-flow-cli/src/tests/hook_command_tests.rs",
   "rust/task-registry-flow-cli/src/tests/landing_tests.rs",
   "rust/task-registry-flow-cli/src/tests/metrics_tests.rs",

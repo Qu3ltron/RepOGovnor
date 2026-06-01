@@ -14,6 +14,7 @@ use std::str::FromStr;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 mod activation_terminal_tests;
+mod archive_tests;
 mod hook_command_tests;
 mod landing_tests;
 mod metrics_tests;
