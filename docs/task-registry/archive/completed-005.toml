@@ -4,6 +4,13 @@ archive_id = "completed-005"
 archive_authority = "docs/task-registry/archive/completed-005.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-05-31-claude-cli-template-pipeline"
+plan_path = "docs/plans/claude-cli-template-pipeline-2026-05-31.md"
+plan_hash_sha256 = "6338b2c727644de355c316df3bdda1cea004ee3b860c890e5759c760a372adf5"
+activated_at = "2026-05-31"
+status = "completed"
+
+[[plans]]
 plan_id = "verify-chain-hardening-batch-2-2026-05-31"
 plan_path = "docs/plans/verify-chain-hardening-batch-2-2026-05-31.md"
 plan_hash_sha256 = "fc8c802ee2e7a6cfbaf5e85a1050ab7c449916ff3812b0ea606cb1d60ddbe8d2"
@@ -38,12 +45,93 @@ plan_hash_sha256 = "e80365453e837a7b1fa6f8c56e2127c3def82279d3a064de7ab811f183b0
 activated_at = "2026-05-31"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-05-31-strict-marker-block-validation"
-plan_path = "docs/plans/strict-marker-block-validation.md"
-plan_hash_sha256 = "ad84fbf9f6187483c4ba626b35a358a2748231bdc335065ad59130fa7eff4277"
-activated_at = "2026-05-31"
+[[tasks]]
+task_id = "TASK-2026-05-31-C01"
+plan_id = "PLAN-2026-05-31-claude-cli-template-pipeline"
 status = "completed"
+title = "Create templates/CLAUDE.md.template"
+kind = "implementation"
+source_plan_path = "docs/plans/claude-cli-template-pipeline-2026-05-31.md"
+source_plan_hash_sha256 = "6338b2c727644de355c316df3bdda1cea004ee3b860c890e5759c760a372adf5"
+reason = "Consumer repos need a Claude Code entry-point template for the render pipeline"
+acceptance_proof = "Behavior B-001: template exists with all required placeholders"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-001-claude-md-template-exists",
+    "B-001b-no-stale-agents-refs",
+]
+
+[[tasks.targets]]
+file = "templates/CLAUDE.md.template"
+object = "Full Claude Code entry-point template"
+required_change = "Create template with all standard placeholders, Claude Code agent paths"
+
+[[tasks]]
+task_id = "TASK-2026-05-31-C02"
+plan_id = "PLAN-2026-05-31-claude-cli-template-pipeline"
+status = "completed"
+title = "Create templates/CLAUDE.overlay.md.template"
+kind = "implementation"
+source_plan_path = "docs/plans/claude-cli-template-pipeline-2026-05-31.md"
+source_plan_hash_sha256 = "6338b2c727644de355c316df3bdda1cea004ee3b860c890e5759c760a372adf5"
+reason = "Merge mode needs an overlay to update the agent-governance block in existing CLAUDE.md files"
+acceptance_proof = "Behavior B-002: overlay template exists with agent-governance block markers"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-002-overlay-template-exists",
+    "B-002b-overlay-not-empty",
+]
+
+[[tasks.targets]]
+file = "templates/CLAUDE.overlay.md.template"
+object = "Claude Code merge-block overlay"
+required_change = "Create overlay template with agent-governance block content"
+
+[[tasks]]
+task_id = "TASK-2026-05-31-C03"
+plan_id = "PLAN-2026-05-31-claude-cli-template-pipeline"
+status = "completed"
+title = "Add CLAUDE.md render entries to MANIFEST.toml"
+kind = "implementation"
+source_plan_path = "docs/plans/claude-cli-template-pipeline-2026-05-31.md"
+source_plan_hash_sha256 = "6338b2c727644de355c316df3bdda1cea004ee3b860c890e5759c760a372adf5"
+reason = "MANIFEST.toml must declare CLAUDE.md render entries so install plan discovers them"
+acceptance_proof = "Behavior B-003: MANIFEST.toml has [[render]] entries for both CLAUDE.md templates"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-003-manifest-has-claude-render",
+    "B-003b-no-non-existent-template-ref",
+]
+
+[[tasks.targets]]
+file = "MANIFEST.toml"
+object = "[[render]] entries for CLAUDE.md"
+required_change = "Add full and overlay render entries for CLAUDE.md templates"
+
+[[tasks]]
+task_id = "TASK-2026-05-31-C04"
+plan_id = "PLAN-2026-05-31-claude-cli-template-pipeline"
+status = "completed"
+title = "Add CLAUDE.md rendering to render-from-config.sh"
+kind = "implementation"
+source_plan_path = "docs/plans/claude-cli-template-pipeline-2026-05-31.md"
+source_plan_hash_sha256 = "6338b2c727644de355c316df3bdda1cea004ee3b860c890e5759c760a372adf5"
+reason = "render-from-config.sh must handle CLAUDE.md alongside AGENTS.md/GEMINI.md in both modes"
+acceptance_proof = "Behavior B-004: render-from-config.sh includes CLAUDE.md in merge and force modes"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-004-render-script-claude-support",
+    "B-004b-dry-run-includes-claude",
+]
+
+[[tasks.targets]]
+file = "scripts/render-from-config.sh"
+object = "CLAUDE.md rendering logic"
+required_change = "Add CLAUDE.md template rendering in merge and force mode blocks"
 
 [[tasks]]
 task_id = "TASK-2026-05-31-VH2-001"
@@ -642,57 +730,3 @@ required_change = "Document status, release executable completeness, waiver, pla
 file = "README.md"
 object = "v2_hardening_note"
 required_change = "Document user-facing waiver/status behavior changes."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-strict-marker-block-001"
-plan_id = "PLAN-2026-05-31-strict-marker-block-validation"
-status = "completed"
-title = "Enforce exact ordered marker blocks"
-kind = "implementation"
-source_plan_path = "docs/plans/strict-marker-block-validation.md"
-source_plan_hash_sha256 = "ad84fbf9f6187483c4ba626b35a358a2748231bdc335065ad59130fa7eff4277"
-reason = "Count-only marker validation accepts prose-only and reversed marker tokens."
-acceptance_proof = "Behaviors B-001-marker-block-positive and B-002-marker-block-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-001-marker-block-positive",
-    "B-002-marker-block-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/status_checks.rs"
-object = "marker_check"
-required_change = "Validate exact ordered HTML comment marker lines."
-
-[[tasks.targets]]
-file = "scripts/status.sh"
-object = "check_markers"
-required_change = "Reject prose-only tokens and end-before-begin marker order."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-strict-marker-block-002"
-plan_id = "PLAN-2026-05-31-strict-marker-block-validation"
-status = "completed"
-title = "Add strict marker negative tests"
-kind = "validation"
-source_plan_path = "docs/plans/strict-marker-block-validation.md"
-source_plan_hash_sha256 = "ad84fbf9f6187483c4ba626b35a358a2748231bdc335065ad59130fa7eff4277"
-reason = "Malformed marker bypasses must be locked by behavioral tests."
-acceptance_proof = "Behaviors B-002-marker-block-negative and B-003-shell-marker-block-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-002-marker-block-negative",
-    "B-003-shell-marker-block-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/status_check_tests.rs"
-object = "status_check_json_rejects_non_block_marker_tokens"
-required_change = "Assert prose-only tokens and reversed comment markers fail JSON status."
-
-[[tasks.targets]]
-file = "scripts/test-install-modes.sh"
-object = "strict_marker_negative_cases"
-required_change = "Assert shell status rejects markerless, prose-only, and reversed-marker workspaces."

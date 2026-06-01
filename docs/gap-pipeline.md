@@ -42,11 +42,13 @@ or that every future integration exists.
 - Claim pressure: the workflow produces reports, receipts, and metrics.
 - Current evidence: `reviewer-report` now summarizes active plans, landed
   tasks, changed targets, receipt state, blocked or deferred work, and proof
-  boundaries in one local handoff surface.
-- User impact: maintainers have pasteable local reviewer evidence, but there is
-  no GitHub or pull request integration yet.
-- Next closure: add optional PR-oriented formatting or integration without
-  adding remote telemetry.
+  boundaries in one local handoff surface. `reviewer-report --format markdown`
+  adds local pull-request-oriented Markdown without posting remotely.
+- User impact: maintainers have pasteable text and Markdown reviewer evidence.
+  There is still no GitHub integration, hosted reviewer service, or remote
+  telemetry.
+- Next closure: add remote integration only under a separate approval that
+  defines authentication, privacy, and failure behavior.
 - Reactivation condition: before publicizing a hosted or GitHub-native PR
   workflow.
 

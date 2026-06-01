@@ -212,13 +212,16 @@ plans are migrated to v2 rather than accepted through a compatibility path.
 
 ```bash
 .codex/scripts/task-registry reviewer-report
+.codex/scripts/task-registry reviewer-report --format markdown
 ```
 
 It summarizes active plans, landed tasks, changed targets, receipt metrics, and
 blocked or deferred work. It also states the proof boundary: governance proof is
 not product correctness proof. The report is intended for pull request or
 review handoff text; domain tests, code review, security review, and product
-acceptance evidence remain project-owned.
+acceptance evidence remain project-owned. The default format is compact text.
+`--format markdown` emits local Markdown suitable for manual pull request paste;
+it does not post to GitHub or call a remote service.
 
 ## Activation Plan Contract
 

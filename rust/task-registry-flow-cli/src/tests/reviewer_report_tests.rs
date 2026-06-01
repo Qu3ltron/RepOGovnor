@@ -85,10 +85,58 @@ fn reviewer_report_rejects_unexpected_args() {
     let root = temp_root("reviewer-report-args");
     seed_repo(&root);
 
-    let error = crate::reviewer_report::run(&root, &["--format".to_string()])
+    let error = crate::reviewer_report::run(&root, &["--bogus".to_string()])
         .expect_err("unexpected reviewer-report args fail");
 
-    assert!(error.contains("usage: task-registry-flow reviewer-report"));
+    assert!(error.contains("usage: task-registry-flow reviewer-report [--format text|markdown]"));
+}
+
+#[test]
+fn reviewer_report_markdown_formats_pr_handoff() {
+    let root = temp_root("reviewer-report-markdown");
+    seed_repo(&root);
+    fs::create_dir_all(root.join("src")).unwrap();
+
+    fs::write(
+        root.join("docs/plans/landed.md"),
+        reviewer_plan(
+            "PLAN-2026-06-01-reviewer-markdown",
+            "TASK-2026-06-01-reviewer-markdown-001",
+            "B-001-reviewer-markdown",
+            "B-002-reviewer-markdown-negative",
+            "src/lib.rs",
+        ),
+    )
+    .unwrap();
+    activate_plan(&root, "docs/plans/landed.md").unwrap();
+    crate::landing::run_command(&root, &changed_files_args(&["src/lib.rs"])).unwrap();
+
+    let report =
+        crate::reviewer_report::run(&root, &["--format".to_string(), "markdown".to_string()])
+            .unwrap();
+
+    assert!(report.contains("# Reviewer Report"), "{report}");
+    assert!(report.contains("## Summary"), "{report}");
+    assert!(report.contains("- Active plans: 0"), "{report}");
+    assert!(report.contains("- Landed tasks: 1"), "{report}");
+    assert!(report.contains("## Proof Boundary"), "{report}");
+    assert!(
+        report.contains("governance proof is not product correctness proof"),
+        "{report}"
+    );
+    assert!(report.contains("## Landed Changed Files"), "{report}");
+    assert!(report.contains("changed `src/lib.rs`"), "{report}");
+}
+
+#[test]
+fn reviewer_report_rejects_unknown_format() {
+    let root = temp_root("reviewer-report-unknown-format");
+    seed_repo(&root);
+
+    let error = crate::reviewer_report::run(&root, &["--format".to_string(), "json".to_string()])
+        .expect_err("unknown reviewer-report format fails");
+
+    assert!(error.contains("usage: task-registry-flow reviewer-report [--format text|markdown]"));
 }
 
 fn reviewer_plan(

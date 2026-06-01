@@ -137,7 +137,7 @@ pub(crate) fn run(mut args: Vec<String>) -> RuntimeResult<String> {
 }
 
 fn usage() -> String {
-    "usage: task-registry-flow {validate|activate <docs/plans/file.md>|status <task_id> <status>|defer <task_id> <basis> <reactivation>|report <plan_id>|reviewer-report|archive-completed|verify-behaviors [plan_id|task_id]|verify-landing [--plan-id <plan_id>] --changed-files <path>...|verify-chain [--format json] [--repair]|verify-mutation-hook [--format codex|antigravity|cursor|claude]|metrics|source-limit check|source-limit plan|release-check {required|version|tracked|all} [--format json]|install plan [--format json]|status-check [--format json]}".to_string()
+    "usage: task-registry-flow {validate|activate <docs/plans/file.md>|status <task_id> <status>|defer <task_id> <basis> <reactivation>|report <plan_id>|reviewer-report [--format text|markdown]|archive-completed|verify-behaviors [plan_id|task_id]|verify-landing [--plan-id <plan_id>] --changed-files <path>...|verify-chain [--format json] [--repair]|verify-mutation-hook [--format codex|antigravity|cursor|claude]|metrics|source-limit check|source-limit plan|release-check {required|version|tracked|all} [--format json]|install plan [--format json]|status-check [--format json]}".to_string()
 }
 
 fn install_command(root: &Path, args: &[String]) -> RuntimeResult<String> {
