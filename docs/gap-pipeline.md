@@ -49,14 +49,17 @@ or that every future integration exists.
 ### GP-003: Migration safety needs more old-layout fixtures
 - Claim pressure: v2 says stale legacy paths are removed and compatibility
   shims are not supported.
-- Current evidence: release checks reject known stale paths, and merge/force
-  install tests exist.
-- User impact: repositories with unusual v0.x or v1 governance layouts may hit
-  hard failures without enough preflight explanation.
-- Next closure: add targeted fixtures for common stale symlink, hook, and skill
-  layouts, with direct remediation diagnostics.
-- Reactivation condition: before a broader public announcement or after the
-  first external migration failure report.
+- Current evidence: release checks reject known stale paths; merge/force install
+  tests seed and remove stale settings, hook, Antigravity, and skill symlink
+  layouts; `status-check --format json` reports stale legacy paths and nonnative
+  `.agents` skills with remediation.
+- User impact: common old-layout failures now have a local preflight diagnostic.
+  Unusual external layouts may still need new fixtures after real migration
+  reports.
+- Next closure: add fixtures for any newly observed external migration layout
+  without restoring compatibility shims.
+- Reactivation condition: after the first external migration failure report or
+  before documenting a larger migration campaign.
 
 ### GP-004: Multi-repo governance remains manual
 - Claim pressure: the plugin is portable and usable across agents and repos.

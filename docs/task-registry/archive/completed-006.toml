@@ -4,6 +4,13 @@ archive_id = "completed-006"
 archive_authority = "docs/task-registry/archive/completed-006.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-05-31-json-failure-semantics"
+plan_path = "docs/plans/json-failure-semantics-gap-closure.md"
+plan_hash_sha256 = "ff964ad41e4ecdbeb73838404e940caf899ab1a2faf6f7e7679ef94f95cf421b"
+activated_at = "2026-05-30"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-05-31-runtime-api-production-hardening"
 plan_path = "docs/plans/runtime-api-production-hardening.md"
 plan_hash_sha256 = "1dd4ad4f595cf5d4cae6a3f058c8cd3a9a1e93edf443f39b7c5bc27f41ad5e9b"
@@ -38,12 +45,157 @@ plan_hash_sha256 = "a07ccef32b7ff44fe8138a092bc91c6524ec8e207019f4ce2dfd7c590b2d
 activated_at = "2026-05-30"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-05-30-production-gap-closures"
-plan_path = "docs/plans/production-gap-closures.md"
-plan_hash_sha256 = "bdb7cbbd8a51f42ef5759d9c877501a5ad8460690ba547e6c39fc679fcef721d"
-activated_at = "2026-05-30"
+[[tasks]]
+task_id = "TASK-2026-05-31-json-failure-001"
+plan_id = "PLAN-2026-05-31-json-failure-semantics"
 status = "completed"
+title = "Make status-check JSON failures exit nonzero"
+kind = "diagnostics"
+source_plan_path = "docs/plans/json-failure-semantics-gap-closure.md"
+source_plan_hash_sha256 = "ff964ad41e4ecdbeb73838404e940caf899ab1a2faf6f7e7679ef94f95cf421b"
+reason = "Failed status diagnostic JSON can currently pass with exit 0."
+acceptance_proof = "Behaviors B-2026-05-31-json-G01-positive and B-2026-05-31-json-G01-negative pass."
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = [
+    "B-2026-05-31-json-G01-positive",
+    "B-2026-05-31-json-G01-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/runtime.rs"
+object = "status_check_command"
+required_change = "Return nonzero on failed JSON reports while preserving JSON."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/status_checks.rs"
+object = "status_check_api"
+required_change = "Own JSON-aware status-check behavior."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/mod.rs"
+object = "status_check_json_tests"
+required_change = "Add positive and negative JSON exit assertions."
+
+[[tasks]]
+task_id = "TASK-2026-05-31-json-failure-002"
+plan_id = "PLAN-2026-05-31-json-failure-semantics"
+status = "completed"
+title = "Preserve source-limit JSON diagnostics on failure"
+kind = "diagnostics"
+source_plan_path = "docs/plans/json-failure-semantics-gap-closure.md"
+source_plan_hash_sha256 = "ff964ad41e4ecdbeb73838404e940caf899ab1a2faf6f7e7679ef94f95cf421b"
+reason = "Source-limit JSON failure currently loses per-file diagnostics."
+acceptance_proof = "Behaviors B-2026-05-31-json-G02-positive and B-2026-05-31-json-G02-negative pass."
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = [
+    "B-2026-05-31-json-G02-positive",
+    "B-2026-05-31-json-G02-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/source_limit.rs"
+object = "json_failure_report"
+required_change = "Return full CheckReport JSON and nonzero status on failed JSON checks."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/mod.rs"
+object = "source_limit_json_tests"
+required_change = "Assert over-limit JSON includes failed path diagnostics."
+
+[[tasks]]
+task_id = "TASK-2026-05-31-json-failure-003"
+plan_id = "PLAN-2026-05-31-json-failure-semantics"
+status = "completed"
+title = "Preserve release-check JSON reports on failure"
+kind = "diagnostics"
+source_plan_path = "docs/plans/json-failure-semantics-gap-closure.md"
+source_plan_hash_sha256 = "ff964ad41e4ecdbeb73838404e940caf899ab1a2faf6f7e7679ef94f95cf421b"
+reason = "Release-check JSON failure can be prefixed as human text."
+acceptance_proof = "Behaviors B-2026-05-31-json-G03-positive and B-2026-05-31-json-G03-negative pass."
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = [
+    "B-2026-05-31-json-G03-positive",
+    "B-2026-05-31-json-G03-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/release_checks.rs"
+object = "json_failure_report"
+required_change = "Return full CheckReport JSON and nonzero status on failed JSON checks."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/cli.rs"
+object = "raw_json_error_rendering"
+required_change = "Render raw JSON diagnostic failures without human prefix."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/mod.rs"
+object = "release_check_json_tests"
+required_change = "Assert failing release JSON is parseable raw JSON."
+
+[[tasks]]
+task_id = "TASK-2026-05-31-json-failure-004"
+plan_id = "PLAN-2026-05-31-json-failure-semantics"
+status = "completed"
+title = "Report actual CLI command and receipt state"
+kind = "schema"
+source_plan_path = "docs/plans/json-failure-semantics-gap-closure.md"
+source_plan_hash_sha256 = "ff964ad41e4ecdbeb73838404e940caf899ab1a2faf6f7e7679ef94f95cf421b"
+reason = "Global JSON failure envelope hard-codes usage and receipt false."
+acceptance_proof = "Behaviors B-2026-05-31-json-G04-positive and B-2026-05-31-json-G04-negative pass."
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = [
+    "B-2026-05-31-json-G04-positive",
+    "B-2026-05-31-json-G04-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/cli.rs"
+object = "failure_envelope"
+required_change = "Render parsed command and computed receipt state on failures."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/reports.rs"
+object = "failure_report_helpers"
+required_change = "Support command-specific failure envelopes."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/mod.rs"
+object = "cli_json_error_tests"
+required_change = "Assert actual command and receipt state in JSON failures."
+
+[[tasks]]
+task_id = "TASK-2026-05-31-json-failure-005"
+plan_id = "PLAN-2026-05-31-json-failure-semantics"
+status = "completed"
+title = "Add shell migration coverage and docs"
+kind = "test"
+source_plan_path = "docs/plans/json-failure-semantics-gap-closure.md"
+source_plan_hash_sha256 = "ff964ad41e4ecdbeb73838404e940caf899ab1a2faf6f7e7679ef94f95cf421b"
+reason = "Release shell migration must prove JSON failures stay machine-readable."
+acceptance_proof = "Behavior B-2026-05-31-json-failure-validation passes."
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = ["B-2026-05-31-json-failure-validation"]
+
+[[tasks.targets]]
+file = "scripts/test-release-readiness.sh"
+object = "json_failure_migration_suite"
+required_change = "Parse failing release/source JSON and assert nonzero exits."
+
+[[tasks.targets]]
+file = "docs/runtime-schemas.md"
+object = "json_failure_contract"
+required_change = "Document command-local raw JSON failures and global failure envelopes."
+
+[[tasks.targets]]
+file = "README.md"
+object = "json_failure_examples"
+required_change = "Keep user examples aligned with real JSON semantics."
 
 [[tasks]]
 task_id = "TASK-2026-05-31-runtime-api-001"
@@ -1121,90 +1273,3 @@ required_change = "Run release readiness tests and audit gate in CI."
 file = "scripts/test-release-readiness.sh"
 object = "audit_negative_tests"
 required_change = "Add negative tests for missing audit tools without waiver and positive waiver behavior."
-
-[[tasks]]
-task_id = "TASK-2026-05-30-production-gap-closures-001"
-plan_id = "PLAN-2026-05-30-production-gap-closures"
-status = "completed"
-title = "Repair mutation hook validation order"
-kind = "implementation"
-source_plan_path = "docs/plans/production-gap-closures.md"
-source_plan_hash_sha256 = "bdb7cbbd8a51f42ef5759d9c877501a5ad8460690ba547e6c39fc679fcef721d"
-reason = "The hook currently runs full validation before path inspection and can block plan activation."
-acceptance_proof = "Behavior B-2026-05-30-hook-governance-before-validation passes."
-created_at = "2026-05-30"
-updated_at = "2026-05-30"
-behavior_ids = ["B-2026-05-30-hook-governance-before-validation"]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/main.rs"
-object = "verify_mutation_hook_dispatch"
-required_change = "Delegate hook verification to a module without running full validation before governance path inspection."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/mutation_hook.rs"
-object = "mutation_hook_verifier"
-required_change = "Implement governance-first hook verification with negative guards for unsafe writes."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests.rs"
-object = "mutation_hook_behavior_tests"
-required_change = "Add positive and negative tests for governance writes, activation commands, and denied implementation writes."
-
-[[tasks]]
-task_id = "TASK-2026-05-30-production-gap-closures-002"
-plan_id = "PLAN-2026-05-30-production-gap-closures"
-status = "completed"
-title = "Run rendered registry wrapper from repo root"
-kind = "implementation"
-source_plan_path = "docs/plans/production-gap-closures.md"
-source_plan_hash_sha256 = "bdb7cbbd8a51f42ef5759d9c877501a5ad8460690ba547e6c39fc679fcef721d"
-reason = "The wrapper computes the repo root but currently leaves the Rust CLI running from the caller directory."
-acceptance_proof = "Behavior B-2026-05-30-wrapper-root-cwd passes."
-created_at = "2026-05-30"
-updated_at = "2026-05-30"
-behavior_ids = ["B-2026-05-30-wrapper-root-cwd"]
-
-[[tasks.targets]]
-file = "templates/.codex/scripts/task-registry.template"
-object = "repo_root_execution"
-required_change = "Change to the repo root before invoking cargo run."
-
-[[tasks.targets]]
-file = "scripts/test-install-modes.sh"
-object = "nested_wrapper_validation"
-required_change = "Assert nested wrapper execution reads and writes only repo-root registry artifacts."
-
-[[tasks]]
-task_id = "TASK-2026-05-30-production-gap-closures-003"
-plan_id = "PLAN-2026-05-30-production-gap-closures"
-status = "completed"
-title = "Align merge install with strict status"
-kind = "implementation"
-source_plan_path = "docs/plans/production-gap-closures.md"
-source_plan_hash_sha256 = "bdb7cbbd8a51f42ef5759d9c877501a5ad8460690ba547e6c39fc679fcef721d"
-reason = "Merge currently preserves stale files that strict status rejects."
-acceptance_proof = "Behavior B-2026-05-30-merge-status-hard-cutover passes."
-created_at = "2026-05-30"
-updated_at = "2026-05-30"
-behavior_ids = ["B-2026-05-30-merge-status-hard-cutover"]
-
-[[tasks.targets]]
-file = "scripts/render-from-config.sh"
-object = "merge_stale_file_removal"
-required_change = "Remove stale legacy governance files during merge and force while keeping dry-run projection-only."
-
-[[tasks.targets]]
-file = "scripts/test-install-modes.sh"
-object = "merge_status_alignment_tests"
-required_change = "Assert merge removes stale files and never reports preserve-stale."
-
-[[tasks.targets]]
-file = "README.md"
-object = "install_mode_documentation"
-required_change = "Document merge stale removal and root-wrapper behavior."
-
-[[tasks.targets]]
-file = "examples/spectrum-arcana-overlay.md"
-object = "reference_install_mode_documentation"
-required_change = "Update reference docs to describe hard-cutover merge behavior."

@@ -21,7 +21,7 @@ reject_grep() {
 }
 
 git init -q "$TARGET_ROOT"
-mkdir -p "$TARGET_ROOT/.codex" "$TARGET_ROOT/.agents/plugins" "$TARGET_ROOT/tools/antigravity" "$TARGET_ROOT/plugins"
+mkdir -p "$TARGET_ROOT/.codex/hooks" "$TARGET_ROOT/.agents/plugins" "$TARGET_ROOT/tools/antigravity" "$TARGET_ROOT/plugins" "$TARGET_ROOT/.gemini"
 mkdir -p "$TARGET_ROOT/.agents/skills" "$TARGET_ROOT/.cursor/skills" "$TARGET_ROOT/.claude/skills"
 git clone -q "$PLUGIN_ROOT" "$TARGET_ROOT/plugins/agent-governance"
 
@@ -29,7 +29,9 @@ printf 'custom agents\n' > "$TARGET_ROOT/AGENTS.md"
 printf 'custom gemini\n<!-- agent-governance:begin -->\nold\n<!-- agent-governance:end -->\n' > "$TARGET_ROOT/GEMINI.md"
 printf 'old config\n' > "$TARGET_ROOT/.codex/config.toml"
 printf 'stale\n' > "$TARGET_ROOT/.codex/settings.toml"
+printf 'stale plan approval hook\n' > "$TARGET_ROOT/.codex/hooks/user-plan-approval.toml"
 printf 'stale root hook\n' > "$TARGET_ROOT/hooks.json"
+printf 'stale gemini settings\n' > "$TARGET_ROOT/.gemini/settings.json"
 printf 'stale agy hook\n' > "$TARGET_ROOT/tools/antigravity/pre-tool-use-gap-closure.sh"
 printf 'wrong plugin link occupant\n' > "$TARGET_ROOT/.agents/plugins/agent-governance"
 
@@ -148,7 +150,9 @@ printf 'custom gemini\n<!-- agent-governance:begin -->\nold\n<!-- agent-governan
 grep -q 'custom agents' "$TARGET_ROOT/AGENTS.md"
 grep -q 'agent-governance:begin' "$TARGET_ROOT/AGENTS.md"
 test ! -e "$TARGET_ROOT/.codex/settings.toml"
+test ! -e "$TARGET_ROOT/.codex/hooks/user-plan-approval.toml"
 test ! -e "$TARGET_ROOT/hooks.json"
+test ! -e "$TARGET_ROOT/.gemini/settings.json"
 test ! -e "$TARGET_ROOT/tools/antigravity/pre-tool-use-gap-closure.sh"
 grep -q 'remove-stale' "$OUT_DIR/merge.out"
 reject_grep 'preserve-stale' "$OUT_DIR/merge.out"
@@ -229,6 +233,11 @@ for skill in gap-closure-contract task-registry-flow; do
   rm -rf "$TARGET_ROOT/.agents/skills/$skill"
   ln -s "../../.cursor/skills/$skill" "$TARGET_ROOT/.agents/skills/$skill"
 done
+printf 'stale\n' > "$TARGET_ROOT/.codex/settings.toml"
+printf 'stale plan approval hook\n' > "$TARGET_ROOT/.codex/hooks/user-plan-approval.toml"
+printf 'stale root hook\n' > "$TARGET_ROOT/hooks.json"
+printf 'stale gemini settings\n' > "$TARGET_ROOT/.gemini/settings.json"
+printf 'stale agy hook\n' > "$TARGET_ROOT/tools/antigravity/pre-tool-use-gap-closure.sh"
 
 if (cd "$TARGET_ROOT" && "$PLUGIN_ROOT/scripts/status.sh" --strict > "$OUT_DIR/symlink-status.out" 2>&1); then
   echo "strict status unexpectedly accepted symlinked skill projections" >&2
@@ -244,7 +253,9 @@ grep -q '.agents/skills/task-registry-flow must be a native directory, not a sym
 
 reject_grep 'custom agents' "$TARGET_ROOT/AGENTS.md"
 test ! -e "$TARGET_ROOT/.codex/settings.toml"
+test ! -e "$TARGET_ROOT/.codex/hooks/user-plan-approval.toml"
 test ! -e "$TARGET_ROOT/hooks.json"
+test ! -e "$TARGET_ROOT/.gemini/settings.json"
 test ! -e "$TARGET_ROOT/tools/antigravity/pre-tool-use-gap-closure.sh"
 test -L "$TARGET_ROOT/.agents/plugins/agent-governance"
 [[ "$(readlink "$TARGET_ROOT/.agents/plugins/agent-governance")" == "../../plugins/agent-governance" ]]

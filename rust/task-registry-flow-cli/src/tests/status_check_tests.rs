@@ -21,7 +21,7 @@ fn status_check_reports_marker_skill_hook_ci_facts() {
 #[test]
 fn status_check_json_success_exits_zero() {
     let root = temp_root("status-json-success");
-    fs::create_dir_all(root.join(".agents/skills/task-registry-flow")).unwrap();
+    create_native_agent_skills(&root);
     write_marker_docs(&root);
     let args = vec!["--format".to_string(), "json".to_string()];
 
@@ -35,13 +35,16 @@ fn status_check_json_success_exits_zero() {
             && check["path"] == "AGENTS.md"
             && check["status"] == "pass"
     }));
-    assert!(
-        value["checks"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .any(|check| { check["check_id"] == "native-skill" && check["status"] == "pass" })
-    );
+    for path in [
+        ".agents/skills/gap-closure-contract",
+        ".agents/skills/task-registry-flow",
+    ] {
+        assert!(value["checks"].as_array().unwrap().iter().any(|check| {
+            check["check_id"] == "native-skill"
+                && check["path"] == path
+                && check["status"] == "pass"
+        }));
+    }
 }
 
 #[test]
@@ -61,7 +64,7 @@ fn status_check_json_failure_exits_nonzero() {
     };
     let value = serde_json::from_str::<serde_json::Value>(&output).unwrap();
     assert_eq!(value["surface"], "status");
-    assert_eq!(value["summary"]["fail"], 1);
+    assert_eq!(value["summary"]["fail"], 2);
     assert!(
         value["checks"]
             .as_array()
@@ -78,6 +81,7 @@ fn status_check_json_symlink_failure_exits_nonzero() {
     write_marker_docs(&root);
     let target = root.join(".cursor/skills/task-registry-flow");
     fs::create_dir_all(&target).unwrap();
+    fs::create_dir_all(root.join(".agents/skills/gap-closure-contract")).unwrap();
     let link = root.join(".agents/skills/task-registry-flow");
     fs::create_dir_all(link.parent().unwrap()).unwrap();
     std::os::unix::fs::symlink(&target, &link).unwrap();
@@ -105,7 +109,7 @@ fn status_check_json_symlink_failure_exits_nonzero() {
 #[test]
 fn status_check_json_missing_marker_failure_exits_nonzero() {
     let root = temp_root("status-json-missing-marker-failure");
-    fs::create_dir_all(root.join(".agents/skills/task-registry-flow")).unwrap();
+    create_native_agent_skills(&root);
     fs::write(root.join("AGENTS.md"), "custom agents\n").unwrap();
     fs::write(
         root.join("GEMINI.md"),
@@ -143,7 +147,7 @@ fn status_check_json_missing_marker_failure_exits_nonzero() {
 #[test]
 fn status_check_json_rejects_non_block_marker_tokens() {
     let root = temp_root("status-json-non-block-marker-failure");
-    fs::create_dir_all(root.join(".agents/skills/task-registry-flow")).unwrap();
+    create_native_agent_skills(&root);
     fs::write(
         root.join("AGENTS.md"),
         "mentions agent-governance:begin and agent-governance:end in prose\n",
@@ -185,7 +189,7 @@ fn status_check_json_rejects_non_block_marker_tokens() {
 #[test]
 fn status_check_json_rejects_stale_marker_content() {
     let root = temp_root("status-json-stale-marker-failure");
-    fs::create_dir_all(root.join(".agents/skills/task-registry-flow")).unwrap();
+    create_native_agent_skills(&root);
     let stale =
         "<!-- agent-governance:begin -->\nold managed block\n<!-- agent-governance:end -->\n";
     fs::write(root.join("AGENTS.md"), stale).unwrap();
@@ -231,6 +235,85 @@ fn status_check_fails_missing_native_skill_projection() {
 
     assert!(report.has_failures());
     assert_eq!(report.checks[0].check_id, "native-skill");
+}
+
+#[cfg(unix)]
+#[test]
+fn status_check_json_reports_stale_migration_layouts_with_remediation() {
+    let root = temp_root("status-json-stale-migration-layouts");
+    write_marker_docs(&root);
+    fs::create_dir_all(root.join(".cursor/skills")).unwrap();
+    fs::create_dir_all(root.join(".agents/skills")).unwrap();
+    std::os::unix::fs::symlink(
+        "../../.cursor/skills/gap-closure-contract",
+        root.join(".agents/skills/gap-closure-contract"),
+    )
+    .unwrap();
+    std::os::unix::fs::symlink(
+        "../../.cursor/skills/task-registry-flow",
+        root.join(".agents/skills/task-registry-flow"),
+    )
+    .unwrap();
+    for path in [
+        "hooks.json",
+        ".codex/settings.toml",
+        ".codex/hooks/user-plan-approval.toml",
+        ".gemini/settings.json",
+        "tools/antigravity/pre-tool-use-gap-closure.sh",
+    ] {
+        let full_path = root.join(path);
+        fs::create_dir_all(full_path.parent().unwrap()).unwrap();
+        fs::write(full_path, "legacy\n").unwrap();
+    }
+    let args = vec!["--format".to_string(), "json".to_string()];
+
+    let error = crate::status_checks::run_command(&root, &args)
+        .expect_err("stale migration layout must fail JSON status");
+
+    let crate::reports::RuntimeFailure::Json {
+        payload: output, ..
+    } = error
+    else {
+        panic!("status stale migration JSON failure must preserve raw JSON");
+    };
+    let value = serde_json::from_str::<serde_json::Value>(&output).unwrap();
+    assert_eq!(value["surface"], "status");
+    assert_eq!(value["summary"]["fail"], 7);
+    for path in [
+        ".agents/skills/gap-closure-contract",
+        ".agents/skills/task-registry-flow",
+    ] {
+        assert!(value["checks"].as_array().unwrap().iter().any(|check| {
+            check["check_id"] == "native-skill"
+                && check["path"] == path
+                && check["status"] == "fail"
+                && check["remediation"] == "replace legacy skill symlink with native directory"
+        }));
+    }
+    for path in [
+        "hooks.json",
+        ".codex/settings.toml",
+        ".codex/hooks/user-plan-approval.toml",
+        ".gemini/settings.json",
+        "tools/antigravity/pre-tool-use-gap-closure.sh",
+    ] {
+        assert!(value["checks"].as_array().unwrap().iter().any(|check| {
+            check["check_id"] == "stale-legacy-path"
+                && check["path"] == path
+                && check["actual"] == "present"
+                && check["status"] == "fail"
+                && check["remediation"]
+                    .as_str()
+                    .unwrap()
+                    .contains("install-to-workspace --merge or --force")
+        }));
+    }
+}
+
+fn create_native_agent_skills(root: &Path) {
+    for skill in ["gap-closure-contract", "task-registry-flow"] {
+        fs::create_dir_all(root.join(".agents/skills").join(skill)).unwrap();
+    }
 }
 
 fn write_marker_docs(root: &Path) {

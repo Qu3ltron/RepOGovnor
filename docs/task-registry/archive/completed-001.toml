@@ -4,6 +4,13 @@ archive_id = "completed-001"
 archive_authority = "docs/task-registry/archive/completed-001.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-06-01-migration-preflight-diagnostics"
+plan_path = "docs/plans/migration-preflight-diagnostics-2026-06-01.md"
+plan_hash_sha256 = "00bf9b4b3ccca500cd8775716fa09ccaa5754a7f0acfe93ca76ecabe7ebaf3f9"
+activated_at = "2026-06-01"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-06-01-reviewer-report"
 plan_path = "docs/plans/reviewer-report-2026-06-01.md"
 plan_hash_sha256 = "3a79a250dcaf6ed428f09122eccd27665cf42f1a4136da7c705074271362f566"
@@ -38,12 +45,51 @@ plan_hash_sha256 = "689ff93a507500d0e687c7fe26a674f308b6409c25c605126c7a3dc70326
 activated_at = "2026-06-01"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-06-01-patch-release-2-0-2"
-plan_path = "docs/plans/patch-release-2-0-2-2026-06-01.md"
-plan_hash_sha256 = "422a7e5b9cfec24f1d0ef05193d017dd8f67efb0c859be29c183e0cd30579402"
-activated_at = "2026-06-01"
+[[tasks]]
+task_id = "TASK-2026-06-01-migration-preflight-001"
+plan_id = "PLAN-2026-06-01-migration-preflight-diagnostics"
 status = "completed"
+title = "Add migration preflight diagnostics"
+kind = "migration"
+source_plan_path = "docs/plans/migration-preflight-diagnostics-2026-06-01.md"
+source_plan_hash_sha256 = "00bf9b4b3ccca500cd8775716fa09ccaa5754a7f0acfe93ca76ecabe7ebaf3f9"
+reason = "GP-003 needs targeted old-layout diagnostics before broader public migration."
+acceptance_proof = "Behaviors B-2026-06-01-migration-preflight-positive and B-2026-06-01-migration-preflight-negative pass."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "B-2026-06-01-migration-preflight-positive",
+    "B-2026-06-01-migration-preflight-negative",
+    "B-2026-06-01-migration-fixture-validation",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T15:11:57.167266735-04:00"
+completion_changed_files = [
+    "docs/gap-pipeline.md",
+    "rust/task-registry-flow-cli/src/status_checks.rs",
+    "rust/task-registry-flow-cli/src/tests/status_check_tests.rs",
+    "scripts/test-install-modes.sh",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/status_checks.rs"
+object = "migration_preflight_checks"
+required_change = "Report stale legacy paths and both required native .agents skill projections."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/status_check_tests.rs"
+object = "migration_preflight_tests"
+required_change = "Assert clean v2 success and stale old-layout remediation failures."
+
+[[tasks.targets]]
+file = "scripts/test-install-modes.sh"
+object = "old_layout_fixture"
+required_change = "Seed additional stale hook/settings layouts and assert merge/force removal."
+
+[[tasks.targets]]
+file = "docs/gap-pipeline.md"
+object = "GP-003"
+required_change = "Update GP-003 with current migration preflight evidence and remaining reactivation conditions."
 
 [[tasks]]
 task_id = "TASK-2026-06-01-reviewer-report-001"
@@ -355,110 +401,6 @@ required_change = "Prove typed command, hook format, receipt/event schema, and f
 
 [[tasks.targets]]
 file = "docs/plans/runtime-typed-surface-closure-2026-06-01.md"
-object = "closure contract"
-required_change = "Track approved scope, behavior verifiers, and validation evidence."
-
-[[tasks.targets]]
-file = "docs/task-registry.toml"
-object = "task registry activation and landing"
-required_change = "Record this plan state through task-registry CLI only."
-
-[[tasks.targets]]
-file = "docs/task-registry/events.jsonl"
-object = "task registry receipts"
-required_change = "Append activation and landing receipts through task-registry CLI only."
-
-[[tasks.targets]]
-file = "docs/task-registry/archive/"
-object = "completed task archives"
-required_change = "Archive completed task rows after landing."
-
-[[tasks]]
-task_id = "TASK-2026-06-01-patch-release-2-0-2-001"
-plan_id = "PLAN-2026-06-01-patch-release-2-0-2"
-status = "completed"
-title = "Prepare and validate patch release 2.0.2"
-kind = "implementation"
-source_plan_path = "docs/plans/patch-release-2-0-2-2026-06-01.md"
-source_plan_hash_sha256 = "422a7e5b9cfec24f1d0ef05193d017dd8f67efb0c859be29c183e0cd30579402"
-reason = "The existing public 2.0.1 release predates blocker fixes now required for public consumption."
-acceptance_proof = "Behaviors B-001 and B-002."
-created_at = "2026-06-01"
-updated_at = "2026-06-01"
-behavior_ids = [
-    "B-001-version-positive",
-    "B-002-readiness-negative",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-06-01T12:52:13.575020246-04:00"
-completion_changed_files = [
-    ".codex-plugin/plugin.json",
-    "CHANGELOG.md",
-    "MANIFEST.toml",
-    "README.md",
-    "REQUIREMENTS.toml",
-    "VERSION",
-    "docs/plans/patch-release-2-0-2-2026-06-01.md",
-    "docs/task-registry.toml",
-    "docs/task-registry/events.jsonl",
-    "package.nix",
-    "plugin.json",
-    "rust/task-registry-flow-cli/Cargo.lock",
-    "rust/task-registry-flow-cli/Cargo.toml",
-]
-
-[[tasks.targets]]
-file = "VERSION"
-object = "release version"
-required_change = "Set patch release version to 2.0.2."
-
-[[tasks.targets]]
-file = "plugin.json"
-object = "plugin version"
-required_change = "Set patch release version to 2.0.2."
-
-[[tasks.targets]]
-file = ".codex-plugin/plugin.json"
-object = "Codex plugin version"
-required_change = "Set patch release version to 2.0.2."
-
-[[tasks.targets]]
-file = "MANIFEST.toml"
-object = "plugin_version"
-required_change = "Set patch release version to 2.0.2."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/Cargo.toml"
-object = "crate version"
-required_change = "Set patch release version to 2.0.2."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/Cargo.lock"
-object = "crate lock version"
-required_change = "Regenerate after the crate version bump."
-
-[[tasks.targets]]
-file = "package.nix"
-object = "Nix package version"
-required_change = "Set patch release version to 2.0.2."
-
-[[tasks.targets]]
-file = "REQUIREMENTS.toml"
-object = "release source version"
-required_change = "Set expected release source version to 2.0.2."
-
-[[tasks.targets]]
-file = "README.md"
-object = "current release"
-required_change = "Set current release to 2.0.2."
-
-[[tasks.targets]]
-file = "CHANGELOG.md"
-object = "patch release notes"
-required_change = "Document post-2.0.1 release blocker fixes."
-
-[[tasks.targets]]
-file = "docs/plans/patch-release-2-0-2-2026-06-01.md"
 object = "closure contract"
 required_change = "Track approved scope, behavior verifiers, and validation evidence."
 

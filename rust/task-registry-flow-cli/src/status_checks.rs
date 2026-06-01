@@ -8,6 +8,17 @@ const MARKER_BEGIN: &str = "<!-- agent-governance:begin -->";
 const MARKER_END: &str = "<!-- agent-governance:end -->";
 const MARKER_HEADING: &str = "## Agent governance (portable plugin)";
 const MARKER_SOURCE_LIMIT: &str = "Source limit";
+const NATIVE_SKILL_PATHS: &[&str] = &[
+    ".agents/skills/gap-closure-contract",
+    ".agents/skills/task-registry-flow",
+];
+const STALE_LEGACY_PATHS: &[&str] = &[
+    "hooks.json",
+    ".codex/settings.toml",
+    ".codex/hooks/user-plan-approval.toml",
+    ".gemini/settings.json",
+    "tools/antigravity/pre-tool-use-gap-closure.sh",
+];
 
 pub(crate) fn run_command(root: &Path, args: &[String]) -> RuntimeResult<String> {
     let json = match args {
@@ -15,16 +26,20 @@ pub(crate) fn run_command(root: &Path, args: &[String]) -> RuntimeResult<String>
         [flag, format] if flag == "--format" && format == "json" => true,
         _ => return Err("usage: task-registry-flow status-check [--format json]".into()),
     };
-    let skill_path = ".agents/skills/task-registry-flow";
-    let path = root.join(skill_path);
-    let report = report(
-        ReportSurface::Status,
-        vec![
-            marker_check(root, "AGENTS.md"),
-            marker_check(root, "GEMINI.md"),
-            native_skill_check(skill_path, path.is_dir() && !path.is_symlink()),
-        ],
-    )?;
+    let mut checks = vec![
+        marker_check(root, "AGENTS.md"),
+        marker_check(root, "GEMINI.md"),
+    ];
+    checks.extend(NATIVE_SKILL_PATHS.iter().map(|skill_path| {
+        let path = root.join(skill_path);
+        native_skill_check(skill_path, path.is_dir() && !path.is_symlink())
+    }));
+    checks.extend(
+        STALE_LEGACY_PATHS
+            .iter()
+            .map(|stale_path| stale_path_check(root, stale_path)),
+    );
+    let report = report(ReportSurface::Status, checks)?;
     if json {
         let output = report.to_json()?;
         if report.has_failures() {
@@ -39,6 +54,27 @@ pub(crate) fn run_command(root: &Path, args: &[String]) -> RuntimeResult<String>
             "status-check ok: {} pass, {} fail",
             report.summary.pass, report.summary.fail
         ))
+    }
+}
+
+pub(crate) fn stale_path_check(root: &Path, path: &str) -> Diagnostic {
+    let full_path = root.join(path);
+    if full_path.exists() || full_path.is_symlink() {
+        Diagnostic::fail(
+            "stale-legacy-path",
+            ReportSurface::Status,
+            path,
+            "stale legacy path absent",
+            "present",
+            "run install-to-workspace --merge or --force to remove stale v0.x/v1 governance layout",
+        )
+    } else {
+        Diagnostic::pass(
+            "stale-legacy-path",
+            ReportSurface::Status,
+            path,
+            "stale legacy path absent",
+        )
     }
 }
 
