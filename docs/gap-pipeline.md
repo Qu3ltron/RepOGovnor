@@ -67,14 +67,16 @@ or that every future integration exists.
 
 ### GP-004: Multi-repo governance remains manual
 - Claim pressure: the plugin is portable and usable across agents and repos.
-- Current evidence: one repo can install and validate local governance; there
-  is no first-class multi-repo policy or status aggregation.
-- User impact: teams with several repos must coordinate versions, evidence, and
-  policy posture by convention.
-- Next closure: define a multi-repo consumption model or explicitly document
-  the manual boundary.
+- Current evidence: `docs/multi-repo.md` now documents the manual boundary:
+  one install per repo, independent plugin pinning, per-repo posture checks,
+  per-repo `reviewer-report`, and no shipped fleet aggregator. The doc is a
+  required release file and packaged asset.
+- User impact: teams with several repos have an honest consumption model and
+  know which coordination remains manual.
+- Next closure: design shared release pinning, cross-repo status aggregation, or
+  organization drift detection only after a second production repo needs it.
 - Reactivation condition: when a second production consumer repo needs shared
-  release pinning or cross-repo status.
+  release pinning, central review summaries, or cross-repo status.
 
 ### GP-005: Product correctness remains out of scope
 - Claim pressure: governance checks can look stronger than they are.

@@ -82,6 +82,7 @@ required = [
   "SECURITY.md",
   "docs/migration-v2.md",
   "docs/example-workflow.md",
+  "docs/multi-repo.md",
   "MANIFEST.toml",
   "REQUIREMENTS.toml",
   "plugin.json",

@@ -259,6 +259,7 @@ For release verification of this plugin itself:
 - `REQUIREMENTS.toml` - files a consumer repo must commit after install
 - `docs/migration-v2.md` - existing workspace migration guide
 - `docs/example-workflow.md` - minimal plan-to-report workflow
+- `docs/multi-repo.md` - manual boundary for teams using several repos
 - `docs/releases/v2.md` - v2 release and migration notes
 - `docs/runtime-schemas.md` - structured runtime report and verifier schemas
 - `VISION.md` - why this exists and where it is going

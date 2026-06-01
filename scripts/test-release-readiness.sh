@@ -77,9 +77,13 @@ check_artifacts() {
   grep -q 'docs/releases/v2.md' "$ROOT/README.md"
   grep -q 'VISION.md' "$ROOT/README.md"
   grep -q 'ROADMAP.md' "$ROOT/README.md"
+  grep -q 'docs/multi-repo.md' "$ROOT/README.md"
   grep -q 'Primary users' "$ROOT/VISION.md"
   grep -q 'Known gaps' "$ROOT/ROADMAP.md"
   grep -q 'Runtime Schemas' "$ROOT/docs/runtime-schemas.md"
+  grep -q 'one install per repo' "$ROOT/docs/multi-repo.md"
+  grep -q 'No fleet aggregator' "$ROOT/docs/multi-repo.md"
+  grep -q 'reviewer-report' "$ROOT/docs/multi-repo.md"
   grep -q 'agent-governance:begin' "$ROOT/templates/AGENTS.md.template"
   grep -q 'agent-governance:end' "$ROOT/templates/AGENTS.md.template"
   grep -q 'agent-governance:begin' "$ROOT/templates/GEMINI.md.template"
@@ -435,6 +439,7 @@ check_nix_package() {
   test -f "$out/share/agent-governance/REQUIREMENTS.toml"
   test -f "$out/share/agent-governance/project.config.example.toml"
   test -f "$out/share/agent-governance/docs/runtime-schemas.md"
+  test -f "$out/share/agent-governance/docs/multi-repo.md"
   ! grep -R '/home/hasnamuss' \
     "$out/bin" \
     "$out/share/agent-governance/templates" \
