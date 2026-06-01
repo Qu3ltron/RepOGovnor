@@ -47,6 +47,9 @@ Registry work uses the plugin-owned Rust CLI at `.codex/scripts/task-registry`. 
   declared in `REQUIREMENTS.toml`.
 - Final release validation forbids local waiver variables; use
   `AGENT_GOVERNANCE_FINAL_RELEASE=1` for release posture checks.
+- Version governance allows automation to push prerelease branch state and
+  `vX.Y.Z-rc.N` tags only. Final `vX.Y.Z` tags, final tag pushes, GitHub
+  Releases, and public release publication remain manual.
 - Zero backwards compatibility: do not add legacy shims, old hook paths, or
   workspace settings compatibility.
 

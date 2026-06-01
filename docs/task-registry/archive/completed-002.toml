@@ -4,6 +4,13 @@ archive_id = "completed-002"
 archive_authority = "docs/task-registry/archive/completed-002.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-06-01-adoption-docs"
+plan_path = "docs/plans/adoption-docs-2026-06-01.md"
+plan_hash_sha256 = "bad39efb5202ecf995fb5cb3772c3611fee07dfcf49720c226cee4397172ddd3"
+activated_at = "2026-06-01"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-06-01-proof-boundary-docs"
 plan_path = "docs/plans/proof-boundary-docs-2026-06-01.md"
 plan_hash_sha256 = "4be58f1eaa5deeb9895970862ad67266e99fb83777b4cc0fa92e8ed533bab8a4"
@@ -38,12 +45,62 @@ plan_hash_sha256 = "4c7f53dd8c3f68457a50b693499893cc1eb6f004d13a0605a73809e9762a
 activated_at = "2026-06-01"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-06-01-archive-line-budget"
-plan_path = "docs/plans/archive-line-budget-2026-06-01.md"
-plan_hash_sha256 = "de8a6769abcc5ab6ec73ff209ea004601970e282885f2b9b1b053bf1598281a1"
-activated_at = "2026-06-01"
+[[tasks]]
+task_id = "TASK-2026-06-01-adoption-docs-001"
+plan_id = "PLAN-2026-06-01-adoption-docs"
 status = "completed"
+title = "Add packaged adoption guidance"
+kind = "documentation"
+source_plan_path = "docs/plans/adoption-docs-2026-06-01.md"
+source_plan_hash_sha256 = "bad39efb5202ecf995fb5cb3772c3611fee07dfcf49720c226cee4397172ddd3"
+reason = "Public users need a concise migration guide and minimal workflow example before broader next-version release work."
+acceptance_proof = "Behaviors B-001-adoption-docs-positive and B-002-adoption-docs-negative."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "B-001-adoption-docs-positive",
+    "B-002-adoption-docs-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T14:46:09.650434451-04:00"
+completion_changed_files = [
+    "README.md",
+    "REQUIREMENTS.toml",
+    "docs/example-workflow.md",
+    "docs/gap-pipeline.md",
+    "docs/migration-v2.md",
+    "package.nix",
+]
+
+[[tasks.targets]]
+file = "docs/migration-v2.md"
+object = "migration_guide"
+required_change = "Add concise v2 migration guide for existing workspaces."
+
+[[tasks.targets]]
+file = "docs/example-workflow.md"
+object = "example_workflow"
+required_change = "Add minimal plan to landing workflow example."
+
+[[tasks.targets]]
+file = "README.md"
+object = "Files users should know"
+required_change = "Link the new adoption docs."
+
+[[tasks.targets]]
+file = "docs/gap-pipeline.md"
+object = "GP-001"
+required_change = "Record closed documentation evidence and leave installer output as pending."
+
+[[tasks.targets]]
+file = "REQUIREMENTS.toml"
+object = "release_source.required"
+required_change = "Require the new adoption docs as release-source files."
+
+[[tasks.targets]]
+file = "package.nix"
+object = "runtime docs assets"
+required_change = "Install the new adoption docs in the packaged asset root."
 
 [[tasks]]
 task_id = "TASK-2026-06-01-proof-boundary-docs-001"
@@ -391,76 +448,3 @@ required_change = "Append activation and landing receipts through task-registry 
 file = "docs/task-registry/archive/"
 object = "completed task archives"
 required_change = "Archive completed task rows after landing."
-
-[[tasks]]
-task_id = "TASK-2026-06-01-archive-line-budget-001"
-plan_id = "PLAN-2026-06-01-archive-line-budget"
-status = "completed"
-title = "Keep generated registry archives under source limit"
-kind = "implementation"
-source_plan_path = "docs/plans/archive-line-budget-2026-06-01.md"
-source_plan_hash_sha256 = "de8a6769abcc5ab6ec73ff209ea004601970e282885f2b9b1b053bf1598281a1"
-reason = "CI install smoke failed because generated completed archive files exceeded the source line limit."
-acceptance_proof = "Behaviors B-001 and B-002."
-created_at = "2026-06-01"
-updated_at = "2026-06-01"
-behavior_ids = [
-    "B-001-archive-budget-positive",
-    "B-002-install-source-limit-negative",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-06-01T12:11:36.353986792-04:00"
-completion_changed_files = [
-    "REQUIREMENTS.toml",
-    "docs/plans/archive-line-budget-2026-06-01.md",
-    "docs/task-registry.toml",
-    "docs/task-registry/archive/completed-001.toml",
-    "docs/task-registry/archive/completed-002.toml",
-    "docs/task-registry/archive/completed-003.toml",
-    "docs/task-registry/archive/completed-004.toml",
-    "docs/task-registry/archive/completed-005.toml",
-    "docs/task-registry/events.jsonl",
-    "rust/task-registry-flow-cli/src/model.rs",
-    "rust/task-registry-flow-cli/src/tests/archive_tests.rs",
-    "rust/task-registry-flow-cli/src/tests/mod.rs",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/model.rs"
-object = "archive chunk size"
-required_change = "Reduce completed-plan archive chunk size to keep generated archive files under source limit."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/archive_tests.rs"
-object = "archive source-limit regression"
-required_change = "Assert archive-completed generates archive files at or below SOURCE_LINE_LIMIT."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/mod.rs"
-object = "test module list"
-required_change = "Include archive_tests."
-
-[[tasks.targets]]
-file = "REQUIREMENTS.toml"
-object = "release_source.required"
-required_change = "Declare archive_tests as release source."
-
-[[tasks.targets]]
-file = "docs/plans/archive-line-budget-2026-06-01.md"
-object = "closure contract"
-required_change = "Track approved scope, behavior verifiers, and validation evidence."
-
-[[tasks.targets]]
-file = "docs/task-registry.toml"
-object = "task registry activation and landing"
-required_change = "Record this plan state through task-registry CLI only."
-
-[[tasks.targets]]
-file = "docs/task-registry/events.jsonl"
-object = "task registry receipts"
-required_change = "Append activation and landing receipts through task-registry CLI only."
-
-[[tasks.targets]]
-file = "docs/task-registry/archive/"
-object = "completed task archives"
-required_change = "Regenerate completed archives with all files below the source line limit."

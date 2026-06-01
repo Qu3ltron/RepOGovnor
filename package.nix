@@ -29,7 +29,7 @@ let
 in
 rustPlatform.buildRustPackage {
   pname = "task-registry-flow";
-  version = "2.0.2";
+  version = "2.1.0";
 
   src = govSrc;
 
@@ -79,6 +79,8 @@ rustPlatform.buildRustPackage {
     cp ${./docs/migration-v2.md} "$asset_root/docs/migration-v2.md"
     cp ${./docs/example-workflow.md} "$asset_root/docs/example-workflow.md"
     cp ${./docs/multi-repo.md} "$asset_root/docs/multi-repo.md"
+    cp ${./docs/versioning.md} "$asset_root/docs/versioning.md"
+    cp ${./docs/version-roadmap.toml} "$asset_root/docs/version-roadmap.toml"
     cp ${./docs/releases/v2.md} "$asset_root/docs/releases/v2.md"
   '';
 

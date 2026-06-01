@@ -92,6 +92,14 @@ or that every future integration exists.
 - Next closure: keep the same wording in any future PR integration or dashboard.
 - Reactivation condition: before publishing remote reviewer integrations.
 
+## Negative Non-Claims
+
+- No automatic final release publication is provided by RepOGovnor.
+- No automatic final release tag push is provided by RepOGovnor.
+- No product correctness proof is created by governance checks alone.
+- No hosted fleet governance is shipped in this release.
+- No remote receipt sync is shipped in this release.
+
 ## Drain protocol
 
 1. Pick one gap by id and write a new `docs/plans/<slug>.md` closure contract.

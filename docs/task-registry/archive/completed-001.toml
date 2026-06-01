@@ -4,6 +4,13 @@ archive_id = "completed-001"
 archive_authority = "docs/task-registry/archive/completed-001.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-06-01-version-backlog-governance"
+plan_path = "docs/plans/version-backlog-governance-2026-06-01.md"
+plan_hash_sha256 = "c626f9522d88805958b26335a302510407067b4d61ba8f41fba361924a73b555"
+activated_at = "2026-06-01"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-06-01-reviewer-markdown-format"
 plan_path = "docs/plans/reviewer-markdown-format-2026-06-01.md"
 plan_hash_sha256 = "41c3b0a5a76a8825f43bc52f0b5f7d241db9ab82e5ba34fa32f60a9fb28f451f"
@@ -38,12 +45,392 @@ plan_hash_sha256 = "3a79a250dcaf6ed428f09122eccd27665cf42f1a4136da7c705074271362
 activated_at = "2026-06-01"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-06-01-adoption-docs"
-plan_path = "docs/plans/adoption-docs-2026-06-01.md"
-plan_hash_sha256 = "bad39efb5202ecf995fb5cb3772c3611fee07dfcf49720c226cee4397172ddd3"
-activated_at = "2026-06-01"
+[[tasks]]
+task_id = "TASK-2026-06-01-VBG-001"
+plan_id = "PLAN-2026-06-01-version-backlog-governance"
 status = "completed"
+title = "Activate version and backlog governance plan"
+kind = "governance"
+source_plan_path = "docs/plans/version-backlog-governance-2026-06-01.md"
+source_plan_hash_sha256 = "c626f9522d88805958b26335a302510407067b4d61ba8f41fba361924a73b555"
+reason = "The approved scope needs task-bound provenance before implementation edits."
+acceptance_proof = "Behavior VBG-B-006-plan-activation-positive."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = ["VBG-B-006-plan-activation-positive"]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T18:09:58.484380039-04:00"
+completion_changed_files = [
+    ".codex-plugin/plugin.json",
+    "AGENTS.md",
+    "CHANGELOG.md",
+    "CLAUDE.md",
+    "GEMINI.md",
+    "MANIFEST.toml",
+    "README.md",
+    "REQUIREMENTS.toml",
+    "VERSION",
+    "docs/gap-pipeline.md",
+    "docs/plans/version-backlog-governance-2026-06-01.md",
+    "docs/releases/v2.md",
+    "docs/runtime-schemas.md",
+    "docs/task-registry.toml",
+    "docs/version-roadmap.toml",
+    "docs/versioning.md",
+    "package.nix",
+    "plugin.json",
+    "rust/task-registry-flow-cli/Cargo.lock",
+    "rust/task-registry-flow-cli/Cargo.toml",
+    "rust/task-registry-flow-cli/src/backlog_check.rs",
+    "rust/task-registry-flow-cli/src/main.rs",
+    "rust/task-registry-flow-cli/src/runtime.rs",
+    "rust/task-registry-flow-cli/src/schema.rs",
+    "rust/task-registry-flow-cli/src/tests/backlog_check_tests.rs",
+    "rust/task-registry-flow-cli/src/tests/mod.rs",
+    "rust/task-registry-flow-cli/src/tests/version_check_tests.rs",
+    "rust/task-registry-flow-cli/src/version_check.rs",
+    "templates/AGENTS.md.template",
+    "templates/CLAUDE.md.template",
+    "templates/GEMINI.md.template",
+]
+
+[[tasks.targets]]
+file = "docs/plans/version-backlog-governance-2026-06-01.md"
+object = "closure_contract"
+required_change = "Capture approved scope, behaviors, validation, and task targets."
+
+[[tasks.targets]]
+file = "docs/task-registry.toml"
+object = "task_registry"
+required_change = "Activate and complete this plan through registry CLI."
+
+[[tasks]]
+task_id = "TASK-2026-06-01-VBG-002"
+plan_id = "PLAN-2026-06-01-version-backlog-governance"
+status = "completed"
+title = "Implement version governance"
+kind = "implementation"
+source_plan_path = "docs/plans/version-backlog-governance-2026-06-01.md"
+source_plan_hash_sha256 = "c626f9522d88805958b26335a302510407067b4d61ba8f41fba361924a73b555"
+reason = "Release authority must catch post-tag governed work and forbid automatic final release."
+acceptance_proof = "Behaviors VBG-B-001-version-positive and VBG-B-002-version-negative."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "VBG-B-001-version-positive",
+    "VBG-B-002-version-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T18:09:58.484380039-04:00"
+completion_changed_files = [
+    ".codex-plugin/plugin.json",
+    "AGENTS.md",
+    "CHANGELOG.md",
+    "CLAUDE.md",
+    "GEMINI.md",
+    "MANIFEST.toml",
+    "README.md",
+    "REQUIREMENTS.toml",
+    "VERSION",
+    "docs/gap-pipeline.md",
+    "docs/plans/version-backlog-governance-2026-06-01.md",
+    "docs/releases/v2.md",
+    "docs/runtime-schemas.md",
+    "docs/task-registry.toml",
+    "docs/version-roadmap.toml",
+    "docs/versioning.md",
+    "package.nix",
+    "plugin.json",
+    "rust/task-registry-flow-cli/Cargo.lock",
+    "rust/task-registry-flow-cli/Cargo.toml",
+    "rust/task-registry-flow-cli/src/backlog_check.rs",
+    "rust/task-registry-flow-cli/src/main.rs",
+    "rust/task-registry-flow-cli/src/runtime.rs",
+    "rust/task-registry-flow-cli/src/schema.rs",
+    "rust/task-registry-flow-cli/src/tests/backlog_check_tests.rs",
+    "rust/task-registry-flow-cli/src/tests/mod.rs",
+    "rust/task-registry-flow-cli/src/tests/version_check_tests.rs",
+    "rust/task-registry-flow-cli/src/version_check.rs",
+    "templates/AGENTS.md.template",
+    "templates/CLAUDE.md.template",
+    "templates/GEMINI.md.template",
+]
+
+[[tasks.targets]]
+file = "docs/versioning.md"
+object = "version_governance"
+required_change = "Document Governed SemVer, prerelease automation, and manual final release."
+
+[[tasks.targets]]
+file = "docs/version-roadmap.toml"
+object = "version_roadmap"
+required_change = "Declare 2.1.0, covered plans, rc tag, final tag, and manual final release policy."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/version_check.rs"
+object = "version_check"
+required_change = "Implement validate, next, prerelease, and release-check."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/version_check_tests.rs"
+object = "version_check_tests"
+required_change = "Add positive and negative version governance tests."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/schema.rs"
+object = "cli_command"
+required_change = "Add version-check and backlog-check command variants."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/runtime.rs"
+object = "dispatcher"
+required_change = "Route version-check and backlog-check commands."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/main.rs"
+object = "module_registration"
+required_change = "Register version_check and backlog_check modules."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/mod.rs"
+object = "test_module_registration"
+required_change = "Register version_check_tests and backlog_check_tests modules."
+
+[[tasks]]
+task_id = "TASK-2026-06-01-VBG-003"
+plan_id = "PLAN-2026-06-01-version-backlog-governance"
+status = "completed"
+title = "Implement backlog governance"
+kind = "implementation"
+source_plan_path = "docs/plans/version-backlog-governance-2026-06-01.md"
+source_plan_hash_sha256 = "c626f9522d88805958b26335a302510407067b4d61ba8f41fba361924a73b555"
+reason = "The drainable gap pipeline needs executable required-field and overclaim checks."
+acceptance_proof = "Behaviors VBG-B-003-backlog-positive and VBG-B-004-backlog-negative."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "VBG-B-003-backlog-positive",
+    "VBG-B-004-backlog-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T18:09:58.484380039-04:00"
+completion_changed_files = [
+    ".codex-plugin/plugin.json",
+    "AGENTS.md",
+    "CHANGELOG.md",
+    "CLAUDE.md",
+    "GEMINI.md",
+    "MANIFEST.toml",
+    "README.md",
+    "REQUIREMENTS.toml",
+    "VERSION",
+    "docs/gap-pipeline.md",
+    "docs/plans/version-backlog-governance-2026-06-01.md",
+    "docs/releases/v2.md",
+    "docs/runtime-schemas.md",
+    "docs/task-registry.toml",
+    "docs/version-roadmap.toml",
+    "docs/versioning.md",
+    "package.nix",
+    "plugin.json",
+    "rust/task-registry-flow-cli/Cargo.lock",
+    "rust/task-registry-flow-cli/Cargo.toml",
+    "rust/task-registry-flow-cli/src/backlog_check.rs",
+    "rust/task-registry-flow-cli/src/main.rs",
+    "rust/task-registry-flow-cli/src/runtime.rs",
+    "rust/task-registry-flow-cli/src/schema.rs",
+    "rust/task-registry-flow-cli/src/tests/backlog_check_tests.rs",
+    "rust/task-registry-flow-cli/src/tests/mod.rs",
+    "rust/task-registry-flow-cli/src/tests/version_check_tests.rs",
+    "rust/task-registry-flow-cli/src/version_check.rs",
+    "templates/AGENTS.md.template",
+    "templates/CLAUDE.md.template",
+    "templates/GEMINI.md.template",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/backlog_check.rs"
+object = "backlog_check"
+required_change = "Validate gap pipeline required fields, reactivation conditions, and negative non-claims."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/backlog_check_tests.rs"
+object = "backlog_check_tests"
+required_change = "Add positive and negative backlog governance tests."
+
+[[tasks.targets]]
+file = "docs/gap-pipeline.md"
+object = "negative_non_claims"
+required_change = "Add executable required fields and negative non-claims."
+
+[[tasks]]
+task_id = "TASK-2026-06-01-VBG-004"
+plan_id = "PLAN-2026-06-01-version-backlog-governance"
+status = "completed"
+title = "Update release and agent surfaces"
+kind = "release"
+source_plan_path = "docs/plans/version-backlog-governance-2026-06-01.md"
+source_plan_hash_sha256 = "c626f9522d88805958b26335a302510407067b4d61ba8f41fba361924a73b555"
+reason = "New governance commands and release coverage must be public and package-tracked."
+acceptance_proof = "Behavior VBG-B-007-release-surface-positive."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = ["VBG-B-007-release-surface-positive"]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T18:09:58.484380039-04:00"
+completion_changed_files = [
+    ".codex-plugin/plugin.json",
+    "AGENTS.md",
+    "CHANGELOG.md",
+    "CLAUDE.md",
+    "GEMINI.md",
+    "MANIFEST.toml",
+    "README.md",
+    "REQUIREMENTS.toml",
+    "VERSION",
+    "docs/gap-pipeline.md",
+    "docs/plans/version-backlog-governance-2026-06-01.md",
+    "docs/releases/v2.md",
+    "docs/runtime-schemas.md",
+    "docs/task-registry.toml",
+    "docs/version-roadmap.toml",
+    "docs/versioning.md",
+    "package.nix",
+    "plugin.json",
+    "rust/task-registry-flow-cli/Cargo.lock",
+    "rust/task-registry-flow-cli/Cargo.toml",
+    "rust/task-registry-flow-cli/src/backlog_check.rs",
+    "rust/task-registry-flow-cli/src/main.rs",
+    "rust/task-registry-flow-cli/src/runtime.rs",
+    "rust/task-registry-flow-cli/src/schema.rs",
+    "rust/task-registry-flow-cli/src/tests/backlog_check_tests.rs",
+    "rust/task-registry-flow-cli/src/tests/mod.rs",
+    "rust/task-registry-flow-cli/src/tests/version_check_tests.rs",
+    "rust/task-registry-flow-cli/src/version_check.rs",
+    "templates/AGENTS.md.template",
+    "templates/CLAUDE.md.template",
+    "templates/GEMINI.md.template",
+]
+
+[[tasks.targets]]
+file = "VERSION"
+object = "release_version"
+required_change = "Set release version to 2.1.0."
+
+[[tasks.targets]]
+file = "plugin.json"
+object = "release_version"
+required_change = "Set release version to 2.1.0."
+
+[[tasks.targets]]
+file = ".codex-plugin/plugin.json"
+object = "release_version"
+required_change = "Set release version to 2.1.0."
+
+[[tasks.targets]]
+file = "MANIFEST.toml"
+object = "plugin_version"
+required_change = "Set plugin version and package new files."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/Cargo.toml"
+object = "package_version"
+required_change = "Set package version to 2.1.0."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/Cargo.lock"
+object = "package_version"
+required_change = "Set package version to 2.1.0."
+
+[[tasks.targets]]
+file = "package.nix"
+object = "package_version"
+required_change = "Set package version and package new docs."
+
+[[tasks.targets]]
+file = "README.md"
+object = "version_backlog_docs"
+required_change = "Document version-check, backlog-check, and prerelease-only automation."
+
+[[tasks.targets]]
+file = "docs/releases/v2.md"
+object = "release_docs"
+required_change = "Set release version and describe 2.1.0 governance commands."
+
+[[tasks.targets]]
+file = "docs/runtime-schemas.md"
+object = "runtime_docs"
+required_change = "Document version-check and backlog-check outputs."
+
+[[tasks.targets]]
+file = "CHANGELOG.md"
+object = "release_notes"
+required_change = "Add 2.1.0 release notes."
+
+[[tasks.targets]]
+file = "REQUIREMENTS.toml"
+object = "release_source"
+required_change = "Track new docs, Rust modules, and tests as release-source files."
+
+[[tasks.targets]]
+file = "AGENTS.md"
+object = "agent_version_policy"
+required_change = "Add prerelease-only automation and manual final release policy."
+
+[[tasks.targets]]
+file = "GEMINI.md"
+object = "agent_version_policy"
+required_change = "Mirror prerelease-only automation and manual final release policy."
+
+[[tasks.targets]]
+file = "CLAUDE.md"
+object = "agent_version_policy"
+required_change = "Mirror prerelease-only automation and manual final release policy."
+
+[[tasks.targets]]
+file = "templates/AGENTS.md.template"
+object = "agent_version_policy"
+required_change = "Template prerelease-only automation and manual final release policy."
+
+[[tasks.targets]]
+file = "templates/GEMINI.md.template"
+object = "agent_version_policy"
+required_change = "Template prerelease-only automation and manual final release policy."
+
+[[tasks.targets]]
+file = "templates/CLAUDE.md.template"
+object = "agent_version_policy"
+required_change = "Template prerelease-only automation and manual final release policy."
+
+[[tasks]]
+task_id = "TASK-2026-06-01-VBG-005"
+plan_id = "PLAN-2026-06-01-version-backlog-governance"
+status = "completed"
+title = "Validate and land version and backlog governance"
+kind = "validation"
+source_plan_path = "docs/plans/version-backlog-governance-2026-06-01.md"
+source_plan_hash_sha256 = "c626f9522d88805958b26335a302510407067b4d61ba8f41fba361924a73b555"
+reason = "This shared governance change must pass behavior, registry, chain, and release-readiness gates."
+acceptance_proof = "Behavior VBG-B-005-full-validation and final TASK_REPORT."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = ["VBG-B-005-full-validation"]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T18:19:19.787357870-04:00"
+completion_changed_files = [
+    "docs/plans/version-backlog-governance-2026-06-01.md",
+    "docs/task-registry.toml",
+]
+
+[[tasks.targets]]
+file = "docs/task-registry.toml"
+object = "landing_report"
+required_change = "Complete tasks through verify-landing, report, metrics, and archive if needed."
+
+[[tasks.targets]]
+file = "docs/plans/version-backlog-governance-2026-06-01.md"
+object = "validation_evidence"
+required_change = "Record final verifier evidence and behavior IDs for landing."
 
 [[tasks]]
 task_id = "TASK-2026-06-01-reviewer-markdown-format-001"
@@ -327,60 +714,3 @@ required_change = "Document reviewer report purpose and proof boundary."
 file = "docs/gap-pipeline.md"
 object = "GP-002 and GP-005"
 required_change = "Record compact reviewer report closure evidence and remaining PR integration gap."
-
-[[tasks]]
-task_id = "TASK-2026-06-01-adoption-docs-001"
-plan_id = "PLAN-2026-06-01-adoption-docs"
-status = "completed"
-title = "Add packaged adoption guidance"
-kind = "documentation"
-source_plan_path = "docs/plans/adoption-docs-2026-06-01.md"
-source_plan_hash_sha256 = "bad39efb5202ecf995fb5cb3772c3611fee07dfcf49720c226cee4397172ddd3"
-reason = "Public users need a concise migration guide and minimal workflow example before broader next-version release work."
-acceptance_proof = "Behaviors B-001-adoption-docs-positive and B-002-adoption-docs-negative."
-created_at = "2026-06-01"
-updated_at = "2026-06-01"
-behavior_ids = [
-    "B-001-adoption-docs-positive",
-    "B-002-adoption-docs-negative",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-06-01T14:46:09.650434451-04:00"
-completion_changed_files = [
-    "README.md",
-    "REQUIREMENTS.toml",
-    "docs/example-workflow.md",
-    "docs/gap-pipeline.md",
-    "docs/migration-v2.md",
-    "package.nix",
-]
-
-[[tasks.targets]]
-file = "docs/migration-v2.md"
-object = "migration_guide"
-required_change = "Add concise v2 migration guide for existing workspaces."
-
-[[tasks.targets]]
-file = "docs/example-workflow.md"
-object = "example_workflow"
-required_change = "Add minimal plan to landing workflow example."
-
-[[tasks.targets]]
-file = "README.md"
-object = "Files users should know"
-required_change = "Link the new adoption docs."
-
-[[tasks.targets]]
-file = "docs/gap-pipeline.md"
-object = "GP-001"
-required_change = "Record closed documentation evidence and leave installer output as pending."
-
-[[tasks.targets]]
-file = "REQUIREMENTS.toml"
-object = "release_source.required"
-required_change = "Require the new adoption docs as release-source files."
-
-[[tasks.targets]]
-file = "package.nix"
-object = "runtime docs assets"
-required_change = "Install the new adoption docs in the packaged asset root."

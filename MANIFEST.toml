@@ -1,6 +1,6 @@
 schema_version = 1
 plugin_name = "agent-governance"
-plugin_version = "2.0.2"
+plugin_version = "2.1.0"
 license = "MIT"
 portable = true
 

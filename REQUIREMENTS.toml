@@ -67,7 +67,7 @@ split_plan_command = ".codex/scripts/task-registry source-limit plan --path <fil
 design_rule = "Source, scripts, configs, docs, templates, and governance files must stay at or below 1600 lines. Use the split planner before adding behavior to a violating file."
 
 [release_source]
-version = "2.0.2"
+version = "2.1.0"
 status_command = "scripts/status.sh --release-source"
 version_check_command = "scripts/release-version-check.sh"
 audit_command = "scripts/release-audit.sh"
@@ -83,6 +83,8 @@ required = [
   "docs/migration-v2.md",
   "docs/example-workflow.md",
   "docs/multi-repo.md",
+  "docs/versioning.md",
+  "docs/version-roadmap.toml",
   "MANIFEST.toml",
   "REQUIREMENTS.toml",
   "plugin.json",
@@ -141,12 +143,16 @@ required = [
   "rust/task-registry-flow-cli/src/tests/status_check_tests.rs",
   "rust/task-registry-flow-cli/src/tests/typed_runtime_surface_tests.rs",
   "rust/task-registry-flow-cli/src/activation.rs",
+  "rust/task-registry-flow-cli/src/backlog_check.rs",
   "rust/task-registry-flow-cli/src/registry_io.rs",
   "rust/task-registry-flow-cli/src/validation.rs",
+  "rust/task-registry-flow-cli/src/version_check.rs",
   "rust/task-registry-flow-cli/src/verify_chain.rs",
   "rust/task-registry-flow-cli/src/verifiers.rs",
   "rust/task-registry-flow-cli/src/tests/activation_terminal_tests.rs",
+  "rust/task-registry-flow-cli/src/tests/backlog_check_tests.rs",
   "rust/task-registry-flow-cli/src/tests/state_transition_tests.rs",
+  "rust/task-registry-flow-cli/src/tests/version_check_tests.rs",
   "rust/task-registry-flow-cli/src/tests/verify_chain_tests.rs",
   "scripts/install-to-workspace.sh",
   "scripts/render-from-config.sh",

@@ -58,6 +58,8 @@ string_enum!(CliCommand {
     Defer => "defer",
     Report => "report",
     ReviewerReport => "reviewer-report",
+    VersionCheck => "version-check",
+    BacklogCheck => "backlog-check",
     ArchiveCompleted => "archive-completed",
     VerifyBehaviors => "verify-behaviors",
     VerifyLanding => "verify-landing",
@@ -93,6 +95,8 @@ string_enum!(ReportSurface {
     SourceLimit => "source-limit",
     SourceLimitPlan => "source-limit-plan",
     Status => "status",
+    Version => "version",
+    Backlog => "backlog",
     ReceiptChain => "receipt-chain",
     ReceiptChainFix => "receipt-chain-fix",
 });

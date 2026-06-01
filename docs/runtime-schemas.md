@@ -27,6 +27,8 @@ diagnostic payload:
 .codex/scripts/task-registry metrics --format json
 .codex/scripts/task-registry install plan --format json
 .codex/scripts/task-registry status-check --format json
+.codex/scripts/task-registry version-check validate --format json
+.codex/scripts/task-registry backlog-check --format json
 ```
 
 For command-specific diagnostic JSON, failures still emit the raw diagnostic
@@ -39,6 +41,14 @@ Known command values are the `CliCommand` enum values in the CLI help. Unknown
 command strings fail before execution. Known `failure_code` values are:
 `usage`, `runtime`, `serialization`, `receipt-append`, and
 `diagnostic-report`.
+
+`version-check` emits diagnostic reports on the `version` surface. It validates
+release surfaces, the version roadmap, completed-plan coverage, prerelease
+metadata, and final tag state when `release-check` is requested.
+
+`backlog-check` emits diagnostic reports on the `backlog` surface. It validates
+the drainable gap pipeline, required gap fields, reactivation conditions, and
+negative non-claims.
 
 ## Receipt Event
 
@@ -101,6 +111,9 @@ Runtime checks fail closed when provenance cannot be proven:
 - Release-source gates are manifest-backed through `REQUIREMENTS.toml`.
   Required files must be native files, not symlinks.
 - Final release mode forbids local waiver variables.
+- Prerelease automation may push only branch state and `vX.Y.Z-rc.N` tags.
+  Final `vX.Y.Z` release tagging, tag push, GitHub Release creation, and public
+  publication remain manual.
 
 ## Diagnostic Report
 

@@ -4,6 +4,13 @@ archive_id = "completed-007"
 archive_authority = "docs/task-registry/archive/completed-007.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-05-30-activation-plan-structure-hardening"
+plan_path = "docs/plans/activation-plan-structure-hardening.md"
+plan_hash_sha256 = "ed3f0a7bbfb0bc6305fd4483137938cbf99c96f6e58591b796a0c96a846dea07"
+activated_at = "2026-05-30"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-05-30-runtime-schema-production-closures"
 plan_path = "docs/plans/runtime-schema-production-closures.md"
 plan_hash_sha256 = "42d740341582e42d50a6db91b98948d5f982dac6572ccf3db7a4bb5a73f9a245"
@@ -30,6 +37,199 @@ plan_path = "docs/plans/production-gap-closures.md"
 plan_hash_sha256 = "bdb7cbbd8a51f42ef5759d9c877501a5ad8460690ba547e6c39fc679fcef721d"
 activated_at = "2026-05-30"
 status = "completed"
+
+[[tasks]]
+task_id = "TASK-2026-05-30-activation-plan-001"
+plan_id = "PLAN-2026-05-30-activation-plan-structure-hardening"
+status = "completed"
+title = "Enforce strict v2 plan contract"
+kind = "schema"
+source_plan_path = "docs/plans/activation-plan-structure-hardening.md"
+source_plan_hash_sha256 = "ed3f0a7bbfb0bc6305fd4483137938cbf99c96f6e58591b796a0c96a846dea07"
+reason = "Production closures need schema-backed plan quality gates before activation"
+acceptance_proof = "Behaviors B-2026-05-30-plan-structure-positive and B-2026-05-30-plan-structure-negative pass"
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = [
+    "B-2026-05-30-plan-structure-positive",
+    "B-2026-05-30-plan-structure-negative",
+    "B-2026-05-30-placeholder-positive",
+    "B-2026-05-30-placeholder-negative",
+    "B-2026-05-30-behavior-metadata-positive",
+    "B-2026-05-30-behavior-metadata-negative",
+    "B-2026-05-30-validation-only-positive",
+    "B-2026-05-30-validation-only-negative",
+    "B-2026-05-30-target-positive",
+    "B-2026-05-30-target-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/schema.rs"
+object = "behavior_polarity_schema"
+required_change = "Add typed behavior polarity vocabulary."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/model.rs"
+object = "behavior_metadata"
+required_change = "Add v2 gap_id and polarity behavior metadata fields."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/plan_contract.rs"
+object = "activation_plan_contract_validator"
+required_change = "Validate required phased sections, placeholders, gap coverage, and task behavior closure semantics."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/main.rs"
+object = "activation_validation_flow"
+required_change = "Call plan-contract validation during activation and registry validation."
+
+[[tasks]]
+task_id = "TASK-2026-05-30-activation-plan-002"
+plan_id = "PLAN-2026-05-30-activation-plan-structure-hardening"
+status = "completed"
+title = "Add positive and negative activation tests"
+kind = "test"
+source_plan_path = "docs/plans/activation-plan-structure-hardening.md"
+source_plan_hash_sha256 = "ed3f0a7bbfb0bc6305fd4483137938cbf99c96f6e58591b796a0c96a846dea07"
+reason = "Activation hardening must prove good plans pass and weak plans fail"
+acceptance_proof = "Behaviors B-2026-05-30-plan-structure-positive and B-2026-05-30-plan-structure-negative pass"
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = [
+    "B-2026-05-30-plan-structure-positive",
+    "B-2026-05-30-plan-structure-negative",
+    "B-2026-05-30-placeholder-positive",
+    "B-2026-05-30-placeholder-negative",
+    "B-2026-05-30-behavior-metadata-positive",
+    "B-2026-05-30-behavior-metadata-negative",
+    "B-2026-05-30-validation-only-positive",
+    "B-2026-05-30-validation-only-negative",
+    "B-2026-05-30-target-positive",
+    "B-2026-05-30-target-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests.rs"
+object = "activation_plan_contract_tests"
+required_change = "Add positive and negative tests for strict plan activation behavior."
+
+[[tasks]]
+task_id = "TASK-2026-05-30-activation-plan-003"
+plan_id = "PLAN-2026-05-30-activation-plan-structure-hardening"
+status = "completed"
+title = "Refresh plan authoring surfaces"
+kind = "documentation"
+source_plan_path = "docs/plans/activation-plan-structure-hardening.md"
+source_plan_hash_sha256 = "ed3f0a7bbfb0bc6305fd4483137938cbf99c96f6e58591b796a0c96a846dea07"
+reason = "Design-time plan authors need an opinionated activation-ready template and matching skills"
+acceptance_proof = "Behavior B-2026-05-30-template-projection passes"
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = ["B-2026-05-30-template-projection"]
+
+[[tasks.targets]]
+file = "templates/.codex/templates/task-registry-plan-template.md.template"
+object = "strict_plan_template"
+required_change = "Provide a comprehensive phased activation-ready plan skeleton."
+
+[[tasks.targets]]
+file = ".codex/templates/task-registry-plan-template.md"
+object = "installed_strict_plan_template"
+required_change = "Refresh installed plan template from the canonical template."
+
+[[tasks.targets]]
+file = "skills/gap-closure-contract/SKILL.md"
+object = "gap_closure_contract_authoring_rules"
+required_change = "Require phased checklist, exact targets, and positive/negative typed verifier coverage."
+
+[[tasks.targets]]
+file = "skills/task-registry-flow/SKILL.md"
+object = "task_registry_activation_rules"
+required_change = "Require strict v2 activation metadata and behavior polarity discipline."
+
+[[tasks.targets]]
+file = ".agents/skills/gap-closure-contract/SKILL.md"
+object = "installed_gap_closure_contract_skill"
+required_change = "Refresh installed skill projection from canonical skill."
+
+[[tasks.targets]]
+file = ".agents/skills/task-registry-flow/SKILL.md"
+object = "installed_task_registry_flow_skill"
+required_change = "Refresh installed skill projection from canonical skill."
+
+[[tasks.targets]]
+file = ".cursor/skills/gap-closure-contract/SKILL.md"
+object = "installed_cursor_gap_closure_contract_skill"
+required_change = "Refresh installed Cursor skill projection from canonical skill."
+
+[[tasks.targets]]
+file = ".cursor/skills/task-registry-flow/SKILL.md"
+object = "installed_cursor_task_registry_flow_skill"
+required_change = "Refresh installed Cursor skill projection from canonical skill."
+
+[[tasks.targets]]
+file = "templates/AGENTS.md.template"
+object = "codex_instruction_template"
+required_change = "Describe strict v2 activation contract."
+
+[[tasks.targets]]
+file = "templates/GEMINI.md.template"
+object = "antigravity_instruction_template"
+required_change = "Describe strict v2 activation contract."
+
+[[tasks.targets]]
+file = "templates/.codex/agent-governance.toml.template"
+object = "governance_metadata_template"
+required_change = "Expose strict activation-plan manifest requirements."
+
+[[tasks.targets]]
+file = "AGENTS.md"
+object = "installed_codex_instructions"
+required_change = "Refresh installed repo instructions from template."
+
+[[tasks.targets]]
+file = "GEMINI.md"
+object = "installed_antigravity_instructions"
+required_change = "Refresh installed Antigravity instructions from template."
+
+[[tasks.targets]]
+file = ".codex/agent-governance.toml"
+object = "installed_governance_metadata"
+required_change = "Refresh installed governance metadata from template."
+
+[[tasks]]
+task_id = "TASK-2026-05-30-activation-plan-004"
+plan_id = "PLAN-2026-05-30-activation-plan-structure-hardening"
+status = "completed"
+title = "Document and validate activation-plan hardening"
+kind = "validation"
+source_plan_path = "docs/plans/activation-plan-structure-hardening.md"
+source_plan_hash_sha256 = "ed3f0a7bbfb0bc6305fd4483137938cbf99c96f6e58591b796a0c96a846dea07"
+reason = "Users and release gates need proof that strict plan activation works"
+acceptance_proof = "Behavior B-2026-05-30-full-validation passes"
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = ["B-2026-05-30-full-validation"]
+
+[[tasks.targets]]
+file = "docs/runtime-schemas.md"
+object = "plan_manifest_schema_docs"
+required_change = "Document gap_id, polarity, required sections, and activation rejection rules."
+
+[[tasks.targets]]
+file = "README.md"
+object = "activation_quality_gate_docs"
+required_change = "Document user-facing plan activation quality gates."
+
+[[tasks.targets]]
+file = "CHANGELOG.md"
+object = "unreleased_activation_plan_hardening_entry"
+required_change = "Record activation-plan structure hardening."
+
+[[tasks.targets]]
+file = "docs/task-registry/events.jsonl"
+object = "local_metrics_receipts"
+required_change = "Keep local receipt metrics schema-valid with zero malformed events."
 
 [[tasks]]
 task_id = "TASK-2026-05-30-runtime-schema-001"

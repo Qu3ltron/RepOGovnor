@@ -1,4 +1,5 @@
 mod activation;
+mod backlog_check;
 mod cli;
 mod hook_io;
 mod install;
@@ -21,6 +22,7 @@ mod status_checks;
 mod validation;
 mod verifiers;
 mod verify_chain;
+mod version_check;
 
 pub(crate) use runtime::{
     append_event, load_registry, normalize_relative_path, timestamp, truncate_detail,

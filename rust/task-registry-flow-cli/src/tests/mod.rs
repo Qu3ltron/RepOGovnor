@@ -15,6 +15,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 mod activation_terminal_tests;
 mod archive_tests;
+mod backlog_check_tests;
 mod hook_command_tests;
 mod landing_tests;
 mod metrics_tests;
@@ -26,6 +27,7 @@ mod state_transition_tests;
 mod status_check_tests;
 mod typed_runtime_surface_tests;
 mod verify_chain_tests;
+mod version_check_tests;
 
 #[test]
 fn activates_and_lands_behavior_backed_task() {
@@ -961,6 +963,14 @@ fn cli_json_envelope_all_commands() {
     assert_eq!(
         CliCommand::from_str("release-check").unwrap(),
         CliCommand::ReleaseCheck
+    );
+    assert_eq!(
+        CliCommand::from_str("version-check").unwrap(),
+        CliCommand::VersionCheck
+    );
+    assert_eq!(
+        CliCommand::from_str("backlog-check").unwrap(),
+        CliCommand::BacklogCheck
     );
     assert_eq!(
         CliCommand::from_str("source-limit").unwrap(),

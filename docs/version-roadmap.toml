@@ -1,0 +1,31 @@
+schema_version = 1
+version_model = "governed_semver"
+current_version = "2.1.0"
+previous_version = "2.0.2"
+release_branch = "main"
+remote = "origin"
+tag_prefix = "v"
+push_policy = "auto_prerelease_manual_release"
+cutover_plan_id = "PLAN-2026-06-01-runtime-typed-surface-closure"
+
+[[releases]]
+version = "2.1.0"
+date = "2026-06-01"
+plan_id = "PLAN-2026-06-01-version-backlog-governance"
+bump = "minor"
+tag = "v2.1.0"
+prerelease_tag = "v2.1.0-rc.1"
+commit_subject = "feat(governance): add version and backlog checks"
+summary = "Add executable version and backlog governance, covering local post-2.0.2 release work with prerelease-only automation and manual final release."
+covered_plan_ids = [
+  "PLAN-2026-06-01-runtime-typed-surface-closure",
+  "PLAN-2026-06-01-release-gap-pipeline",
+  "PLAN-2026-06-01-proof-boundary-docs",
+  "PLAN-2026-06-01-adoption-docs",
+  "PLAN-2026-06-01-reviewer-report",
+  "PLAN-2026-06-01-migration-preflight-diagnostics",
+  "PLAN-2026-06-01-first-run-installer-guidance",
+  "PLAN-2026-06-01-multi-repo-boundary",
+  "PLAN-2026-06-01-reviewer-markdown-format",
+  "PLAN-2026-06-01-version-backlog-governance",
+]

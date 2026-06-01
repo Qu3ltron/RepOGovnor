@@ -34,7 +34,7 @@ This is probably not the right tool if you want:
 
 ## What you get today
 
-Current release: `2.0.2`
+Current release: `2.1.0`
 
 License: MIT. The plugin is free to use, copy, modify, and distribute under
 the terms in [LICENSE](LICENSE).
@@ -112,6 +112,8 @@ Then validate the install:
 ```bash
 .codex/scripts/task-registry validate
 .codex/scripts/task-registry source-limit check
+.codex/scripts/task-registry version-check validate
+.codex/scripts/task-registry backlog-check
 .codex/scripts/task-registry verify-chain --format json
 .codex/scripts/task-registry metrics
 plugins/agent-governance/scripts/status.sh --strict
@@ -126,6 +128,12 @@ policy.
 Release waivers are local-only and must carry a reason. Set
 `AGENT_GOVERNANCE_FINAL_RELEASE=1` for final release validation; waiver flags
 are rejected in that mode.
+
+Version governance is local and explicit. `version-check next <plan_id>` shows
+the governed release metadata. `version-check prerelease <plan_id> --rc <n>`
+may be used by automation to push the branch and `vX.Y.Z-rc.N` tag. Final
+`vX.Y.Z` tagging, final tag push, GitHub Release creation, and public release
+publication remain manual.
 
 Fresh installs or intentional rebaselines can use `--force`. Preview the full
 write set first:
@@ -190,6 +198,8 @@ nix flake check --no-build --all-systems
 .codex/scripts/task-registry report PLAN-YYYY-MM-DD-example
 .codex/scripts/task-registry reviewer-report
 .codex/scripts/task-registry reviewer-report --format markdown
+.codex/scripts/task-registry version-check validate
+.codex/scripts/task-registry backlog-check
 ```
 
 Direct completed-status writes are rejected; `verify-landing` owns completion

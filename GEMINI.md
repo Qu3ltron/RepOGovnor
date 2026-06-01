@@ -59,6 +59,7 @@ Handoff: `.codex/scripts/task-registry report <plan_id>`; archive completed when
 - **Terminal task rule:** `completed` and `cancelled` are immutable. Changed follow-up work needs a new `task_id`; do not rewrite terminal provenance.
 - **Receipt chain:** keep local receipts intact and run `.codex/scripts/task-registry verify-chain --format json` before production handoff.
 - **Release source:** required files are native files, not symlinks, and final release validation forbids local waiver variables.
+- **Version release:** automation may push prerelease branch state and `vX.Y.Z-rc.N` tags only; final tags, final tag pushes, GitHub Releases, and public release publication remain manual.
 - **Zero backwards compatibility:** do not add legacy shims, old hook paths, or settings compatibility.
 
 ## Verify in Antigravity

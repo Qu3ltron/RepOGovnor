@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+## 2.1.0 - 2026-06-01
+
+### Added
+
+- Added `version-check` for Governed SemVer validation, release roadmap
+  coverage, prerelease command output, and manual final tag verification.
+- Added `backlog-check` for executable validation of the drainable gap pipeline
+  and explicit negative non-claims.
+
+### Changed
+
+- Documented prerelease-only automation: branch and `vX.Y.Z-rc.N` tag pushes may
+  be automated, while final release publication remains manual.
+
 ## 2.0.2 - 2026-06-01
 
 ### Fixed
