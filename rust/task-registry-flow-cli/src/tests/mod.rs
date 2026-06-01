@@ -20,6 +20,7 @@ mod landing_tests;
 mod metrics_tests;
 mod receipt_chain_tests;
 mod release_source_tests;
+mod reviewer_report_tests;
 mod security_tests;
 mod state_transition_tests;
 mod status_check_tests;

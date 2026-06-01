@@ -188,11 +188,16 @@ nix flake check --no-build --all-systems
 ```bash
 .codex/scripts/task-registry verify-landing --plan-id PLAN-YYYY-MM-DD-example --changed-files src/example.rs
 .codex/scripts/task-registry report PLAN-YYYY-MM-DD-example
+.codex/scripts/task-registry reviewer-report
 ```
 
 Direct completed-status writes are rejected; `verify-landing` owns completion
 after it binds changed files to active task targets and runs typed behavior
 verifiers.
+
+`reviewer-report` is a pasteable local handoff summary. It shows active plans,
+landed tasks, changed targets, receipt state, blocked or deferred work, and the
+proof boundary between governance evidence and product correctness evidence.
 
 The hook layer is designed to keep this honest. It permits plan bootstrap work,
 such as writing or activating plans, and denies implementation or runtime

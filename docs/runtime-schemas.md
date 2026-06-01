@@ -206,6 +206,20 @@ instance against that schema.
 All runtime Task Manifests must use `schema_version = 2`. Completed historical
 plans are migrated to v2 rather than accepted through a compatibility path.
 
+## Reviewer Report
+
+`reviewer-report` is a read-only local handoff surface:
+
+```bash
+.codex/scripts/task-registry reviewer-report
+```
+
+It summarizes active plans, landed tasks, changed targets, receipt metrics, and
+blocked or deferred work. It also states the proof boundary: governance proof is
+not product correctness proof. The report is intended for pull request or
+review handoff text; domain tests, code review, security review, and product
+acceptance evidence remain project-owned.
+
 ## Activation Plan Contract
 
 New activations must be comprehensive phased plans with these exact Markdown

@@ -83,6 +83,7 @@ pub(crate) fn run(mut args: Vec<String>) -> RuntimeResult<String> {
             let report = report_plan(root, plan_id)?;
             Ok(format_report(&report))
         }
+        CliCommand::ReviewerReport => Ok(crate::reviewer_report::run(root, &args)?),
         CliCommand::ArchiveCompleted => {
             if !args.is_empty() {
                 return Err(usage().into());
@@ -136,7 +137,7 @@ pub(crate) fn run(mut args: Vec<String>) -> RuntimeResult<String> {
 }
 
 fn usage() -> String {
-    "usage: task-registry-flow {validate|activate <docs/plans/file.md>|status <task_id> <status>|defer <task_id> <basis> <reactivation>|report <plan_id>|archive-completed|verify-behaviors [plan_id|task_id]|verify-landing [--plan-id <plan_id>] --changed-files <path>...|verify-chain [--format json] [--repair]|verify-mutation-hook [--format codex|antigravity|cursor|claude]|metrics|source-limit check|source-limit plan|release-check {required|version|tracked|all} [--format json]|install plan [--format json]|status-check [--format json]}".to_string()
+    "usage: task-registry-flow {validate|activate <docs/plans/file.md>|status <task_id> <status>|defer <task_id> <basis> <reactivation>|report <plan_id>|reviewer-report|archive-completed|verify-behaviors [plan_id|task_id]|verify-landing [--plan-id <plan_id>] --changed-files <path>...|verify-chain [--format json] [--repair]|verify-mutation-hook [--format codex|antigravity|cursor|claude]|metrics|source-limit check|source-limit plan|release-check {required|version|tracked|all} [--format json]|install plan [--format json]|status-check [--format json]}".to_string()
 }
 
 fn install_command(root: &Path, args: &[String]) -> RuntimeResult<String> {

@@ -36,13 +36,15 @@ or that every future integration exists.
 
 ### GP-002: Reviewer handoff is not yet a compact product surface
 - Claim pressure: the workflow produces reports, receipts, and metrics.
-- Current evidence: `report`, `metrics`, and `verify-chain` exist, but there is
-  no single reviewer summary designed for pull requests.
-- User impact: maintainers still need to assemble proof manually from several
-  commands.
-- Next closure: add a compact reviewer report with active plans, landed tasks,
-  changed targets, receipts, and remaining blocked or deferred work.
-- Reactivation condition: before publicizing a recommended PR workflow.
+- Current evidence: `reviewer-report` now summarizes active plans, landed
+  tasks, changed targets, receipt state, blocked or deferred work, and proof
+  boundaries in one local handoff surface.
+- User impact: maintainers have pasteable local reviewer evidence, but there is
+  no GitHub or pull request integration yet.
+- Next closure: add optional PR-oriented formatting or integration without
+  adding remote telemetry.
+- Reactivation condition: before publicizing a hosted or GitHub-native PR
+  workflow.
 
 ### GP-003: Migration safety needs more old-layout fixtures
 - Claim pressure: v2 says stale legacy paths are removed and compatibility
@@ -72,12 +74,12 @@ or that every future integration exists.
 - Current evidence: registry, receipts, hooks, and release checks prove process
   invariants; they do not replace domain tests or code review. README now
   includes a `Proof boundaries` section that separates Governance proof from
-  Product correctness proof.
-- User impact: users have a visible public boundary, but future reviewer output
-  should keep the same distinction when a compact report command exists.
-- Next closure: add reviewer-output language that labels governance proof
-  separately from product correctness proof.
-- Reactivation condition: before publishing reviewer-report features.
+  Product correctness proof, and `reviewer-report` repeats that boundary in
+  handoff output.
+- User impact: public docs and local reviewer output both state the proof
+  boundary.
+- Next closure: keep the same wording in any future PR integration or dashboard.
+- Reactivation condition: before publishing remote reviewer integrations.
 
 ## Drain protocol
 

@@ -13,6 +13,7 @@ mod receipts;
 mod registry_io;
 mod release_checks;
 mod reports;
+mod reviewer_report;
 mod runtime;
 mod schema;
 mod source_limit;

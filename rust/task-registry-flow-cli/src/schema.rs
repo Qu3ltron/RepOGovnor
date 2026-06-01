@@ -57,6 +57,7 @@ string_enum!(CliCommand {
     Status => "status",
     Defer => "defer",
     Report => "report",
+    ReviewerReport => "reviewer-report",
     ArchiveCompleted => "archive-completed",
     VerifyBehaviors => "verify-behaviors",
     VerifyLanding => "verify-landing",
