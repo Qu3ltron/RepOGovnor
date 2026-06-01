@@ -90,11 +90,19 @@ bash "${PLUGIN_ROOT}/scripts/render-from-config.sh" "$CONFIG" "$TARGET_ROOT"
 if [[ "$DRY_RUN" -eq 1 ]]; then
   echo ""
   echo "Dry run only; no files changed."
+  echo "Next step:"
+  echo "  rerun with --merge for an existing repo, or --force for an intentional rebaseline"
   exit 0
 fi
 
 echo ""
-echo "Required for CI (commit these — plugins/agent-governance/REQUIREMENTS.toml):"
+echo "First-run next steps:"
+echo "  1. Review the rendered action list above."
+echo "  2. Run the posture checks below before committing or pushing."
+echo "  3. Read ${PLUGIN_ROOT}/docs/example-workflow.md for the plan -> activate -> land loop."
+echo "  4. Read ${PLUGIN_ROOT}/docs/migration-v2.md when upgrading an existing repo."
+echo ""
+echo "Required for CI (commit these; source: plugins/agent-governance/REQUIREMENTS.toml):"
 python3 <<PY
 import tomllib
 from pathlib import Path
@@ -105,10 +113,11 @@ print()
 print(req["tracked_for_ci"]["design_rule"].strip())
 PY
 echo ""
-echo "Posture check (must pass before push):"
+echo "Posture checks:"
 echo "  ${PLUGIN_ROOT}/scripts/status.sh --strict"
 echo "  .codex/scripts/task-registry validate"
 echo "  .codex/scripts/task-registry source-limit check"
+echo "  .codex/scripts/task-registry verify-chain --format json"
 echo "  .codex/scripts/task-registry metrics"
 echo ""
 echo "Optional if plugin link was missing (install creates it when absent):"

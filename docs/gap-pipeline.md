@@ -27,12 +27,16 @@ or that every future integration exists.
   still assumes comfort with Git, shell commands, and local config. The release
   now includes `docs/migration-v2.md` and `docs/example-workflow.md` as packaged
   docs for migration and the plan -> activate -> edit -> land -> report loop.
-- User impact: first-time public users have a direct guide, but installer output
-  still needs clearer first-run messaging.
-- Next closure: improve first-run installer output and add a richer fixture or
-  sample repository if external smoke users still stall.
-- Reactivation condition: before the next public minor release or when a fresh
-  external install smoke test shows confusion.
+  Installer output now prints dry-run continuation, applied-install first-run
+  next steps, canonical posture checks, and direct workflow/migration doc
+  pointers.
+- User impact: first-time public users get a direct local next action from the
+  command they just ran. A richer sample repository may still be useful if
+  external smoke users stall after install.
+- Next closure: add a richer fixture or sample repository only if external
+  smoke evidence shows the current installer guidance is still insufficient.
+- Reactivation condition: when a fresh external install smoke test shows
+  confusion after reading the first-run output.
 
 ### GP-002: Reviewer handoff is not yet a compact product surface
 - Claim pressure: the workflow produces reports, receipts, and metrics.

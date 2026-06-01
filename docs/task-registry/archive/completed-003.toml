@@ -4,6 +4,13 @@ archive_id = "completed-003"
 archive_authority = "docs/task-registry/archive/completed-003.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-06-01-public-release-2-0-1"
+plan_path = "docs/plans/public-release-2-0-1-2026-06-01.md"
+plan_hash_sha256 = "7a684d01328786329d292ff45325add7d7f0d56938aff1972dd1ca9fc8ec8d01"
+activated_at = "2026-05-31"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-05-31-ci-nix-release-readiness"
 plan_path = "docs/plans/ci-nix-release-readiness-2026-05-31.md"
 plan_hash_sha256 = "3eb542718b31d9d7f2527936e77847a3b0ea4146e60d888dbc804e95e8c92b39"
@@ -38,12 +45,287 @@ plan_hash_sha256 = "3117f1306aa73aae251ec6a9476b395ba53c61048395acdf479f8d81373b
 activated_at = "2026-05-31"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-05-31-secondary-hardening"
-plan_path = "docs/plans/secondary-hardening-2026-05-31.md"
-plan_hash_sha256 = "d2d2f67837a23e7c786c9d4bff81e697318556741cde726a079bd1dcf223450f"
-activated_at = "2026-05-31"
+[[tasks]]
+task_id = "TASK-2026-06-01-public-release-001"
+plan_id = "PLAN-2026-06-01-public-release-2-0-1"
 status = "completed"
+title = "Update public release metadata to 2.0.1"
+kind = "release"
+source_plan_path = "docs/plans/public-release-2-0-1-2026-06-01.md"
+source_plan_hash_sha256 = "7a684d01328786329d292ff45325add7d7f0d56938aff1972dd1ca9fc8ec8d01"
+reason = "Public release metadata must identify the actual post-fix release."
+acceptance_proof = "Behaviors B-2026-06-01-public-release-G01-positive and B-2026-06-01-public-release-G01-negative pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-2026-06-01-public-release-G01-positive",
+    "B-2026-06-01-public-release-G01-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-05-31T22:08:31.015973206-04:00"
+completion_changed_files = [
+    ".codex-plugin/plugin.json",
+    ".github/workflows/agent-governance.yml",
+    ".github/workflows/ci.yml",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "MANIFEST.toml",
+    "README.md",
+    "REQUIREMENTS.toml",
+    "SECURITY.md",
+    "VERSION",
+    "docs/plans/public-release-2-0-1-2026-06-01.md",
+    "docs/releases/v2.md",
+    "package.nix",
+    "plugin.json",
+    "rust/task-registry-flow-cli/Cargo.lock",
+    "rust/task-registry-flow-cli/Cargo.toml",
+    "scripts/test-release-readiness.sh",
+    "templates/.github/workflows/agent-governance.yml.template",
+]
+
+[[tasks.targets]]
+file = "VERSION"
+object = "release version"
+required_change = "Set to 2.0.1."
+
+[[tasks.targets]]
+file = "plugin.json"
+object = "version"
+required_change = "Set to 2.0.1."
+
+[[tasks.targets]]
+file = ".codex-plugin/plugin.json"
+object = "version"
+required_change = "Set to 2.0.1."
+
+[[tasks.targets]]
+file = "MANIFEST.toml"
+object = "plugin_version"
+required_change = "Set to 2.0.1."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/Cargo.toml"
+object = "package.version"
+required_change = "Set to 2.0.1."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/Cargo.lock"
+object = "task-registry-flow-cli package.version"
+required_change = "Set to 2.0.1."
+
+[[tasks.targets]]
+file = "package.nix"
+object = "version"
+required_change = "Set to 2.0.1."
+
+[[tasks.targets]]
+file = "README.md"
+object = "current release"
+required_change = "Set to 2.0.1."
+
+[[tasks.targets]]
+file = "docs/releases/v2.md"
+object = "release version"
+required_change = "Set to 2.0.1."
+
+[[tasks.targets]]
+file = "scripts/test-release-readiness.sh"
+object = "version drift fixture"
+required_change = "Set the negative drift fixture to a version different from 2.0.1."
+
+[[tasks]]
+task_id = "TASK-2026-06-01-public-release-002"
+plan_id = "PLAN-2026-06-01-public-release-2-0-1"
+status = "completed"
+title = "Add public contribution and security docs"
+kind = "documentation"
+source_plan_path = "docs/plans/public-release-2-0-1-2026-06-01.md"
+source_plan_hash_sha256 = "7a684d01328786329d292ff45325add7d7f0d56938aff1972dd1ca9fc8ec8d01"
+reason = "Public users need clear contribution and vulnerability-reporting guidance."
+acceptance_proof = "Behaviors B-2026-06-01-public-release-G02-positive and B-2026-06-01-public-release-G02-negative pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-2026-06-01-public-release-G02-positive",
+    "B-2026-06-01-public-release-G02-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-05-31T22:08:31.015973206-04:00"
+completion_changed_files = [
+    ".codex-plugin/plugin.json",
+    ".github/workflows/agent-governance.yml",
+    ".github/workflows/ci.yml",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "MANIFEST.toml",
+    "README.md",
+    "REQUIREMENTS.toml",
+    "SECURITY.md",
+    "VERSION",
+    "docs/plans/public-release-2-0-1-2026-06-01.md",
+    "docs/releases/v2.md",
+    "package.nix",
+    "plugin.json",
+    "rust/task-registry-flow-cli/Cargo.lock",
+    "rust/task-registry-flow-cli/Cargo.toml",
+    "scripts/test-release-readiness.sh",
+    "templates/.github/workflows/agent-governance.yml.template",
+]
+
+[[tasks.targets]]
+file = "CHANGELOG.md"
+object = "2.0.1 release notes"
+required_change = "Add dated 2.0.1 section and leave Unreleased empty."
+
+[[tasks.targets]]
+file = "CONTRIBUTING.md"
+object = "public contribution guidance"
+required_change = "Add concise issue, PR, and validation guidance."
+
+[[tasks.targets]]
+file = "SECURITY.md"
+object = "vulnerability reporting"
+required_change = "Route vulnerability reports through GitHub private reporting/advisories."
+
+[[tasks]]
+task_id = "TASK-2026-06-01-public-release-003"
+plan_id = "PLAN-2026-06-01-public-release-2-0-1"
+status = "completed"
+title = "Declare public docs in release-source requirements"
+kind = "release"
+source_plan_path = "docs/plans/public-release-2-0-1-2026-06-01.md"
+source_plan_hash_sha256 = "7a684d01328786329d292ff45325add7d7f0d56938aff1972dd1ca9fc8ec8d01"
+reason = "New public release docs must be native release-source files."
+acceptance_proof = "Behaviors B-2026-06-01-public-release-G03-positive and B-2026-06-01-public-release-G03-negative pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-2026-06-01-public-release-G03-positive",
+    "B-2026-06-01-public-release-G03-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-05-31T22:08:31.015973206-04:00"
+completion_changed_files = [
+    ".codex-plugin/plugin.json",
+    ".github/workflows/agent-governance.yml",
+    ".github/workflows/ci.yml",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "MANIFEST.toml",
+    "README.md",
+    "REQUIREMENTS.toml",
+    "SECURITY.md",
+    "VERSION",
+    "docs/plans/public-release-2-0-1-2026-06-01.md",
+    "docs/releases/v2.md",
+    "package.nix",
+    "plugin.json",
+    "rust/task-registry-flow-cli/Cargo.lock",
+    "rust/task-registry-flow-cli/Cargo.toml",
+    "scripts/test-release-readiness.sh",
+    "templates/.github/workflows/agent-governance.yml.template",
+]
+
+[[tasks.targets]]
+file = "REQUIREMENTS.toml"
+object = "release_source"
+required_change = "Set release version to 2.0.1 and require CONTRIBUTING.md plus SECURITY.md."
+
+[[tasks]]
+task_id = "TASK-2026-06-01-public-release-004"
+plan_id = "PLAN-2026-06-01-public-release-2-0-1"
+status = "completed"
+title = "Update checkout actions to Node 24-backed version"
+kind = "implementation"
+source_plan_path = "docs/plans/public-release-2-0-1-2026-06-01.md"
+source_plan_hash_sha256 = "7a684d01328786329d292ff45325add7d7f0d56938aff1972dd1ca9fc8ec8d01"
+reason = "GitHub warns actions/checkout@v4 uses deprecated Node 20 runtime."
+acceptance_proof = "Behaviors B-2026-06-01-public-release-G04-positive and B-2026-06-01-public-release-G04-negative pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-2026-06-01-public-release-G04-positive",
+    "B-2026-06-01-public-release-G04-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-05-31T22:08:31.015973206-04:00"
+completion_changed_files = [
+    ".codex-plugin/plugin.json",
+    ".github/workflows/agent-governance.yml",
+    ".github/workflows/ci.yml",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "MANIFEST.toml",
+    "README.md",
+    "REQUIREMENTS.toml",
+    "SECURITY.md",
+    "VERSION",
+    "docs/plans/public-release-2-0-1-2026-06-01.md",
+    "docs/releases/v2.md",
+    "package.nix",
+    "plugin.json",
+    "rust/task-registry-flow-cli/Cargo.lock",
+    "rust/task-registry-flow-cli/Cargo.toml",
+    "scripts/test-release-readiness.sh",
+    "templates/.github/workflows/agent-governance.yml.template",
+]
+
+[[tasks.targets]]
+file = ".github/workflows/ci.yml"
+object = "checkout action"
+required_change = "Use actions/checkout@v6.0.2."
+
+[[tasks.targets]]
+file = ".github/workflows/agent-governance.yml"
+object = "checkout action"
+required_change = "Use actions/checkout@v6.0.2."
+
+[[tasks.targets]]
+file = "templates/.github/workflows/agent-governance.yml.template"
+object = "checkout action"
+required_change = "Use actions/checkout@v6.0.2."
+
+[[tasks]]
+task_id = "TASK-2026-06-01-public-release-005"
+plan_id = "PLAN-2026-06-01-public-release-2-0-1"
+status = "completed"
+title = "Validate and publish public release"
+kind = "validation"
+source_plan_path = "docs/plans/public-release-2-0-1-2026-06-01.md"
+source_plan_hash_sha256 = "7a684d01328786329d292ff45325add7d7f0d56938aff1972dd1ca9fc8ec8d01"
+reason = "Public release requires local validation and GitHub handoff evidence."
+acceptance_proof = "Behavior B-2026-06-01-public-release-G05-validation passes; final release-source, CI, tags, release, visibility, and public smoke tests pass after commit."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = ["B-2026-06-01-public-release-G05-validation"]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-05-31T22:08:31.015973206-04:00"
+completion_changed_files = [
+    ".codex-plugin/plugin.json",
+    ".github/workflows/agent-governance.yml",
+    ".github/workflows/ci.yml",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "MANIFEST.toml",
+    "README.md",
+    "REQUIREMENTS.toml",
+    "SECURITY.md",
+    "VERSION",
+    "docs/plans/public-release-2-0-1-2026-06-01.md",
+    "docs/releases/v2.md",
+    "package.nix",
+    "plugin.json",
+    "rust/task-registry-flow-cli/Cargo.lock",
+    "rust/task-registry-flow-cli/Cargo.toml",
+    "scripts/test-release-readiness.sh",
+    "templates/.github/workflows/agent-governance.yml.template",
+]
+
+[[tasks.targets]]
+file = "docs/plans/public-release-2-0-1-2026-06-01.md"
+object = "walkthrough evidence"
+required_change = "Capture local validation and public release handoff evidence."
 
 [[tasks]]
 task_id = "TASK-2026-05-31-ci-nix-001"
@@ -740,68 +1022,3 @@ required_change = "Mirror canonical task-registry-flow skill source."
 file = ".claude/skills/task-registry-flow/SKILL.md"
 object = "claude_projection"
 required_change = "Mirror canonical task-registry-flow skill source."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-SH01"
-plan_id = "PLAN-2026-05-31-secondary-hardening"
-status = "completed"
-title = "Harden command write-target extraction"
-kind = "authorization"
-source_plan_path = "docs/plans/secondary-hardening-2026-05-31.md"
-source_plan_hash_sha256 = "d2d2f67837a23e7c786c9d4bff81e697318556741cde726a079bd1dcf223450f"
-reason = "Mutation hooks must fail closed for compact shell redirections and hidden inline write targets."
-acceptance_proof = "Behaviors B-SH01-positive, B-SH01-negative-compact, and B-SH01-negative-open pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-SH01-positive",
-    "B-SH01-negative-compact",
-    "B-SH01-negative-open",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/mutation_hook.rs"
-object = "compact_redirection_detection"
-required_change = "Extract compact redirect targets and mark variable compact redirects as ambiguous writes."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/mutation_hook.rs"
-object = "inline_open_write_detection"
-required_change = "Scan every inline open call and reject write-mode calls whose target is not deterministic."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/hook_command_tests.rs"
-object = "command_write_negative_suite"
-required_change = "Add compact redirect and mixed inline open tests."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-SH02"
-plan_id = "PLAN-2026-05-31-secondary-hardening"
-status = "completed"
-title = "Reject symlinked release-source required files"
-kind = "release"
-source_plan_path = "docs/plans/secondary-hardening-2026-05-31.md"
-source_plan_hash_sha256 = "d2d2f67837a23e7c786c9d4bff81e697318556741cde726a079bd1dcf223450f"
-reason = "Release-source required files must be native files, not symlink indirections."
-acceptance_proof = "Behaviors B-SH02-positive and B-SH02-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-SH02-positive",
-    "B-SH02-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/release_checks.rs"
-object = "required_file_native_source"
-required_change = "Use symlink metadata and fail required release-source paths that are symlinks."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/release_source_tests.rs"
-object = "required_symlink_negative"
-required_change = "Add a symlinked required-file negative fixture."
-
-[[tasks.targets]]
-file = "docs/runtime-schemas.md"
-object = "release_native_file_contract"
-required_change = "Document that release-source required artifacts must be native files."

@@ -103,6 +103,8 @@ grep -q '.agents/skills/task-registry-flow: would-replace-symlink' "$OUT_DIR/dry
 test -L "$TARGET_ROOT/.agents/skills/gap-closure-contract"
 test -L "$TARGET_ROOT/.agents/skills/task-registry-flow"
 grep -q '.claude/settings.json: would-create' "$OUT_DIR/dry-run.out"
+grep -q 'Dry run only; no files changed.' "$OUT_DIR/dry-run.out"
+grep -q 'rerun with --merge for an existing repo, or --force for an intentional rebaseline' "$OUT_DIR/dry-run.out"
 
 if (cd "$TARGET_ROOT" && "$PLUGIN_ROOT/scripts/status.sh" --strict > "$OUT_DIR/no-marker-status.out" 2>&1); then
   echo "strict status unexpectedly accepted markerless AGENTS.md" >&2
@@ -149,6 +151,10 @@ printf 'custom gemini\n<!-- agent-governance:begin -->\nold\n<!-- agent-governan
 
 grep -q 'custom agents' "$TARGET_ROOT/AGENTS.md"
 grep -q 'agent-governance:begin' "$TARGET_ROOT/AGENTS.md"
+grep -q 'First-run next steps:' "$OUT_DIR/merge.out"
+grep -q 'docs/example-workflow.md' "$OUT_DIR/merge.out"
+grep -q 'docs/migration-v2.md' "$OUT_DIR/merge.out"
+grep -q '.codex/scripts/task-registry verify-chain --format json' "$OUT_DIR/merge.out"
 test ! -e "$TARGET_ROOT/.codex/settings.toml"
 test ! -e "$TARGET_ROOT/.codex/hooks/user-plan-approval.toml"
 test ! -e "$TARGET_ROOT/hooks.json"
@@ -252,6 +258,9 @@ grep -q '.agents/skills/task-registry-flow must be a native directory, not a sym
   --force > "$OUT_DIR/force.out"
 
 reject_grep 'custom agents' "$TARGET_ROOT/AGENTS.md"
+grep -q 'First-run next steps:' "$OUT_DIR/force.out"
+grep -q 'Posture checks:' "$OUT_DIR/force.out"
+grep -q '.codex/scripts/task-registry validate' "$OUT_DIR/force.out"
 test ! -e "$TARGET_ROOT/.codex/settings.toml"
 test ! -e "$TARGET_ROOT/.codex/hooks/user-plan-approval.toml"
 test ! -e "$TARGET_ROOT/hooks.json"

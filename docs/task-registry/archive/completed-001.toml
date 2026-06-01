@@ -4,6 +4,13 @@ archive_id = "completed-001"
 archive_authority = "docs/task-registry/archive/completed-001.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-06-01-first-run-installer-guidance"
+plan_path = "docs/plans/first-run-installer-guidance-2026-06-01.md"
+plan_hash_sha256 = "2e0e04bdaf91283ee3f5261294d8d1509dea9aa3a0af5351c9218f0ac8346df4"
+activated_at = "2026-06-01"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-06-01-migration-preflight-diagnostics"
 plan_path = "docs/plans/migration-preflight-diagnostics-2026-06-01.md"
 plan_hash_sha256 = "00bf9b4b3ccca500cd8775716fa09ccaa5754a7f0acfe93ca76ecabe7ebaf3f9"
@@ -38,12 +45,44 @@ plan_hash_sha256 = "69ff196bc27d177fca2b5549fcc1e40b5ac0a9bb253616837254565f643d
 activated_at = "2026-06-01"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-06-01-runtime-typed-surface-closure"
-plan_path = "docs/plans/runtime-typed-surface-closure-2026-06-01.md"
-plan_hash_sha256 = "689ff93a507500d0e687c7fe26a674f308b6409c25c605126c7a3dc703266289"
-activated_at = "2026-06-01"
+[[tasks]]
+task_id = "TASK-2026-06-01-first-run-installer-guidance-001"
+plan_id = "PLAN-2026-06-01-first-run-installer-guidance"
 status = "completed"
+title = "Clarify first-run installer output"
+kind = "documentation"
+source_plan_path = "docs/plans/first-run-installer-guidance-2026-06-01.md"
+source_plan_hash_sha256 = "2e0e04bdaf91283ee3f5261294d8d1509dea9aa3a0af5351c9218f0ac8346df4"
+reason = "GP-001 needs direct first-run guidance in the command output new public users see."
+acceptance_proof = "Behaviors B-2026-06-01-first-run-positive and B-2026-06-01-first-run-negative pass."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "B-2026-06-01-first-run-positive",
+    "B-2026-06-01-first-run-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T15:19:07.998431282-04:00"
+completion_changed_files = [
+    "docs/gap-pipeline.md",
+    "scripts/install-to-workspace.sh",
+    "scripts/test-install-modes.sh",
+]
+
+[[tasks.targets]]
+file = "scripts/install-to-workspace.sh"
+object = "first_run_next_steps"
+required_change = "Print explicit dry-run continuation and applied-install first-run validation guidance."
+
+[[tasks.targets]]
+file = "scripts/test-install-modes.sh"
+object = "first_run_output_assertions"
+required_change = "Assert installer output includes dry-run continuation and applied-install next steps."
+
+[[tasks.targets]]
+file = "docs/gap-pipeline.md"
+object = "GP-001"
+required_change = "Update GP-001 with current first-run installer evidence and remaining reactivation conditions."
 
 [[tasks]]
 task_id = "TASK-2026-06-01-migration-preflight-001"
@@ -354,67 +393,3 @@ completion_changed_files = [
 file = "docs/gap-pipeline.md"
 object = "gap_pipeline"
 required_change = "Document verified claims, remaining gaps, evidence, priorities, and drain protocol."
-
-[[tasks]]
-task_id = "TASK-2026-06-01-runtime-typed-surface-closure-001"
-plan_id = "PLAN-2026-06-01-runtime-typed-surface-closure"
-status = "completed"
-title = "Close runtime typed surface gaps"
-kind = "implementation"
-source_plan_path = "docs/plans/runtime-typed-surface-closure-2026-06-01.md"
-source_plan_hash_sha256 = "689ff93a507500d0e687c7fe26a674f308b6409c25c605126c7a3dc703266289"
-reason = "The active goal requires typed command, hook format, receipt/event schema, and failure-code surfaces only."
-acceptance_proof = "Behaviors B-001 through B-004."
-created_at = "2026-06-01"
-updated_at = "2026-06-01"
-behavior_ids = [
-    "B-001-receipt-schema-positive",
-    "B-002-receipt-schema-negative",
-    "B-003-failure-code-positive",
-    "B-004-failure-code-negative",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-06-01T13:11:37.685476346-04:00"
-completion_changed_files = [
-    "docs/plans/runtime-typed-surface-closure-2026-06-01.md",
-    "docs/task-registry.toml",
-    "docs/task-registry/events.jsonl",
-    "rust/task-registry-flow-cli/src/cli.rs",
-    "rust/task-registry-flow-cli/src/schema.rs",
-    "rust/task-registry-flow-cli/src/tests/typed_runtime_surface_tests.rs",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/schema.rs"
-object = "ReceiptEvent schema version typing"
-required_change = "Reject non-v2 receipt/event schema versions during deserialization."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/cli.rs"
-object = "JSON fallback failure code"
-required_change = "Use FailureCode::Serialization instead of raw fallback failure-code literals."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/typed_runtime_surface_tests.rs"
-object = "typed runtime surface tests"
-required_change = "Prove typed command, hook format, receipt/event schema, and failure-code behavior."
-
-[[tasks.targets]]
-file = "docs/plans/runtime-typed-surface-closure-2026-06-01.md"
-object = "closure contract"
-required_change = "Track approved scope, behavior verifiers, and validation evidence."
-
-[[tasks.targets]]
-file = "docs/task-registry.toml"
-object = "task registry activation and landing"
-required_change = "Record this plan state through task-registry CLI only."
-
-[[tasks.targets]]
-file = "docs/task-registry/events.jsonl"
-object = "task registry receipts"
-required_change = "Append activation and landing receipts through task-registry CLI only."
-
-[[tasks.targets]]
-file = "docs/task-registry/archive/"
-object = "completed task archives"
-required_change = "Archive completed task rows after landing."
