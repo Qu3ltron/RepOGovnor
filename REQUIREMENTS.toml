@@ -80,6 +80,8 @@ required = [
   "CONTRIBUTING.md",
   "README.md",
   "SECURITY.md",
+  "docs/agent-environment-matrix.md",
+  "docs/engineering-policy-compliance.md",
   "docs/migration-v2.md",
   "docs/example-workflow.md",
   "docs/multi-repo.md",

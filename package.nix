@@ -75,6 +75,8 @@ rustPlatform.buildRustPackage {
     cp ${./project.config.example.toml} "$asset_root/project.config.example.toml"
     cp ${./README.md} "$asset_root/README.md"
     mkdir -p "$asset_root/docs/releases"
+    cp ${./docs/agent-environment-matrix.md} "$asset_root/docs/agent-environment-matrix.md"
+    cp ${./docs/engineering-policy-compliance.md} "$asset_root/docs/engineering-policy-compliance.md"
     cp ${./docs/runtime-schemas.md} "$asset_root/docs/runtime-schemas.md"
     cp ${./docs/migration-v2.md} "$asset_root/docs/migration-v2.md"
     cp ${./docs/example-workflow.md} "$asset_root/docs/example-workflow.md"

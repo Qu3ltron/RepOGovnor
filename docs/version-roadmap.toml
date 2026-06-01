@@ -27,5 +27,7 @@ covered_plan_ids = [
   "PLAN-2026-06-01-first-run-installer-guidance",
   "PLAN-2026-06-01-multi-repo-boundary",
   "PLAN-2026-06-01-reviewer-markdown-format",
+  "PLAN-2026-06-01-policy-compliance-cost-posture",
+  "PLAN-2026-06-01-policy-posture-version-coverage",
   "PLAN-2026-06-01-version-backlog-governance",
 ]

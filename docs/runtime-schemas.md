@@ -143,8 +143,8 @@ Required fields: `check_id`, `surface`, `path`, `severity`, `status`,
 `expected`, `actual`, and `remediation`.
 
 Known surfaces: `cli`, `manifest`, `migration`, `release-source`,
-`tracked-for-ci`, `source-limit`, `source-limit-plan`, `status`,
-`receipt-chain`, and `receipt-chain-fix`. Unknown surfaces fail
+`tracked-for-ci`, `source-limit`, `source-limit-plan`, `status`, `version`,
+`backlog`, `receipt-chain`, and `receipt-chain-fix`. Unknown surfaces fail
 deserialization.
 
 Known statuses: `pass`, `warn`, `fail`, `skip`.
@@ -235,6 +235,20 @@ review handoff text; domain tests, code review, security review, and product
 acceptance evidence remain project-owned. The default format is compact text.
 `--format markdown` emits local Markdown suitable for manual pull request paste;
 it does not post to GitHub or call a remote service.
+
+## Future Policy And Cost Artifacts
+
+RepOGovnor's product direction is engineering policy compliance for
+agent-assisted repos. Future runtime surfaces should evaluate declared
+engineering policy and emit local compliance artifacts. Those artifacts should
+identify policy version, repo commit or build id, evaluated controls, evidence,
+waivers, and unproven controls.
+
+Token and cost evidence should be modeled as measured, estimated, or unmeasured.
+Measured cost requires structured usage evidence, provider and model identity,
+pricing snapshot or version, timestamp, attribution target, and evidence source.
+The current release does not calculate reliable cost per commit; unavailable or
+hidden usage must be reported as unmeasured rather than guessed.
 
 ## Activation Plan Contract
 

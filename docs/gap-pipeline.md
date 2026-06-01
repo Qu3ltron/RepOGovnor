@@ -8,16 +8,18 @@ behavior proof, landing verification, and registry report.
 
 Verified on 2026-06-01:
 
-- Release metadata is currently `2.0.2` across canonical machine surfaces.
+- Release metadata is currently `2.1.0` across canonical machine surfaces.
 - Local registry validation passes with no active, blocked, or deferred tasks.
 - Source/governance files are under the 1600-line limit.
 - Release-source status passes on the local checkout.
 - Runtime receipts are schema version 2 hash-chain events, with v1 receipts
   treated as malformed historical evidence rather than current proof.
+- Version and backlog checks validate RepOGovnor release governance.
 
 These checks prove release posture and workflow provenance. They do not prove
 that the product is easy for new users, that every migration path is pleasant,
-or that every future integration exists.
+or that every future integration exists. They also do not yet prove conformance
+to a first-class typed engineering policy manifest.
 
 ## Remaining Gaps
 
@@ -92,6 +94,33 @@ or that every future integration exists.
 - Next closure: keep the same wording in any future PR integration or dashboard.
 - Reactivation condition: before publishing remote reviewer integrations.
 
+### GP-006: Engineering policy compliance is the central direction, not yet the full runtime
+- Claim pressure: public positioning now targets engineering policy compliance
+  for agent-assisted repos.
+- Current evidence: the runtime already has plan activation, mutation gates,
+  typed behavior verifiers, receipt chains, source limits, status diagnostics,
+  release-source checks, version checks, backlog checks, and reviewer reports.
+- User impact: maintainers can use the system as a strong policy evidence
+  substrate today, but there is not yet a first-class typed policy manifest or
+  compliance artifact command.
+- Next closure: design and implement typed policy input plus a local compliance
+  artifact with pass, fail, warn, skip, waived, and unproven control states.
+- Reactivation condition: before claiming a shipped policy engine or compliance
+  artifact.
+
+### GP-007: Token spend and cost per commit need structured usage evidence
+- Claim pressure: cost per commit is an intended first-class metric.
+- Current evidence: local workflow metrics exist, but structured token usage,
+  provider/model attribution, pricing snapshots, and commit-linked cost receipts
+  are not shipped.
+- User impact: any current cost claim would be false precision. Hidden or
+  unavailable usage must be reported as unmeasured.
+- Next closure: add a cost evidence model that distinguishes measured,
+  estimated, and unmeasured spend, then attribute measured usage to commits,
+  plans, tasks, verifier runs, landing attempts, retries, and release cycles.
+- Reactivation condition: before publishing cost per commit or token-spend
+  metrics as a shipped feature.
+
 ## Negative Non-Claims
 
 - No automatic final release publication is provided by RepOGovnor.
@@ -99,6 +128,9 @@ or that every future integration exists.
 - No product correctness proof is created by governance checks alone.
 - No hosted fleet governance is shipped in this release.
 - No remote receipt sync is shipped in this release.
+- No typed policy engine or compliance artifact command is shipped in this
+  release.
+- No reliable cost per commit or guessed token spend is shipped in this release.
 
 ## Drain protocol
 

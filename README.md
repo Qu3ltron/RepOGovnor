@@ -1,33 +1,40 @@
-# Agent Governance
+# RepOGovnor
 
-Agent Governance helps teams use coding agents without letting work drift into
-unreviewed edits, stale plans, or unverifiable "trust me" changes.
+RepOGovnor targets engineering policy compliance for agent-assisted repos. It
+helps maintainers turn declared engineering policy into local workflow evidence:
+what was approved, which files were in scope, which checks ran, what passed or
+failed, and what remains unproven.
 
-It installs a local governance layer for Codex, Cursor, and Antigravity:
+The install namespace is still `agent-governance`, but the product direction is
+broader than agent hooks. It installs a local policy and evidence layer for
+Codex, Antigravity CLI, Cursor, and Claude Code:
 
-- every meaningful change starts from an approved plan
+- every meaningful change starts from an approved plan or declared policy
 - plan tasks are activated into a local registry
 - mutation hooks block unplanned implementation writes
 - installs and upgrades are checked by repeatable scripts
 - local receipts show what was validated, without network telemetry
 
-The goal is simple: keep agent-assisted development fast while making the work
-auditable enough for production repositories.
+The goal is simple: keep agent-assisted development fast while making
+engineering-policy compliance inspectable enough for production repositories.
 
 ## Who this is for
 
 Use this plugin if you are:
 
 - a maintainer who lets agents edit a real repository
-- a team lead who needs plan-first agent workflows
+- a team lead who needs policy-first agent workflows
 - a project owner who wants local evidence before merging agent changes
-- a regulated or high-risk project that needs explicit task provenance
-- a multi-tool user moving between Codex, Cursor, and Antigravity
+- a regulated or high-risk project that needs explicit engineering-policy
+  provenance, not certification
+- a multi-tool user moving between Codex, Antigravity CLI, Cursor, and Claude
+  Code
 
 This is probably not the right tool if you want:
 
 - a hosted dashboard
 - automatic product management
+- regulatory certification or external attestation
 - a zero-setup chat-only assistant
 - compatibility shims for old governance layouts
 - agents to freely edit any file without a declared task
@@ -43,7 +50,7 @@ the terms in [LICENSE](LICENSE).
   `.codex/scripts/task-registry`.
 - Plan activation, task status, deferral, reports, metrics, behavior checks, and
   source-limit checks.
-- Codex, Cursor, and Antigravity hook templates.
+- Codex, Antigravity CLI, Cursor, and Claude Code hook/templates surfaces.
 - Native skills for plan closure and task-registry flow.
 - Local mutation gates that allow governance repair paths but block unbound
   implementation writes.
@@ -65,23 +72,31 @@ the terms in [LICENSE](LICENSE).
   plugin layout, Nix package assets, native required files, and tracked release
   artifacts.
 
+Future policy work will make the input and output more explicit: a typed
+engineering policy as input, a compliance artifact as output, and token/cost
+evidence where usage can be measured honestly. Cost per commit is a product
+goal, but it requires structured usage receipts and pricing evidence; hidden or
+unavailable usage must be reported as unmeasured, not guessed.
+
 Important limits:
 
 - It is local-first. There is no hosted service or remote sync.
 - Receipts are local files; there is no built-in analytics pipeline.
 - The workflow is intentionally strict. Legacy hook paths and `--overlay` are
   removed in v2.
-- It validates process and provenance; it does not prove product correctness by
-  itself.
+- It validates process, policy conformance, and provenance; it does not prove
+  product correctness by itself.
+- It is not a regulatory certification or external attestation tool.
 
 ## Proof boundaries
 
-Governance proof and product correctness proof are separate.
+Engineering-policy compliance proof and product correctness proof are separate.
 
-Governance proof means the repository can show the approved plan, active task
-targets, typed behavior verifiers, mutation boundaries, receipt chain, and
-release-source checks for a change. It answers "was this change authorized,
-scoped, tested against its declared behaviors, and landed through the workflow?"
+Policy compliance proof means the repository can show the declared policy or
+approved plan, active task targets, typed behavior verifiers, mutation
+boundaries, receipt chain, and release-source checks for a change. It answers
+"did this repo/build/change comply with the engineering policy this repository
+declared?"
 
 Product correctness proof still belongs to the project. Maintainers still need
 domain tests, code review, security review where relevant, and product
@@ -110,13 +125,9 @@ plugins/agent-governance/scripts/install-to-workspace.sh \
 Then validate the install:
 
 ```bash
-.codex/scripts/task-registry validate
-.codex/scripts/task-registry source-limit check
-.codex/scripts/task-registry version-check validate
-.codex/scripts/task-registry backlog-check
-.codex/scripts/task-registry verify-chain --format json
-.codex/scripts/task-registry metrics
 plugins/agent-governance/scripts/status.sh --strict
+.codex/scripts/task-registry source-limit check
+.codex/scripts/task-registry validate
 ```
 
 `AGENTS.md` and `GEMINI.md` must each carry exactly one
@@ -198,9 +209,11 @@ nix flake check --no-build --all-systems
 .codex/scripts/task-registry report PLAN-YYYY-MM-DD-example
 .codex/scripts/task-registry reviewer-report
 .codex/scripts/task-registry reviewer-report --format markdown
-.codex/scripts/task-registry version-check validate
-.codex/scripts/task-registry backlog-check
 ```
+
+In this plugin source repo, release work also runs `version-check validate` and
+`backlog-check`. Those checks validate RepOGovnor release governance, not every
+consumer install.
 
 Direct completed-status writes are rejected; `verify-landing` owns completion
 after it binds changed files to active task targets and runs typed behavior
@@ -273,6 +286,9 @@ For release verification of this plugin itself:
 - `docs/migration-v2.md` - existing workspace migration guide
 - `docs/example-workflow.md` - minimal plan-to-report workflow
 - `docs/multi-repo.md` - manual boundary for teams using several repos
+- `docs/agent-environment-matrix.md` - supported agent surfaces and checks
+- `docs/engineering-policy-compliance.md` - product direction for policy input,
+  compliance artifacts, and cost evidence
 - `docs/releases/v2.md` - v2 release and migration notes
 - `docs/runtime-schemas.md` - structured runtime report and verifier schemas
 - `VISION.md` - why this exists and where it is going

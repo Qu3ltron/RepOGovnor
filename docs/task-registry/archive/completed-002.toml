@@ -4,6 +4,20 @@ archive_id = "completed-002"
 archive_authority = "docs/task-registry/archive/completed-002.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-06-01-migration-preflight-diagnostics"
+plan_path = "docs/plans/migration-preflight-diagnostics-2026-06-01.md"
+plan_hash_sha256 = "00bf9b4b3ccca500cd8775716fa09ccaa5754a7f0acfe93ca76ecabe7ebaf3f9"
+activated_at = "2026-06-01"
+status = "completed"
+
+[[plans]]
+plan_id = "PLAN-2026-06-01-reviewer-report"
+plan_path = "docs/plans/reviewer-report-2026-06-01.md"
+plan_hash_sha256 = "3a79a250dcaf6ed428f09122eccd27665cf42f1a4136da7c705074271362f566"
+activated_at = "2026-06-01"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-06-01-adoption-docs"
 plan_path = "docs/plans/adoption-docs-2026-06-01.md"
 plan_hash_sha256 = "bad39efb5202ecf995fb5cb3772c3611fee07dfcf49720c226cee4397172ddd3"
@@ -31,19 +45,134 @@ plan_hash_sha256 = "689ff93a507500d0e687c7fe26a674f308b6409c25c605126c7a3dc70326
 activated_at = "2026-06-01"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-06-01-patch-release-2-0-2"
-plan_path = "docs/plans/patch-release-2-0-2-2026-06-01.md"
-plan_hash_sha256 = "422a7e5b9cfec24f1d0ef05193d017dd8f67efb0c859be29c183e0cd30579402"
-activated_at = "2026-06-01"
+[[tasks]]
+task_id = "TASK-2026-06-01-migration-preflight-001"
+plan_id = "PLAN-2026-06-01-migration-preflight-diagnostics"
 status = "completed"
+title = "Add migration preflight diagnostics"
+kind = "migration"
+source_plan_path = "docs/plans/migration-preflight-diagnostics-2026-06-01.md"
+source_plan_hash_sha256 = "00bf9b4b3ccca500cd8775716fa09ccaa5754a7f0acfe93ca76ecabe7ebaf3f9"
+reason = "GP-003 needs targeted old-layout diagnostics before broader public migration."
+acceptance_proof = "Behaviors B-2026-06-01-migration-preflight-positive and B-2026-06-01-migration-preflight-negative pass."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "B-2026-06-01-migration-preflight-positive",
+    "B-2026-06-01-migration-preflight-negative",
+    "B-2026-06-01-migration-fixture-validation",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T15:11:57.167266735-04:00"
+completion_changed_files = [
+    "docs/gap-pipeline.md",
+    "rust/task-registry-flow-cli/src/status_checks.rs",
+    "rust/task-registry-flow-cli/src/tests/status_check_tests.rs",
+    "scripts/test-install-modes.sh",
+]
 
-[[plans]]
-plan_id = "PLAN-2026-06-01-receipt-lock-release"
-plan_path = "docs/plans/receipt-lock-release-2026-06-01.md"
-plan_hash_sha256 = "4c7f53dd8c3f68457a50b693499893cc1eb6f004d13a0605a73809e9762a3ee9"
-activated_at = "2026-06-01"
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/status_checks.rs"
+object = "migration_preflight_checks"
+required_change = "Report stale legacy paths and both required native .agents skill projections."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/status_check_tests.rs"
+object = "migration_preflight_tests"
+required_change = "Assert clean v2 success and stale old-layout remediation failures."
+
+[[tasks.targets]]
+file = "scripts/test-install-modes.sh"
+object = "old_layout_fixture"
+required_change = "Seed additional stale hook/settings layouts and assert merge/force removal."
+
+[[tasks.targets]]
+file = "docs/gap-pipeline.md"
+object = "GP-003"
+required_change = "Update GP-003 with current migration preflight evidence and remaining reactivation conditions."
+
+[[tasks]]
+task_id = "TASK-2026-06-01-reviewer-report-001"
+plan_id = "PLAN-2026-06-01-reviewer-report"
 status = "completed"
+title = "Add compact reviewer report"
+kind = "implementation"
+source_plan_path = "docs/plans/reviewer-report-2026-06-01.md"
+source_plan_hash_sha256 = "3a79a250dcaf6ed428f09122eccd27665cf42f1a4136da7c705074271362f566"
+reason = "Maintainers need one local handoff surface for governance proof without overstating product correctness."
+acceptance_proof = "Behaviors B-001 through B-004."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "B-001-reviewer-report-positive",
+    "B-002-reviewer-report-negative",
+    "B-003-proof-boundary-positive",
+    "B-004-proof-boundary-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T14:56:55.300147275-04:00"
+completion_changed_files = [
+    "README.md",
+    "REQUIREMENTS.toml",
+    "docs/gap-pipeline.md",
+    "docs/runtime-schemas.md",
+    "rust/task-registry-flow-cli/src/main.rs",
+    "rust/task-registry-flow-cli/src/reviewer_report.rs",
+    "rust/task-registry-flow-cli/src/runtime.rs",
+    "rust/task-registry-flow-cli/src/schema.rs",
+    "rust/task-registry-flow-cli/src/tests/mod.rs",
+    "rust/task-registry-flow-cli/src/tests/reviewer_report_tests.rs",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/schema.rs"
+object = "CliCommand"
+required_change = "Add typed reviewer-report command value."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/reviewer_report.rs"
+object = "reviewer_report"
+required_change = "Render compact reviewer handoff evidence from registry and receipts."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/runtime.rs"
+object = "dispatcher"
+required_change = "Route reviewer-report command and update usage."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/main.rs"
+object = "modules"
+required_change = "Include reviewer_report module."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/mod.rs"
+object = "reviewer_report_tests_module"
+required_change = "Register reviewer report tests."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/reviewer_report_tests.rs"
+object = "reviewer_report_tests"
+required_change = "Add positive and negative reviewer report tests."
+
+[[tasks.targets]]
+file = "REQUIREMENTS.toml"
+object = "release_source.required"
+required_change = "Declare reviewer_report.rs as a release source."
+
+[[tasks.targets]]
+file = "README.md"
+object = "reviewer handoff"
+required_change = "Document reviewer-report usage."
+
+[[tasks.targets]]
+file = "docs/runtime-schemas.md"
+object = "Reviewer Report"
+required_change = "Document reviewer report purpose and proof boundary."
+
+[[tasks.targets]]
+file = "docs/gap-pipeline.md"
+object = "GP-002 and GP-005"
+required_change = "Record compact reviewer report closure evidence and remaining PR integration gap."
 
 [[tasks]]
 task_id = "TASK-2026-06-01-adoption-docs-001"
@@ -272,165 +401,6 @@ required_change = "Prove typed command, hook format, receipt/event schema, and f
 
 [[tasks.targets]]
 file = "docs/plans/runtime-typed-surface-closure-2026-06-01.md"
-object = "closure contract"
-required_change = "Track approved scope, behavior verifiers, and validation evidence."
-
-[[tasks.targets]]
-file = "docs/task-registry.toml"
-object = "task registry activation and landing"
-required_change = "Record this plan state through task-registry CLI only."
-
-[[tasks.targets]]
-file = "docs/task-registry/events.jsonl"
-object = "task registry receipts"
-required_change = "Append activation and landing receipts through task-registry CLI only."
-
-[[tasks.targets]]
-file = "docs/task-registry/archive/"
-object = "completed task archives"
-required_change = "Archive completed task rows after landing."
-
-[[tasks]]
-task_id = "TASK-2026-06-01-patch-release-2-0-2-001"
-plan_id = "PLAN-2026-06-01-patch-release-2-0-2"
-status = "completed"
-title = "Prepare and validate patch release 2.0.2"
-kind = "implementation"
-source_plan_path = "docs/plans/patch-release-2-0-2-2026-06-01.md"
-source_plan_hash_sha256 = "422a7e5b9cfec24f1d0ef05193d017dd8f67efb0c859be29c183e0cd30579402"
-reason = "The existing public 2.0.1 release predates blocker fixes now required for public consumption."
-acceptance_proof = "Behaviors B-001 and B-002."
-created_at = "2026-06-01"
-updated_at = "2026-06-01"
-behavior_ids = [
-    "B-001-version-positive",
-    "B-002-readiness-negative",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-06-01T12:52:13.575020246-04:00"
-completion_changed_files = [
-    ".codex-plugin/plugin.json",
-    "CHANGELOG.md",
-    "MANIFEST.toml",
-    "README.md",
-    "REQUIREMENTS.toml",
-    "VERSION",
-    "docs/plans/patch-release-2-0-2-2026-06-01.md",
-    "docs/task-registry.toml",
-    "docs/task-registry/events.jsonl",
-    "package.nix",
-    "plugin.json",
-    "rust/task-registry-flow-cli/Cargo.lock",
-    "rust/task-registry-flow-cli/Cargo.toml",
-]
-
-[[tasks.targets]]
-file = "VERSION"
-object = "release version"
-required_change = "Set patch release version to 2.0.2."
-
-[[tasks.targets]]
-file = "plugin.json"
-object = "plugin version"
-required_change = "Set patch release version to 2.0.2."
-
-[[tasks.targets]]
-file = ".codex-plugin/plugin.json"
-object = "Codex plugin version"
-required_change = "Set patch release version to 2.0.2."
-
-[[tasks.targets]]
-file = "MANIFEST.toml"
-object = "plugin_version"
-required_change = "Set patch release version to 2.0.2."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/Cargo.toml"
-object = "crate version"
-required_change = "Set patch release version to 2.0.2."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/Cargo.lock"
-object = "crate lock version"
-required_change = "Regenerate after the crate version bump."
-
-[[tasks.targets]]
-file = "package.nix"
-object = "Nix package version"
-required_change = "Set patch release version to 2.0.2."
-
-[[tasks.targets]]
-file = "REQUIREMENTS.toml"
-object = "release source version"
-required_change = "Set expected release source version to 2.0.2."
-
-[[tasks.targets]]
-file = "README.md"
-object = "current release"
-required_change = "Set current release to 2.0.2."
-
-[[tasks.targets]]
-file = "CHANGELOG.md"
-object = "patch release notes"
-required_change = "Document post-2.0.1 release blocker fixes."
-
-[[tasks.targets]]
-file = "docs/plans/patch-release-2-0-2-2026-06-01.md"
-object = "closure contract"
-required_change = "Track approved scope, behavior verifiers, and validation evidence."
-
-[[tasks.targets]]
-file = "docs/task-registry.toml"
-object = "task registry activation and landing"
-required_change = "Record this plan state through task-registry CLI only."
-
-[[tasks.targets]]
-file = "docs/task-registry/events.jsonl"
-object = "task registry receipts"
-required_change = "Append activation and landing receipts through task-registry CLI only."
-
-[[tasks.targets]]
-file = "docs/task-registry/archive/"
-object = "completed task archives"
-required_change = "Archive completed task rows after landing."
-
-[[tasks]]
-task_id = "TASK-2026-06-01-receipt-lock-release-001"
-plan_id = "PLAN-2026-06-01-receipt-lock-release"
-status = "completed"
-title = "Release receipt file locks after durable append"
-kind = "implementation"
-source_plan_path = "docs/plans/receipt-lock-release-2026-06-01.md"
-source_plan_hash_sha256 = "4c7f53dd8c3f68457a50b693499893cc1eb6f004d13a0605a73809e9762a3ee9"
-reason = "CI/Nix package check exposed sequential receipt append lock retention."
-acceptance_proof = "Behaviors B-001 and B-002."
-created_at = "2026-06-01"
-updated_at = "2026-06-01"
-behavior_ids = [
-    "B-001-receipt-lock-positive",
-    "B-002-nix-lock-negative",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-06-01T12:28:44.386055840-04:00"
-completion_changed_files = [
-    "docs/plans/receipt-lock-release-2026-06-01.md",
-    "docs/task-registry.toml",
-    "docs/task-registry/events.jsonl",
-    "rust/task-registry-flow-cli/src/runtime.rs",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/runtime.rs"
-object = "append_event lock release"
-required_change = "Explicitly unlock the events file after sync succeeds."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/metrics_tests.rs"
-object = "receipt metrics lock regression"
-required_change = "Use existing focused metrics test as behavior proof."
-
-[[tasks.targets]]
-file = "docs/plans/receipt-lock-release-2026-06-01.md"
 object = "closure contract"
 required_change = "Track approved scope, behavior verifiers, and validation evidence."
 

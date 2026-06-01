@@ -4,6 +4,20 @@ archive_id = "completed-003"
 archive_authority = "docs/task-registry/archive/completed-003.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-06-01-patch-release-2-0-2"
+plan_path = "docs/plans/patch-release-2-0-2-2026-06-01.md"
+plan_hash_sha256 = "422a7e5b9cfec24f1d0ef05193d017dd8f67efb0c859be29c183e0cd30579402"
+activated_at = "2026-06-01"
+status = "completed"
+
+[[plans]]
+plan_id = "PLAN-2026-06-01-receipt-lock-release"
+plan_path = "docs/plans/receipt-lock-release-2026-06-01.md"
+plan_hash_sha256 = "4c7f53dd8c3f68457a50b693499893cc1eb6f004d13a0605a73809e9762a3ee9"
+activated_at = "2026-06-01"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-06-01-archive-line-budget"
 plan_path = "docs/plans/archive-line-budget-2026-06-01.md"
 plan_hash_sha256 = "de8a6769abcc5ab6ec73ff209ea004601970e282885f2b9b1b053bf1598281a1"
@@ -31,19 +45,164 @@ plan_hash_sha256 = "7a684d01328786329d292ff45325add7d7f0d56938aff1972dd1ca9fc8ec
 activated_at = "2026-05-31"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-05-31-ci-nix-release-readiness"
-plan_path = "docs/plans/ci-nix-release-readiness-2026-05-31.md"
-plan_hash_sha256 = "3eb542718b31d9d7f2527936e77847a3b0ea4146e60d888dbc804e95e8c92b39"
-activated_at = "2026-05-31"
+[[tasks]]
+task_id = "TASK-2026-06-01-patch-release-2-0-2-001"
+plan_id = "PLAN-2026-06-01-patch-release-2-0-2"
 status = "completed"
+title = "Prepare and validate patch release 2.0.2"
+kind = "implementation"
+source_plan_path = "docs/plans/patch-release-2-0-2-2026-06-01.md"
+source_plan_hash_sha256 = "422a7e5b9cfec24f1d0ef05193d017dd8f67efb0c859be29c183e0cd30579402"
+reason = "The existing public 2.0.1 release predates blocker fixes now required for public consumption."
+acceptance_proof = "Behaviors B-001 and B-002."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "B-001-version-positive",
+    "B-002-readiness-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T12:52:13.575020246-04:00"
+completion_changed_files = [
+    ".codex-plugin/plugin.json",
+    "CHANGELOG.md",
+    "MANIFEST.toml",
+    "README.md",
+    "REQUIREMENTS.toml",
+    "VERSION",
+    "docs/plans/patch-release-2-0-2-2026-06-01.md",
+    "docs/task-registry.toml",
+    "docs/task-registry/events.jsonl",
+    "package.nix",
+    "plugin.json",
+    "rust/task-registry-flow-cli/Cargo.lock",
+    "rust/task-registry-flow-cli/Cargo.toml",
+]
 
-[[plans]]
-plan_id = "PLAN-2026-05-31-landing-active-only"
-plan_path = "docs/plans/landing-active-only-2026-05-31.md"
-plan_hash_sha256 = "0426f2b63fcd131cf0ba3f87a38810c3b05be604f51e96e1f50ba6fd48535d78"
-activated_at = "2026-05-31"
+[[tasks.targets]]
+file = "VERSION"
+object = "release version"
+required_change = "Set patch release version to 2.0.2."
+
+[[tasks.targets]]
+file = "plugin.json"
+object = "plugin version"
+required_change = "Set patch release version to 2.0.2."
+
+[[tasks.targets]]
+file = ".codex-plugin/plugin.json"
+object = "Codex plugin version"
+required_change = "Set patch release version to 2.0.2."
+
+[[tasks.targets]]
+file = "MANIFEST.toml"
+object = "plugin_version"
+required_change = "Set patch release version to 2.0.2."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/Cargo.toml"
+object = "crate version"
+required_change = "Set patch release version to 2.0.2."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/Cargo.lock"
+object = "crate lock version"
+required_change = "Regenerate after the crate version bump."
+
+[[tasks.targets]]
+file = "package.nix"
+object = "Nix package version"
+required_change = "Set patch release version to 2.0.2."
+
+[[tasks.targets]]
+file = "REQUIREMENTS.toml"
+object = "release source version"
+required_change = "Set expected release source version to 2.0.2."
+
+[[tasks.targets]]
+file = "README.md"
+object = "current release"
+required_change = "Set current release to 2.0.2."
+
+[[tasks.targets]]
+file = "CHANGELOG.md"
+object = "patch release notes"
+required_change = "Document post-2.0.1 release blocker fixes."
+
+[[tasks.targets]]
+file = "docs/plans/patch-release-2-0-2-2026-06-01.md"
+object = "closure contract"
+required_change = "Track approved scope, behavior verifiers, and validation evidence."
+
+[[tasks.targets]]
+file = "docs/task-registry.toml"
+object = "task registry activation and landing"
+required_change = "Record this plan state through task-registry CLI only."
+
+[[tasks.targets]]
+file = "docs/task-registry/events.jsonl"
+object = "task registry receipts"
+required_change = "Append activation and landing receipts through task-registry CLI only."
+
+[[tasks.targets]]
+file = "docs/task-registry/archive/"
+object = "completed task archives"
+required_change = "Archive completed task rows after landing."
+
+[[tasks]]
+task_id = "TASK-2026-06-01-receipt-lock-release-001"
+plan_id = "PLAN-2026-06-01-receipt-lock-release"
 status = "completed"
+title = "Release receipt file locks after durable append"
+kind = "implementation"
+source_plan_path = "docs/plans/receipt-lock-release-2026-06-01.md"
+source_plan_hash_sha256 = "4c7f53dd8c3f68457a50b693499893cc1eb6f004d13a0605a73809e9762a3ee9"
+reason = "CI/Nix package check exposed sequential receipt append lock retention."
+acceptance_proof = "Behaviors B-001 and B-002."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "B-001-receipt-lock-positive",
+    "B-002-nix-lock-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T12:28:44.386055840-04:00"
+completion_changed_files = [
+    "docs/plans/receipt-lock-release-2026-06-01.md",
+    "docs/task-registry.toml",
+    "docs/task-registry/events.jsonl",
+    "rust/task-registry-flow-cli/src/runtime.rs",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/runtime.rs"
+object = "append_event lock release"
+required_change = "Explicitly unlock the events file after sync succeeds."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/metrics_tests.rs"
+object = "receipt metrics lock regression"
+required_change = "Use existing focused metrics test as behavior proof."
+
+[[tasks.targets]]
+file = "docs/plans/receipt-lock-release-2026-06-01.md"
+object = "closure contract"
+required_change = "Track approved scope, behavior verifiers, and validation evidence."
+
+[[tasks.targets]]
+file = "docs/task-registry.toml"
+object = "task registry activation and landing"
+required_change = "Record this plan state through task-registry CLI only."
+
+[[tasks.targets]]
+file = "docs/task-registry/events.jsonl"
+object = "task registry receipts"
+required_change = "Append activation and landing receipts through task-registry CLI only."
+
+[[tasks.targets]]
+file = "docs/task-registry/archive/"
+object = "completed task archives"
+required_change = "Archive completed task rows after landing."
 
 [[tasks]]
 task_id = "TASK-2026-06-01-archive-line-budget-001"
@@ -1020,179 +1179,3 @@ completion_changed_files = [
 file = "docs/plans/public-release-2-0-1-2026-06-01.md"
 object = "walkthrough evidence"
 required_change = "Capture local validation and public release handoff evidence."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-ci-nix-001"
-plan_id = "PLAN-2026-05-31-ci-nix-release-readiness"
-status = "completed"
-title = "Install Nix before CI release readiness"
-kind = "implementation"
-source_plan_path = "docs/plans/ci-nix-release-readiness-2026-05-31.md"
-source_plan_hash_sha256 = "3eb542718b31d9d7f2527936e77847a3b0ea4146e60d888dbc804e95e8c92b39"
-reason = "GitHub CI release readiness failed because nix was unavailable on the runner."
-acceptance_proof = "Behaviors B-2026-05-31-ci-nix-G01-positive and B-2026-05-31-ci-nix-G01-negative: workflow order verifiers pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-2026-05-31-ci-nix-G01-positive",
-    "B-2026-05-31-ci-nix-G01-negative",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-05-31T20:59:49.339136379-04:00"
-completion_changed_files = [
-    ".github/workflows/ci.yml",
-    "docs/plans/ci-nix-release-readiness-2026-05-31.md",
-]
-
-[[tasks.targets]]
-file = ".github/workflows/ci.yml"
-object = "release_readiness_prerequisites"
-required_change = "Install pinned Nix action before Release readiness behavior."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-ci-nix-002"
-plan_id = "PLAN-2026-05-31-ci-nix-release-readiness"
-status = "completed"
-title = "Validate release readiness after CI prerequisite fix"
-kind = "validation"
-source_plan_path = "docs/plans/ci-nix-release-readiness-2026-05-31.md"
-source_plan_hash_sha256 = "3eb542718b31d9d7f2527936e77847a3b0ea4146e60d888dbc804e95e8c92b39"
-reason = "Release handoff requires strict local release, registry, and receipt-chain evidence."
-acceptance_proof = "Behavior B-2026-05-31-ci-nix-G02-validation: local release readiness and registry gates pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = ["B-2026-05-31-ci-nix-G02-validation"]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-05-31T20:59:49.339136379-04:00"
-completion_changed_files = [
-    ".github/workflows/ci.yml",
-    "docs/plans/ci-nix-release-readiness-2026-05-31.md",
-]
-
-[[tasks.targets]]
-file = "docs/plans/ci-nix-release-readiness-2026-05-31.md"
-object = "walkthrough_evidence"
-required_change = "Capture release validation and receipt-chain evidence for the CI prerequisite closure."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-active-landing-001"
-plan_id = "PLAN-2026-05-31-landing-active-only"
-status = "completed"
-title = "Restrict verify-landing to active tasks"
-kind = "implementation"
-source_plan_path = "docs/plans/landing-active-only-2026-05-31.md"
-source_plan_hash_sha256 = "0426f2b63fcd131cf0ba3f87a38810c3b05be604f51e96e1f50ba6fd48535d78"
-reason = "Landing must reject planned task targets before running behavior verifiers."
-acceptance_proof = "Behaviors B-2026-05-31-active-landing-G01-positive and B-2026-05-31-active-landing-G01-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-2026-05-31-active-landing-G01-positive",
-    "B-2026-05-31-active-landing-G01-negative",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-05-31T19:19:15.084173327-04:00"
-completion_changed_files = [
-    "docs/plans/landing-active-only-2026-05-31.md",
-    "docs/runtime-schemas.md",
-    "rust/task-registry-flow-cli/src/landing.rs",
-    "rust/task-registry-flow-cli/src/tests/landing_tests.rs",
-    "rust/task-registry-flow-cli/src/tests/mod.rs",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/landing.rs"
-object = "landing task selector"
-required_change = "Select only active task targets before verifier execution and update diagnostics."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-active-landing-002"
-plan_id = "PLAN-2026-05-31-landing-active-only"
-status = "completed"
-title = "Cover planned-task landing rejection"
-kind = "test"
-source_plan_path = "docs/plans/landing-active-only-2026-05-31.md"
-source_plan_hash_sha256 = "0426f2b63fcd131cf0ba3f87a38810c3b05be604f51e96e1f50ba6fd48535d78"
-reason = "The review gap requires a negative test proving planned targets fail before verifiers run."
-acceptance_proof = "Behavior B-2026-05-31-active-landing-G01-negative passes."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = ["B-2026-05-31-active-landing-G01-negative"]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-05-31T19:19:15.084173327-04:00"
-completion_changed_files = [
-    "docs/plans/landing-active-only-2026-05-31.md",
-    "docs/runtime-schemas.md",
-    "rust/task-registry-flow-cli/src/landing.rs",
-    "rust/task-registry-flow-cli/src/tests/landing_tests.rs",
-    "rust/task-registry-flow-cli/src/tests/mod.rs",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/landing_tests.rs"
-object = "planned target rejection test"
-required_change = "Add a test that a planned task with a failing verifier is rejected before verifier execution."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/mod.rs"
-object = "landing failing-verifier fixture"
-required_change = "Activate the task before expecting verifier failure."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-active-landing-003"
-plan_id = "PLAN-2026-05-31-landing-active-only"
-status = "completed"
-title = "Sync active-only landing docs"
-kind = "documentation"
-source_plan_path = "docs/plans/landing-active-only-2026-05-31.md"
-source_plan_hash_sha256 = "0426f2b63fcd131cf0ba3f87a38810c3b05be604f51e96e1f50ba6fd48535d78"
-reason = "Runtime docs and diagnostics must not describe planned tasks as landing candidates."
-acceptance_proof = "Behaviors B-2026-05-31-active-landing-G02-positive and B-2026-05-31-active-landing-G02-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-2026-05-31-active-landing-G02-positive",
-    "B-2026-05-31-active-landing-G02-negative",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-05-31T19:19:15.084173327-04:00"
-completion_changed_files = [
-    "docs/plans/landing-active-only-2026-05-31.md",
-    "docs/runtime-schemas.md",
-    "rust/task-registry-flow-cli/src/landing.rs",
-    "rust/task-registry-flow-cli/src/tests/landing_tests.rs",
-    "rust/task-registry-flow-cli/src/tests/mod.rs",
-]
-
-[[tasks.targets]]
-file = "docs/runtime-schemas.md"
-object = "Landing Completion Contract"
-required_change = "Describe verify-landing as active-task-only completion."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-active-landing-004"
-plan_id = "PLAN-2026-05-31-landing-active-only"
-status = "completed"
-title = "Run active-only landing validation"
-kind = "validation"
-source_plan_path = "docs/plans/landing-active-only-2026-05-31.md"
-source_plan_hash_sha256 = "0426f2b63fcd131cf0ba3f87a38810c3b05be604f51e96e1f50ba6fd48535d78"
-reason = "The landing selector change touches governance completion authority and needs full release proof."
-acceptance_proof = "Behavior B-2026-05-31-active-landing-G03-validation passes."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = ["B-2026-05-31-active-landing-G03-validation"]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-05-31T19:19:15.084173327-04:00"
-completion_changed_files = [
-    "docs/plans/landing-active-only-2026-05-31.md",
-    "docs/runtime-schemas.md",
-    "rust/task-registry-flow-cli/src/landing.rs",
-    "rust/task-registry-flow-cli/src/tests/landing_tests.rs",
-    "rust/task-registry-flow-cli/src/tests/mod.rs",
-]
-
-[[tasks.targets]]
-file = "docs/plans/landing-active-only-2026-05-31.md"
-object = "validation and handoff evidence"
-required_change = "Run the focused and full validation gates for active-only landing."
