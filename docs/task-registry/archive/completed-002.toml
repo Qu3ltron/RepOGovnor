@@ -4,6 +4,13 @@ archive_id = "completed-002"
 archive_authority = "docs/task-registry/archive/completed-002.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-06-01-typed-runtime-surfaces"
+plan_path = "docs/plans/typed-runtime-surfaces-2026-06-01.md"
+plan_hash_sha256 = "68afb6dae13bf251613c5e498b732b2a84aba0426cf130171b6ba88fb58f83a6"
+activated_at = "2026-06-01"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-06-01-security-hardening"
 plan_path = "docs/plans/security-hardening-2026-06-01.md"
 plan_hash_sha256 = "e5e821a28da569cfd8d18e9a4b9ac6587c268125eeb25e37e6f9022ea809b0f0"
@@ -38,12 +45,139 @@ plan_hash_sha256 = "8b9cf69a4e0c1d0dfcc4c030a9c64e5a9cce194da099c9b92e22e0b8c765
 activated_at = "2026-05-31"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-05-31-claude-runbook-doc-sync"
-plan_path = "docs/plans/claude-runbook-doc-sync-2026-05-31.md"
-plan_hash_sha256 = "42ca1674087d6e1bc74e9d8109b7569d51b671a42ed2edb00b34d29008ebb0f9"
-activated_at = "2026-05-31"
+[[tasks]]
+task_id = "TASK-2026-06-01-typed-runtime-surfaces-001"
+plan_id = "PLAN-2026-06-01-typed-runtime-surfaces"
 status = "completed"
+title = "Enforce typed runtime command, hook, receipt, and failure surfaces"
+kind = "implementation"
+source_plan_path = "docs/plans/typed-runtime-surfaces-2026-06-01.md"
+source_plan_hash_sha256 = "68afb6dae13bf251613c5e498b732b2a84aba0426cf130171b6ba88fb58f83a6"
+reason = "Runtime machine interfaces must use typed discriminators instead of open strings."
+acceptance_proof = "Behaviors B-001 through B-008."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "B-001-command-enum-positive",
+    "B-002-command-enum-negative",
+    "B-003-hook-format-positive",
+    "B-004-hook-format-negative",
+    "B-005-receipt-schema-positive",
+    "B-006-receipt-schema-negative",
+    "B-007-failure-code-positive",
+    "B-008-failure-code-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T11:55:12.429456182-04:00"
+completion_changed_files = [
+    "REQUIREMENTS.toml",
+    "docs/plans/typed-runtime-surfaces-2026-06-01.md",
+    "docs/runtime-schemas.md",
+    "docs/task-registry.toml",
+    "docs/task-registry/events.jsonl",
+    "rust/task-registry-flow-cli/src/cli.rs",
+    "rust/task-registry-flow-cli/src/release_checks.rs",
+    "rust/task-registry-flow-cli/src/reports.rs",
+    "rust/task-registry-flow-cli/src/runtime.rs",
+    "rust/task-registry-flow-cli/src/schema.rs",
+    "rust/task-registry-flow-cli/src/source_limit.rs",
+    "rust/task-registry-flow-cli/src/status_checks.rs",
+    "rust/task-registry-flow-cli/src/tests/mod.rs",
+    "rust/task-registry-flow-cli/src/tests/status_check_tests.rs",
+    "rust/task-registry-flow-cli/src/tests/typed_runtime_surface_tests.rs",
+    "rust/task-registry-flow-cli/src/verifiers.rs",
+    "rust/task-registry-flow-cli/src/verify_chain.rs",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/schema.rs"
+object = "typed runtime schema"
+required_change = "Add typed schema version, subject kind, report surface, and failure code fields."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/reports.rs"
+object = "typed RuntimeFailure"
+required_change = "Carry typed failure codes through runtime errors and JSON payloads."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/cli.rs"
+object = "failure rendering"
+required_change = "Emit typed failure_code in command reports."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/runtime.rs"
+object = "typed dispatch"
+required_change = "Preserve typed command and hook parsing without string aliases."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/source_limit.rs"
+object = "typed report surfaces"
+required_change = "Use typed report surface enum values."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/status_checks.rs"
+object = "typed report surfaces"
+required_change = "Use typed report surface enum values."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/release_checks.rs"
+object = "typed report surfaces"
+required_change = "Use typed report surface enum values."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/typed_runtime_surface_tests.rs"
+object = "typed runtime regressions"
+required_change = "Add positive and negative tests for typed command, hook, receipt, and failure surfaces."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/verify_chain.rs"
+object = "typed report surfaces and failures"
+required_change = "Use typed receipt-chain surface and typed runtime failures."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/verifiers.rs"
+object = "typed verifier subject"
+required_change = "Use typed verifier-target runtime subject kind."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/mod.rs"
+object = "test module list"
+required_change = "Include typed_runtime_surface_tests."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/status_check_tests.rs"
+object = "status check typed surface tests"
+required_change = "Update status-check tests for typed report surfaces and typed JSON runtime failures."
+
+[[tasks.targets]]
+file = "REQUIREMENTS.toml"
+object = "release_source.required"
+required_change = "Declare new typed runtime test source."
+
+[[tasks.targets]]
+file = "docs/plans/typed-runtime-surfaces-2026-06-01.md"
+object = "closure contract"
+required_change = "Track approved scope, typed behavior verifiers, targets, and validation evidence."
+
+[[tasks.targets]]
+file = "docs/runtime-schemas.md"
+object = "runtime schema documentation"
+required_change = "Document typed failure codes, typed subject kinds, and typed report surfaces."
+
+[[tasks.targets]]
+file = "docs/task-registry.toml"
+object = "task registry activation and landing"
+required_change = "Record this plan state through task-registry CLI only."
+
+[[tasks.targets]]
+file = "docs/task-registry/events.jsonl"
+object = "task registry receipts"
+required_change = "Append activation and landing receipts through task-registry CLI only."
+
+[[tasks.targets]]
+file = "docs/task-registry/archive/"
+object = "completed task archive"
+required_change = "Archive completed task rows after landing."
 
 [[tasks]]
 task_id = "TASK-2026-06-01-001"
@@ -1336,31 +1470,3 @@ required_change = "Declare new landing Rust sources so release readiness cannot 
 file = "docs/plans/ci-owned-landing-2026-05-31.md"
 object = "validation evidence contract"
 required_change = "Keep this closure contract as the task-bound validation evidence surface."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-CRD01"
-plan_id = "PLAN-2026-05-31-claude-runbook-doc-sync"
-status = "completed"
-title = "Refresh Claude runbook smoke documentation"
-kind = "governance"
-source_plan_path = "docs/plans/claude-runbook-doc-sync-2026-05-31.md"
-source_plan_hash_sha256 = "42ca1674087d6e1bc74e9d8109b7569d51b671a42ed2edb00b34d29008ebb0f9"
-reason = "Claude-facing runbook documentation must not lag current release gates."
-acceptance_proof = "Behaviors B-CRD01-positive, B-CRD01-negative, and B-CRD01-validation pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-CRD01-positive",
-    "B-CRD01-negative",
-    "B-CRD01-validation",
-]
-
-[[tasks.targets]]
-file = ".claude/skills/run-governance-plugin/SKILL.md"
-object = "runbook_current_gates"
-required_change = "Document current count-free smoke coverage and strict status behavior."
-
-[[tasks.targets]]
-file = ".claude/skills/run-governance-plugin/smoke.sh"
-object = "count_free_labels"
-required_change = "Remove stale hardcoded count labels and obsolete known-nonzero status wording."

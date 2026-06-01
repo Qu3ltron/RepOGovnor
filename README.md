@@ -74,6 +74,20 @@ Important limits:
 - It validates process and provenance; it does not prove product correctness by
   itself.
 
+## Proof boundaries
+
+Governance proof and product correctness proof are separate.
+
+Governance proof means the repository can show the approved plan, active task
+targets, typed behavior verifiers, mutation boundaries, receipt chain, and
+release-source checks for a change. It answers "was this change authorized,
+scoped, tested against its declared behaviors, and landed through the workflow?"
+
+Product correctness proof still belongs to the project. Maintainers still need
+domain tests, code review, security review where relevant, and product
+acceptance evidence. A green governance report is useful review evidence, not a
+substitute for deciding whether the product behavior is correct.
+
 See [VISION.md](VISION.md) for the product direction and
 [ROADMAP.md](ROADMAP.md) for planned improvements.
 

@@ -69,12 +69,14 @@ or that every future integration exists.
 ### GP-005: Product correctness remains out of scope
 - Claim pressure: governance checks can look stronger than they are.
 - Current evidence: registry, receipts, hooks, and release checks prove process
-  invariants; they do not replace domain tests or code review.
-- User impact: users may over-trust a green governance report.
-- Next closure: add clearer docs and reviewer output language that labels
-  governance proof separately from product correctness proof.
-- Reactivation condition: before publishing reviewer-report features or a public
-  tutorial.
+  invariants; they do not replace domain tests or code review. README now
+  includes a `Proof boundaries` section that separates Governance proof from
+  Product correctness proof.
+- User impact: users have a visible public boundary, but future reviewer output
+  should keep the same distinction when a compact report command exists.
+- Next closure: add reviewer-output language that labels governance proof
+  separately from product correctness proof.
+- Reactivation condition: before publishing reviewer-report features.
 
 ## Drain protocol
 
