@@ -210,6 +210,16 @@ format = "json"
 key = "version"
 
 [[release_source.version_files]]
+path = "README.md"
+format = "markdown-line"
+key = "Current release:"
+
+[[release_source.version_files]]
+path = "docs/releases/v2.md"
+format = "markdown-line"
+key = "Release version:"
+
+[[release_source.version_files]]
 path = ".codex-plugin/plugin.json"
 format = "json"
 key = "version"

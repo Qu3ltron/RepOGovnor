@@ -628,7 +628,29 @@ fn extract_version(root: &Path, version_file: &VersionFile) -> Result<String> {
                 .map(str::to_string)
                 .ok_or_else(|| format!("missing TOML string key {key}"))
         }
+        VersionFileFormat::MarkdownLine => {
+            let key = version_file
+                .key
+                .as_deref()
+                .ok_or_else(|| "markdown-line version file requires key".to_string())?;
+            markdown_line_version(&body, key)
+                .ok_or_else(|| format!("missing Markdown version line with prefix {key}"))
+        }
     }
+}
+
+fn markdown_line_version(body: &str, key: &str) -> Option<String> {
+    body.lines().find_map(|line| {
+        let rest = line.trim().strip_prefix(key)?.trim();
+        if rest.is_empty() {
+            return None;
+        }
+        if let Some(after_open) = rest.strip_prefix('`') {
+            let (version, _) = after_open.split_once('`')?;
+            return Some(version.trim().to_string());
+        }
+        Some(rest.to_string())
+    })
 }
 
 fn json_key<'a>(value: &'a serde_json::Value, key: &str) -> Option<&'a serde_json::Value> {

@@ -64,3 +64,24 @@ fn release_source_rejects_required_symlink() {
             && check.actual == "symlink"
     }));
 }
+
+#[test]
+fn release_source_rejects_stale_markdown_version_file() {
+    let root = temp_root("release-source-markdown-version");
+    seed_release_repo(&root);
+    fs::write(
+        root.join("docs/releases/v2.md"),
+        "# V2 Release Checklist\n\nRelease version: `2.0.1`\n",
+    )
+    .unwrap();
+
+    let report = release_checks::report(&root, release_checks::Mode::Version).unwrap();
+
+    assert!(report.has_failures());
+    assert!(report.checks.iter().any(|check| {
+        check.check_id == "release-version-consistent"
+            && check.path == "docs/releases/v2.md"
+            && check.status == CheckStatus::Fail
+            && check.actual == "version 2.0.1"
+    }));
+}

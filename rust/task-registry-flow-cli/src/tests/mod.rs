@@ -1478,7 +1478,13 @@ required_change = "Update verifier fixture."
 
 fn seed_release_repo(root: &Path) {
     fs::write(root.join("VERSION"), "2.0.0\n").unwrap();
-    fs::write(root.join("README.md"), "readme").unwrap();
+    fs::write(root.join("README.md"), "Current release: `2.0.0`\n").unwrap();
+    fs::create_dir_all(root.join("docs/releases")).unwrap();
+    fs::write(
+        root.join("docs/releases/v2.md"),
+        "# V2 Release Checklist\n\nRelease version: `2.0.0`\n",
+    )
+    .unwrap();
     fs::write(root.join("plugin.json"), r#"{"version":"2.0.0"}"#).unwrap();
     fs::write(
         root.join("MANIFEST.toml"),
@@ -1513,7 +1519,7 @@ required = ["README.md"]
 
 [release_source]
 version = "2.0.0"
-required = ["VERSION", "README.md", "plugin.json", "MANIFEST.toml", "rust/task-registry-flow-cli/Cargo.toml", "scripts/test-install-modes.sh"]
+required = ["VERSION", "README.md", "docs/releases/v2.md", "plugin.json", "MANIFEST.toml", "rust/task-registry-flow-cli/Cargo.toml", "scripts/test-install-modes.sh"]
 executable = ["scripts/test-install-modes.sh"]
 stale_absent = ["hooks.json"]
 check_ids = ["release-file-present", "release-file-executable", "release-script-executable-undeclared", "release-executable-platform", "release-rust-source-undeclared", "stale-path-absent", "release-version-consistent"]
@@ -1526,6 +1532,16 @@ format = "plain"
 path = "plugin.json"
 format = "json"
 key = "version"
+
+[[release_source.version_files]]
+path = "README.md"
+format = "markdown-line"
+key = "Current release:"
+
+[[release_source.version_files]]
+path = "docs/releases/v2.md"
+format = "markdown-line"
+key = "Release version:"
 
 [[release_source.version_files]]
 path = "MANIFEST.toml"

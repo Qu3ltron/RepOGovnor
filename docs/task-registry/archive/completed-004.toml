@@ -4,6 +4,13 @@ archive_id = "completed-004"
 archive_authority = "docs/task-registry/archive/completed-004.toml"
 
 [[plans]]
+plan_id = "verify-chain-hardening-batch-2-2026-05-31"
+plan_path = "docs/plans/verify-chain-hardening-batch-2-2026-05-31.md"
+plan_hash_sha256 = "fc8c802ee2e7a6cfbaf5e85a1050ab7c449916ff3812b0ea606cb1d60ddbe8d2"
+activated_at = "2026-05-31"
+status = "completed"
+
+[[plans]]
 plan_id = "verify-chain-hardening-2026-05-31"
 plan_path = "docs/plans/verify-chain-hardening-2026-05-31.md"
 plan_hash_sha256 = "3002c6daddc69a7250637febd77b03cb7c14c5852000c468193ebe63601a3522"
@@ -38,12 +45,96 @@ plan_hash_sha256 = "ad84fbf9f6187483c4ba626b35a358a2748231bdc335065ad59130fa7eff
 activated_at = "2026-05-31"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-05-31-release-executable-enforcement"
-plan_path = "docs/plans/release-executable-enforcement.md"
-plan_hash_sha256 = "3ad7520f1e9de72abd5e7e704399e4588d00628a3487ef271c337e362b4be72c"
-activated_at = "2026-05-31"
+[[tasks]]
+task_id = "TASK-2026-05-31-VH2-001"
+plan_id = "verify-chain-hardening-batch-2-2026-05-31"
 status = "completed"
+title = "Fix repair_chain truncation hazard — use truncate(false)"
+kind = "implementation"
+source_plan_path = "docs/plans/verify-chain-hardening-batch-2-2026-05-31.md"
+source_plan_hash_sha256 = "fc8c802ee2e7a6cfbaf5e85a1050ab7c449916ff3812b0ea606cb1d60ddbe8d2"
+reason = "repair_chain opens the events file with truncate(true) before acquiring the lock, creating a data-loss hazard if any step before the atomic rename fails"
+acceptance_proof = "Behavior B-H1: repair_chain OpenOptions uses truncate(false); events file survives lock-contention error paths intact"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-H1-repair-does-not-truncate-before-lock",
+    "B-H1-repair-preserves-on-lock-failure-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/verify_chain.rs"
+object = "repair_chain OpenOptions"
+required_change = "change truncate(true) to truncate(false) so the events file is not zeroed before the atomic rename"
+
+[[tasks]]
+task_id = "TASK-2026-05-31-VH2-002"
+plan_id = "verify-chain-hardening-batch-2-2026-05-31"
+status = "completed"
+title = "Reject duplicate flags and fix Option debug in error messages"
+kind = "implementation"
+source_plan_path = "docs/plans/verify-chain-hardening-batch-2-2026-05-31.md"
+source_plan_hash_sha256 = "fc8c802ee2e7a6cfbaf5e85a1050ab7c449916ff3812b0ea606cb1d60ddbe8d2"
+reason = "parse_verify_chain_args silently accepts duplicate --repair/--format and leaks Rust Option debug formatting in error messages"
+acceptance_proof = "Behavior B-H2: --repair --repair exits 1 with duplicate flag error; Behavior B-H3: error messages use user-friendly phrasing without Some()/None"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-H2-rejects-duplicate-repair-flag",
+    "B-H2-rejects-duplicate-format-flag",
+    "B-H2-single-flags-still-accepted-negative",
+    "B-H3-no-option-debug-in-errors",
+    "B-H3-valid-format-still-accepted-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/verify_chain.rs"
+object = "parse_verify_chain_args"
+required_change = "detect duplicate --repair and --format flags; format error messages without Option debug representation"
+
+[[tasks]]
+task_id = "TASK-2026-05-31-VH2-003"
+plan_id = "verify-chain-hardening-batch-2-2026-05-31"
+status = "completed"
+title = "Render pass diagnostics in format_chain_report text output"
+kind = "implementation"
+source_plan_path = "docs/plans/verify-chain-hardening-batch-2-2026-05-31.md"
+source_plan_hash_sha256 = "fc8c802ee2e7a6cfbaf5e85a1050ab7c449916ff3812b0ea606cb1d60ddbe8d2"
+reason = "After --repair, format_chain_report ignores pass diagnostics, so users never see what lines were fixed"
+acceptance_proof = "Behavior B-H4: repair output includes repair count and per-line details"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-H4-repair-output-shows-pass-diagnostics",
+    "B-H4-no-spurious-pass-on-intact-chain-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/verify_chain.rs"
+object = "format_chain_report"
+required_change = "render pass diagnostics when summary.pass > 0, showing repair count and per-line details"
+
+[[tasks]]
+task_id = "TASK-2026-05-31-VH2-004"
+plan_id = "verify-chain-hardening-batch-2-2026-05-31"
+status = "completed"
+title = "Clean up orphaned temp file on sync failure in repair_chain"
+kind = "implementation"
+source_plan_path = "docs/plans/verify-chain-hardening-batch-2-2026-05-31.md"
+source_plan_hash_sha256 = "fc8c802ee2e7a6cfbaf5e85a1050ab7c449916ff3812b0ea606cb1d60ddbe8d2"
+reason = "If sync_all fails after a successful fs::write of the temp file, the events.jsonl.tmp file is left on disk"
+acceptance_proof = "Behavior B-H5: successful repair leaves no .tmp file; error path cleans up"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-H5-no-orphaned-tmp-after-repair",
+    "B-H5-tmp-file-cleaned-on-error-path-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/verify_chain.rs"
+object = "repair_chain error handling"
+required_change = "add fs::remove_file(&tmp_path) cleanup on the sync_all error path"
 
 [[tasks]]
 task_id = "TASK-2026-05-31-VC-001"
@@ -605,86 +696,3 @@ required_change = "Assert prose-only tokens and reversed comment markers fail JS
 file = "scripts/test-install-modes.sh"
 object = "strict_marker_negative_cases"
 required_change = "Assert shell status rejects markerless, prose-only, and reversed-marker workspaces."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-release-executable-001"
-plan_id = "PLAN-2026-05-31-release-executable-enforcement"
-status = "completed"
-title = "Add executable release schema and runtime checks"
-kind = "implementation"
-source_plan_path = "docs/plans/release-executable-enforcement.md"
-source_plan_hash_sha256 = "3ad7520f1e9de72abd5e7e704399e4588d00628a3487ef271c337e362b4be72c"
-reason = "Release artifact presence is insufficient when scripts are not executable."
-acceptance_proof = "Behaviors B-001-executable-release-positive and B-002-executable-release-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-001-executable-release-positive",
-    "B-002-executable-release-negative",
-]
-
-[[tasks.targets]]
-file = "REQUIREMENTS.toml"
-object = "release_source.executable and check_ids"
-required_change = "Declare executable release artifacts and the release-file-executable diagnostic id."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/schema.rs"
-object = "ReleaseCheckId"
-required_change = "Add release-file-executable as a typed release check id."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/release_checks.rs"
-object = "release_check runtime"
-required_change = "Parse executable requirements and emit pass/fail executable diagnostics."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-release-executable-002"
-plan_id = "PLAN-2026-05-31-release-executable-enforcement"
-status = "completed"
-title = "Add executable migration tests"
-kind = "validation"
-source_plan_path = "docs/plans/release-executable-enforcement.md"
-source_plan_hash_sha256 = "3ad7520f1e9de72abd5e7e704399e4588d00628a3487ef271c337e362b4be72c"
-reason = "The release gate must prove both good executable state and non-executable migration failure."
-acceptance_proof = "Behaviors B-002-executable-release-negative and B-003-direct-script-validation pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-002-executable-release-negative",
-    "B-003-direct-script-validation",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/mod.rs"
-object = "release executable tests"
-required_change = "Seed executable requirements and assert chmod 0644 failures produce release-file-executable diagnostics."
-
-[[tasks.targets]]
-file = "scripts/test-release-readiness.sh"
-object = "check_executable"
-required_change = "Add positive and negative executable-mode release readiness checks."
-
-[[tasks.targets]]
-file = "scripts/test-install-modes.sh"
-object = "filesystem mode"
-required_change = "Track executable mode so direct invocation works."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-release-executable-003"
-plan_id = "PLAN-2026-05-31-release-executable-enforcement"
-status = "completed"
-title = "Document executable release runtime contract"
-kind = "documentation"
-source_plan_path = "docs/plans/release-executable-enforcement.md"
-source_plan_hash_sha256 = "3ad7520f1e9de72abd5e7e704399e4588d00628a3487ef271c337e362b4be72c"
-reason = "Release executable policy must be discoverable as schema, not loose prose."
-acceptance_proof = "Behavior B-001-executable-release-positive passes and docs/runtime-schemas.md names release_source.executable."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = ["B-001-executable-release-positive"]
-
-[[tasks.targets]]
-file = "docs/runtime-schemas.md"
-object = "Release Contract"
-required_change = "Document release_source.executable and release-file-executable diagnostics."

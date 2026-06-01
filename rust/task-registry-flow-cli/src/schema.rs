@@ -212,6 +212,7 @@ string_enum!(VersionFileFormat {
     Plain => "plain",
     Json => "json",
     Toml => "toml",
+    MarkdownLine => "markdown-line",
 });
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]

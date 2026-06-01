@@ -4,6 +4,13 @@ archive_id = "completed-003"
 archive_authority = "docs/task-registry/archive/completed-003.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-05-31-documentation-sync"
+plan_path = "docs/plans/documentation-sync-2026-05-31.md"
+plan_hash_sha256 = "3117f1306aa73aae251ec6a9476b395ba53c61048395acdf479f8d81373baf52"
+activated_at = "2026-05-31"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-05-31-secondary-hardening"
 plan_path = "docs/plans/secondary-hardening-2026-05-31.md"
 plan_hash_sha256 = "d2d2f67837a23e7c786c9d4bff81e697318556741cde726a079bd1dcf223450f"
@@ -38,12 +45,150 @@ plan_hash_sha256 = "6338b2c727644de355c316df3bdda1cea004ee3b860c890e5759c760a372
 activated_at = "2026-05-31"
 status = "completed"
 
-[[plans]]
-plan_id = "verify-chain-hardening-batch-2-2026-05-31"
-plan_path = "docs/plans/verify-chain-hardening-batch-2-2026-05-31.md"
-plan_hash_sha256 = "fc8c802ee2e7a6cfbaf5e85a1050ab7c449916ff3812b0ea606cb1d60ddbe8d2"
-activated_at = "2026-05-31"
+[[tasks]]
+task_id = "TASK-2026-05-31-DOC01"
+plan_id = "PLAN-2026-05-31-documentation-sync"
 status = "completed"
+title = "Update README and system docs"
+kind = "governance"
+source_plan_path = "docs/plans/documentation-sync-2026-05-31.md"
+source_plan_hash_sha256 = "3117f1306aa73aae251ec6a9476b395ba53c61048395acdf479f8d81373baf52"
+reason = "Production-facing docs must match the current hardened runtime before release."
+acceptance_proof = "Behaviors B-DOC01-positive and B-DOC01-negative pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-DOC01-positive",
+    "B-DOC01-negative",
+]
+
+[[tasks.targets]]
+file = "README.md"
+object = "production_contract"
+required_change = "Document clean-tree release readiness, manifest-backed source tracking, native files, receipt chains, terminal task immutability, and Nix verification."
+
+[[tasks.targets]]
+file = "docs/runtime-schemas.md"
+object = "runtime_invariants"
+required_change = "Add runtime invariants for receipts, mutation target parsing, terminal task immutability, release source, and final release waivers."
+
+[[tasks.targets]]
+file = "docs/releases/v2.md"
+object = "release_checklist"
+required_change = "Use REQUIREMENTS.toml as artifact authority and list current final release gates."
+
+[[tasks.targets]]
+file = "docs/agent-environment-matrix.md"
+object = "environment_matrix"
+required_change = "Add Claude Code and shared hardening rules across agent environments."
+
+[[tasks]]
+task_id = "TASK-2026-05-31-DOC02"
+plan_id = "PLAN-2026-05-31-documentation-sync"
+status = "completed"
+title = "Update agent-facing docs and skill projections"
+kind = "governance"
+source_plan_path = "docs/plans/documentation-sync-2026-05-31.md"
+source_plan_hash_sha256 = "3117f1306aa73aae251ec6a9476b395ba53c61048395acdf479f8d81373baf52"
+reason = "All agent-facing docs, templates, and skill projections must reinforce the same canonical rules."
+acceptance_proof = "Behaviors B-DOC02-positive, B-DOC02-negative, and B-DOC02-projection pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-DOC02-positive",
+    "B-DOC02-negative",
+    "B-DOC02-projection",
+]
+
+[[tasks.targets]]
+file = "AGENTS.md"
+object = "agent_hardening_rules"
+required_change = "Add shared production hardening rules for agents."
+
+[[tasks.targets]]
+file = "CLAUDE.md"
+object = "agent_hardening_rules"
+required_change = "Keep Claude Code instructions aligned with shared hardening rules."
+
+[[tasks.targets]]
+file = "GEMINI.md"
+object = "agent_hardening_rules"
+required_change = "Keep Antigravity instructions aligned with shared hardening rules."
+
+[[tasks.targets]]
+file = ".cursor/rules/agent-governance.mdc"
+object = "cursor_hardening_rules"
+required_change = "State Cursor-specific production hardening expectations."
+
+[[tasks.targets]]
+file = "templates/AGENTS.md.template"
+object = "agent_hardening_rules_template"
+required_change = "Render shared hardening rules for future Codex installs."
+
+[[tasks.targets]]
+file = "templates/CLAUDE.md.template"
+object = "agent_hardening_rules_template"
+required_change = "Render shared hardening rules for future Claude Code installs."
+
+[[tasks.targets]]
+file = "templates/GEMINI.md.template"
+object = "agent_hardening_rules_template"
+required_change = "Render shared hardening rules for future Antigravity installs."
+
+[[tasks.targets]]
+file = "templates/.cursor/rules/agent-governance.mdc.template"
+object = "cursor_hardening_rules_template"
+required_change = "Render Cursor hardening rules for future installs."
+
+[[tasks.targets]]
+file = "skills/gap-closure-contract/SKILL.md"
+object = "contract_requirements"
+required_change = "Include documentation sync, terminal task, receipt-chain, and release-source requirements."
+
+[[tasks.targets]]
+file = "skills/task-registry-flow/SKILL.md"
+object = "registry_flow_requirements"
+required_change = "Include terminal immutability and receipt-chain handoff requirements."
+
+[[tasks.targets]]
+file = ".agents/skills/gap-closure-contract/SKILL.md"
+object = "codex_projection"
+required_change = "Mirror canonical gap-closure-contract skill source."
+
+[[tasks.targets]]
+file = ".agents/skills/gap-closure-contract.md"
+object = "antigravity_markdown_projection"
+required_change = "Mirror canonical gap-closure-contract skill source."
+
+[[tasks.targets]]
+file = ".cursor/skills/gap-closure-contract/SKILL.md"
+object = "cursor_projection"
+required_change = "Mirror canonical gap-closure-contract skill source."
+
+[[tasks.targets]]
+file = ".claude/skills/gap-closure-contract/SKILL.md"
+object = "claude_projection"
+required_change = "Mirror canonical gap-closure-contract skill source."
+
+[[tasks.targets]]
+file = ".agents/skills/task-registry-flow/SKILL.md"
+object = "codex_projection"
+required_change = "Mirror canonical task-registry-flow skill source."
+
+[[tasks.targets]]
+file = ".agents/skills/task-registry-flow.md"
+object = "antigravity_markdown_projection"
+required_change = "Mirror canonical task-registry-flow skill source."
+
+[[tasks.targets]]
+file = ".cursor/skills/task-registry-flow/SKILL.md"
+object = "cursor_projection"
+required_change = "Mirror canonical task-registry-flow skill source."
+
+[[tasks.targets]]
+file = ".claude/skills/task-registry-flow/SKILL.md"
+object = "claude_projection"
+required_change = "Mirror canonical task-registry-flow skill source."
 
 [[tasks]]
 task_id = "TASK-2026-05-31-SH01"
@@ -639,94 +784,3 @@ behavior_ids = [
 file = "scripts/render-from-config.sh"
 object = "CLAUDE.md rendering logic"
 required_change = "Add CLAUDE.md template rendering in merge and force mode blocks"
-
-[[tasks]]
-task_id = "TASK-2026-05-31-VH2-001"
-plan_id = "verify-chain-hardening-batch-2-2026-05-31"
-status = "completed"
-title = "Fix repair_chain truncation hazard — use truncate(false)"
-kind = "implementation"
-source_plan_path = "docs/plans/verify-chain-hardening-batch-2-2026-05-31.md"
-source_plan_hash_sha256 = "fc8c802ee2e7a6cfbaf5e85a1050ab7c449916ff3812b0ea606cb1d60ddbe8d2"
-reason = "repair_chain opens the events file with truncate(true) before acquiring the lock, creating a data-loss hazard if any step before the atomic rename fails"
-acceptance_proof = "Behavior B-H1: repair_chain OpenOptions uses truncate(false); events file survives lock-contention error paths intact"
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-H1-repair-does-not-truncate-before-lock",
-    "B-H1-repair-preserves-on-lock-failure-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/verify_chain.rs"
-object = "repair_chain OpenOptions"
-required_change = "change truncate(true) to truncate(false) so the events file is not zeroed before the atomic rename"
-
-[[tasks]]
-task_id = "TASK-2026-05-31-VH2-002"
-plan_id = "verify-chain-hardening-batch-2-2026-05-31"
-status = "completed"
-title = "Reject duplicate flags and fix Option debug in error messages"
-kind = "implementation"
-source_plan_path = "docs/plans/verify-chain-hardening-batch-2-2026-05-31.md"
-source_plan_hash_sha256 = "fc8c802ee2e7a6cfbaf5e85a1050ab7c449916ff3812b0ea606cb1d60ddbe8d2"
-reason = "parse_verify_chain_args silently accepts duplicate --repair/--format and leaks Rust Option debug formatting in error messages"
-acceptance_proof = "Behavior B-H2: --repair --repair exits 1 with duplicate flag error; Behavior B-H3: error messages use user-friendly phrasing without Some()/None"
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-H2-rejects-duplicate-repair-flag",
-    "B-H2-rejects-duplicate-format-flag",
-    "B-H2-single-flags-still-accepted-negative",
-    "B-H3-no-option-debug-in-errors",
-    "B-H3-valid-format-still-accepted-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/verify_chain.rs"
-object = "parse_verify_chain_args"
-required_change = "detect duplicate --repair and --format flags; format error messages without Option debug representation"
-
-[[tasks]]
-task_id = "TASK-2026-05-31-VH2-003"
-plan_id = "verify-chain-hardening-batch-2-2026-05-31"
-status = "completed"
-title = "Render pass diagnostics in format_chain_report text output"
-kind = "implementation"
-source_plan_path = "docs/plans/verify-chain-hardening-batch-2-2026-05-31.md"
-source_plan_hash_sha256 = "fc8c802ee2e7a6cfbaf5e85a1050ab7c449916ff3812b0ea606cb1d60ddbe8d2"
-reason = "After --repair, format_chain_report ignores pass diagnostics, so users never see what lines were fixed"
-acceptance_proof = "Behavior B-H4: repair output includes repair count and per-line details"
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-H4-repair-output-shows-pass-diagnostics",
-    "B-H4-no-spurious-pass-on-intact-chain-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/verify_chain.rs"
-object = "format_chain_report"
-required_change = "render pass diagnostics when summary.pass > 0, showing repair count and per-line details"
-
-[[tasks]]
-task_id = "TASK-2026-05-31-VH2-004"
-plan_id = "verify-chain-hardening-batch-2-2026-05-31"
-status = "completed"
-title = "Clean up orphaned temp file on sync failure in repair_chain"
-kind = "implementation"
-source_plan_path = "docs/plans/verify-chain-hardening-batch-2-2026-05-31.md"
-source_plan_hash_sha256 = "fc8c802ee2e7a6cfbaf5e85a1050ab7c449916ff3812b0ea606cb1d60ddbe8d2"
-reason = "If sync_all fails after a successful fs::write of the temp file, the events.jsonl.tmp file is left on disk"
-acceptance_proof = "Behavior B-H5: successful repair leaves no .tmp file; error path cleans up"
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-H5-no-orphaned-tmp-after-repair",
-    "B-H5-tmp-file-cleaned-on-error-path-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/verify_chain.rs"
-object = "repair_chain error handling"
-required_change = "add fs::remove_file(&tmp_path) cleanup on the sync_all error path"
