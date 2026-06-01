@@ -24,12 +24,13 @@ or that every future integration exists.
 ### GP-001: First-run adoption path is still dense
 - Claim pressure: README and ROADMAP position the plugin as public and usable.
 - Current evidence: install commands and validation gates exist, but the setup
-  still assumes comfort with Git, shell commands, local config, and governed
-  task concepts.
-- User impact: first-time public users may stall before they see a successful
-  plan -> activate -> edit -> land loop.
-- Next closure: add a concise migration guide, a minimal example repository or
-  fixture, and clearer first-run installer output.
+  still assumes comfort with Git, shell commands, and local config. The release
+  now includes `docs/migration-v2.md` and `docs/example-workflow.md` as packaged
+  docs for migration and the plan -> activate -> edit -> land -> report loop.
+- User impact: first-time public users have a direct guide, but installer output
+  still needs clearer first-run messaging.
+- Next closure: improve first-run installer output and add a richer fixture or
+  sample repository if external smoke users still stall.
 - Reactivation condition: before the next public minor release or when a fresh
   external install smoke test shows confusion.
 

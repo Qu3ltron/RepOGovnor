@@ -4,6 +4,13 @@ archive_id = "completed-003"
 archive_authority = "docs/task-registry/archive/completed-003.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-05-31-ci-owned-landing"
+plan_path = "docs/plans/ci-owned-landing-2026-05-31.md"
+plan_hash_sha256 = "8b9cf69a4e0c1d0dfcc4c030a9c64e5a9cce194da099c9b92e22e0b8c765e35b"
+activated_at = "2026-05-31"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-05-31-claude-runbook-doc-sync"
 plan_path = "docs/plans/claude-runbook-doc-sync-2026-05-31.md"
 plan_hash_sha256 = "42ca1674087d6e1bc74e9d8109b7569d51b671a42ed2edb00b34d29008ebb0f9"
@@ -38,12 +45,352 @@ plan_hash_sha256 = "c36ad94618699298f2e99c4d5a0be22c0c7eadcfef7ae5a4881569e3e1c1
 activated_at = "2026-05-31"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-05-31-nix-auto-update"
-plan_path = "docs/plans/nix-auto-update-2026-05-31.md"
-plan_hash_sha256 = "7dd5f95dc1fd502953fd1569b99e1a5581af159d661cb512ee6570988677f70e"
-activated_at = "2026-05-31"
+[[tasks]]
+task_id = "TASK-2026-05-31-ci-owned-landing-001"
+plan_id = "PLAN-2026-05-31-ci-owned-landing"
 status = "completed"
+title = "Implement verify-landing completion authority"
+kind = "governance"
+source_plan_path = "docs/plans/ci-owned-landing-2026-05-31.md"
+source_plan_hash_sha256 = "8b9cf69a4e0c1d0dfcc4c030a9c64e5a9cce194da099c9b92e22e0b8c765e35b"
+reason = "Task completion must be written only through a landing verifier that binds changed files to activated task targets."
+acceptance_proof = "Behaviors B-2026-05-31-landing-G01-positive, B-2026-05-31-landing-G02-negative, B-2026-05-31-landing-G03-positive, and B-2026-05-31-landing-G03-negative pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-2026-05-31-landing-G01-positive",
+    "B-2026-05-31-landing-G02-negative",
+    "B-2026-05-31-landing-G03-positive",
+    "B-2026-05-31-landing-G03-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-05-31T17:49:55.146266347-04:00"
+completion_changed_files = [
+    ".agents/skills/task-registry-flow.md",
+    ".agents/skills/task-registry-flow/PROJECT.md",
+    ".agents/skills/task-registry-flow/SKILL.md",
+    ".claude/skills/task-registry-flow/PROJECT.md",
+    ".claude/skills/task-registry-flow/SKILL.md",
+    ".codex/agent-governance.toml",
+    ".cursor/skills/task-registry-flow/PROJECT.md",
+    ".cursor/skills/task-registry-flow/SKILL.md",
+    "AGENTS.md",
+    "README.md",
+    "REQUIREMENTS.toml",
+    "docs/plans/ci-owned-landing-2026-05-31.md",
+    "docs/runtime-schemas.md",
+    "rust/task-registry-flow-cli/src/activation.rs",
+    "rust/task-registry-flow-cli/src/landing.rs",
+    "rust/task-registry-flow-cli/src/main.rs",
+    "rust/task-registry-flow-cli/src/model.rs",
+    "rust/task-registry-flow-cli/src/receipts.rs",
+    "rust/task-registry-flow-cli/src/runtime.rs",
+    "rust/task-registry-flow-cli/src/schema.rs",
+    "rust/task-registry-flow-cli/src/tests/activation_terminal_tests.rs",
+    "rust/task-registry-flow-cli/src/tests/landing_tests.rs",
+    "rust/task-registry-flow-cli/src/tests/mod.rs",
+    "scripts/render-from-config.sh",
+    "templates/.codex/agent-governance.toml.template",
+    "templates/AGENTS.md.template",
+    "templates/CLAUDE.md.template",
+    "templates/GEMINI.md.template",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/schema.rs"
+object = "CliCommand verify-landing opcode"
+required_change = "Add canonical verify-landing command enum value."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/runtime.rs"
+object = "CLI dispatcher and usage"
+required_change = "Route verify-landing and remove direct status completion from the user-facing completion path."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/activation.rs"
+object = "task status transition entrypoint"
+required_change = "Reject direct completed status while preserving internal transition validation for landing completion."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/landing.rs"
+object = "verify-landing command implementation"
+required_change = "Bind changed files to active task targets, reject registry-only or unbound changes, run verifiers, and write completion status."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/model.rs"
+object = "RegistryTask completion evidence fields"
+required_change = "Add optional landing-owned completion evidence fields."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/receipts.rs"
+object = "default receipt command list"
+required_change = "Record verify-landing command receipts by default."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/main.rs"
+object = "landing module registration"
+required_change = "Register the landing module."
+
+[[tasks]]
+task_id = "TASK-2026-05-31-ci-owned-landing-002"
+plan_id = "PLAN-2026-05-31-ci-owned-landing"
+status = "completed"
+title = "Cover landing behavior with focused tests"
+kind = "test"
+source_plan_path = "docs/plans/ci-owned-landing-2026-05-31.md"
+source_plan_hash_sha256 = "8b9cf69a4e0c1d0dfcc4c030a9c64e5a9cce194da099c9b92e22e0b8c765e35b"
+reason = "The landing authority change needs positive and negative tests for completion, direct status denial, and off-plan drift."
+acceptance_proof = "Behaviors B-2026-05-31-landing-G01-positive, B-2026-05-31-landing-G02-negative, B-2026-05-31-landing-G03-positive, and B-2026-05-31-landing-G03-negative pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-2026-05-31-landing-G01-positive",
+    "B-2026-05-31-landing-G02-negative",
+    "B-2026-05-31-landing-G03-positive",
+    "B-2026-05-31-landing-G03-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-05-31T17:49:55.146266347-04:00"
+completion_changed_files = [
+    ".agents/skills/task-registry-flow.md",
+    ".agents/skills/task-registry-flow/PROJECT.md",
+    ".agents/skills/task-registry-flow/SKILL.md",
+    ".claude/skills/task-registry-flow/PROJECT.md",
+    ".claude/skills/task-registry-flow/SKILL.md",
+    ".codex/agent-governance.toml",
+    ".cursor/skills/task-registry-flow/PROJECT.md",
+    ".cursor/skills/task-registry-flow/SKILL.md",
+    "AGENTS.md",
+    "README.md",
+    "REQUIREMENTS.toml",
+    "docs/plans/ci-owned-landing-2026-05-31.md",
+    "docs/runtime-schemas.md",
+    "rust/task-registry-flow-cli/src/activation.rs",
+    "rust/task-registry-flow-cli/src/landing.rs",
+    "rust/task-registry-flow-cli/src/main.rs",
+    "rust/task-registry-flow-cli/src/model.rs",
+    "rust/task-registry-flow-cli/src/receipts.rs",
+    "rust/task-registry-flow-cli/src/runtime.rs",
+    "rust/task-registry-flow-cli/src/schema.rs",
+    "rust/task-registry-flow-cli/src/tests/activation_terminal_tests.rs",
+    "rust/task-registry-flow-cli/src/tests/landing_tests.rs",
+    "rust/task-registry-flow-cli/src/tests/mod.rs",
+    "scripts/render-from-config.sh",
+    "templates/.codex/agent-governance.toml.template",
+    "templates/AGENTS.md.template",
+    "templates/CLAUDE.md.template",
+    "templates/GEMINI.md.template",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/landing_tests.rs"
+object = "landing positive and negative tests"
+required_change = "Add focused tests for verify-landing success, direct completed status rejection, and unbound or registry-only changed files."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/mod.rs"
+object = "test module registry and completion expectations"
+required_change = "Register landing tests and update direct completion expectations."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/activation_terminal_tests.rs"
+object = "terminal task setup"
+required_change = "Use landing-owned completion setup for terminal activation tests."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/state_transition_tests.rs"
+object = "transition test notes"
+required_change = "Keep internal transition tests aligned with landing-owned completion behavior."
+
+[[tasks]]
+task_id = "TASK-2026-05-31-ci-owned-landing-003"
+plan_id = "PLAN-2026-05-31-ci-owned-landing"
+status = "completed"
+title = "Update workflow docs and projections"
+kind = "documentation"
+source_plan_path = "docs/plans/ci-owned-landing-2026-05-31.md"
+source_plan_hash_sha256 = "8b9cf69a4e0c1d0dfcc4c030a9c64e5a9cce194da099c9b92e22e0b8c765e35b"
+reason = "Agent-facing docs must not keep teaching direct completed status after completion becomes landing-owned."
+acceptance_proof = "Behaviors B-2026-05-31-landing-G04-positive and B-2026-05-31-landing-G04-negative pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-2026-05-31-landing-G04-positive",
+    "B-2026-05-31-landing-G04-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-05-31T17:49:55.146266347-04:00"
+completion_changed_files = [
+    ".agents/skills/task-registry-flow.md",
+    ".agents/skills/task-registry-flow/PROJECT.md",
+    ".agents/skills/task-registry-flow/SKILL.md",
+    ".claude/skills/task-registry-flow/PROJECT.md",
+    ".claude/skills/task-registry-flow/SKILL.md",
+    ".codex/agent-governance.toml",
+    ".cursor/skills/task-registry-flow/PROJECT.md",
+    ".cursor/skills/task-registry-flow/SKILL.md",
+    "AGENTS.md",
+    "README.md",
+    "REQUIREMENTS.toml",
+    "docs/plans/ci-owned-landing-2026-05-31.md",
+    "docs/runtime-schemas.md",
+    "rust/task-registry-flow-cli/src/activation.rs",
+    "rust/task-registry-flow-cli/src/landing.rs",
+    "rust/task-registry-flow-cli/src/main.rs",
+    "rust/task-registry-flow-cli/src/model.rs",
+    "rust/task-registry-flow-cli/src/receipts.rs",
+    "rust/task-registry-flow-cli/src/runtime.rs",
+    "rust/task-registry-flow-cli/src/schema.rs",
+    "rust/task-registry-flow-cli/src/tests/activation_terminal_tests.rs",
+    "rust/task-registry-flow-cli/src/tests/landing_tests.rs",
+    "rust/task-registry-flow-cli/src/tests/mod.rs",
+    "scripts/render-from-config.sh",
+    "templates/.codex/agent-governance.toml.template",
+    "templates/AGENTS.md.template",
+    "templates/CLAUDE.md.template",
+    "templates/GEMINI.md.template",
+]
+
+[[tasks.targets]]
+file = "README.md"
+object = "daily workflow completion guidance"
+required_change = "Replace direct completion status command with verify-landing workflow."
+
+[[tasks.targets]]
+file = "AGENTS.md"
+object = "gap closure completion instruction"
+required_change = "State that verify-landing owns completed status after typed behavior verification."
+
+[[tasks.targets]]
+file = "docs/runtime-schemas.md"
+object = "runtime completion contract"
+required_change = "Document landing-owned completion and registry-only drift rejection."
+
+[[tasks.targets]]
+file = ".codex/agent-governance.toml"
+object = "task registry command metadata"
+required_change = "Add verify_landing_command metadata."
+
+[[tasks.targets]]
+file = "templates/.codex/agent-governance.toml.template"
+object = "projected task registry metadata"
+required_change = "Add verify_landing_command metadata to generated installs."
+
+[[tasks.targets]]
+file = "scripts/render-from-config.sh"
+object = "project config renderer"
+required_change = "Preserve canonical verify-landing metadata in generated docs/config."
+
+[[tasks.targets]]
+file = "templates/AGENTS.md.template"
+object = "Codex projected completion workflow"
+required_change = "State that verify-landing owns completion."
+
+[[tasks.targets]]
+file = "templates/CLAUDE.md.template"
+object = "Claude projected completion workflow"
+required_change = "State that verify-landing owns completion."
+
+[[tasks.targets]]
+file = "templates/GEMINI.md.template"
+object = "Antigravity projected completion workflow"
+required_change = "State that verify-landing owns completion."
+
+[[tasks.targets]]
+file = ".agents/skills/task-registry-flow/SKILL.md"
+object = "Codex skill completion workflow"
+required_change = "Add TASK_VERIFY_LANDING and remove direct completed status guidance."
+
+[[tasks.targets]]
+file = ".agents/skills/task-registry-flow.md"
+object = "flat Codex skill completion workflow"
+required_change = "Add TASK_VERIFY_LANDING and remove direct completed status guidance."
+
+[[tasks.targets]]
+file = ".cursor/skills/task-registry-flow/SKILL.md"
+object = "Cursor skill completion workflow"
+required_change = "Add TASK_VERIFY_LANDING and remove direct completed status guidance."
+
+[[tasks.targets]]
+file = ".claude/skills/task-registry-flow/SKILL.md"
+object = "Claude skill completion workflow"
+required_change = "Add TASK_VERIFY_LANDING and remove direct completed status guidance."
+
+[[tasks.targets]]
+file = ".agents/skills/task-registry-flow/PROJECT.md"
+object = "Codex skill project opcode table"
+required_change = "Add verify-landing opcode row."
+
+[[tasks.targets]]
+file = ".cursor/skills/task-registry-flow/PROJECT.md"
+object = "Cursor skill project opcode table"
+required_change = "Add verify-landing opcode row."
+
+[[tasks.targets]]
+file = ".claude/skills/task-registry-flow/PROJECT.md"
+object = "Claude skill project opcode table"
+required_change = "Add verify-landing opcode row."
+
+[[tasks]]
+task_id = "TASK-2026-05-31-ci-owned-landing-004"
+plan_id = "PLAN-2026-05-31-ci-owned-landing"
+status = "completed"
+title = "Run final governance validation"
+kind = "validation"
+source_plan_path = "docs/plans/ci-owned-landing-2026-05-31.md"
+source_plan_hash_sha256 = "8b9cf69a4e0c1d0dfcc4c030a9c64e5a9cce194da099c9b92e22e0b8c765e35b"
+reason = "The new completion authority touches shared CLI, registry, docs, and release surfaces."
+acceptance_proof = "Behavior B-2026-05-31-landing-G05-validation passes."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = ["B-2026-05-31-landing-G05-validation"]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-05-31T17:49:55.146266347-04:00"
+completion_changed_files = [
+    ".agents/skills/task-registry-flow.md",
+    ".agents/skills/task-registry-flow/PROJECT.md",
+    ".agents/skills/task-registry-flow/SKILL.md",
+    ".claude/skills/task-registry-flow/PROJECT.md",
+    ".claude/skills/task-registry-flow/SKILL.md",
+    ".codex/agent-governance.toml",
+    ".cursor/skills/task-registry-flow/PROJECT.md",
+    ".cursor/skills/task-registry-flow/SKILL.md",
+    "AGENTS.md",
+    "README.md",
+    "REQUIREMENTS.toml",
+    "docs/plans/ci-owned-landing-2026-05-31.md",
+    "docs/runtime-schemas.md",
+    "rust/task-registry-flow-cli/src/activation.rs",
+    "rust/task-registry-flow-cli/src/landing.rs",
+    "rust/task-registry-flow-cli/src/main.rs",
+    "rust/task-registry-flow-cli/src/model.rs",
+    "rust/task-registry-flow-cli/src/receipts.rs",
+    "rust/task-registry-flow-cli/src/runtime.rs",
+    "rust/task-registry-flow-cli/src/schema.rs",
+    "rust/task-registry-flow-cli/src/tests/activation_terminal_tests.rs",
+    "rust/task-registry-flow-cli/src/tests/landing_tests.rs",
+    "rust/task-registry-flow-cli/src/tests/mod.rs",
+    "scripts/render-from-config.sh",
+    "templates/.codex/agent-governance.toml.template",
+    "templates/AGENTS.md.template",
+    "templates/CLAUDE.md.template",
+    "templates/GEMINI.md.template",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/Cargo.toml"
+object = "Cargo validation target"
+required_change = "Run focused and full cargo validation for the task-registry CLI."
+
+[[tasks.targets]]
+file = "REQUIREMENTS.toml"
+object = "release source declaration"
+required_change = "Declare new landing Rust sources so release readiness cannot ship undeclared source."
+
+[[tasks.targets]]
+file = "docs/plans/ci-owned-landing-2026-05-31.md"
+object = "validation evidence contract"
+required_change = "Keep this closure contract as the task-bound validation evidence surface."
 
 [[tasks]]
 task_id = "TASK-2026-05-31-CRD01"
@@ -658,69 +1005,3 @@ behavior_ids = [
 file = "rust/task-registry-flow-cli/src/source_limit.rs"
 object = "normalize_relative_path"
 required_change = "Remove duplicate fn, import from crate::runtime instead"
-
-[[tasks]]
-task_id = "TASK-2026-05-31-N01"
-plan_id = "PLAN-2026-05-31-nix-auto-update"
-status = "completed"
-title = "Create flake.nix for Governance-plugin"
-kind = "implementation"
-source_plan_path = "docs/plans/nix-auto-update-2026-05-31.md"
-source_plan_hash_sha256 = "7dd5f95dc1fd502953fd1569b99e1a5581af159d661cb512ee6570988677f70e"
-reason = "Machine services need to consume the governance plugin as a Nix flake input rather than a local clone"
-acceptance_proof = "Behavior B-001: nix flake check passes, nix build produces working binary"
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-001-flake-exists",
-    "B-001b-no-hardcoded-paths",
-]
-
-[[tasks.targets]]
-file = "flake.nix"
-object = "Nix flake with package, app, devShell, formatter"
-required_change = "Create flake.nix exposing task-registry-flow package"
-
-[[tasks]]
-task_id = "TASK-2026-05-31-N02"
-plan_id = "PLAN-2026-05-31-nix-auto-update"
-status = "completed"
-title = "Create package.nix for task-registry-flow-cli"
-kind = "implementation"
-source_plan_path = "docs/plans/nix-auto-update-2026-05-31.md"
-source_plan_hash_sha256 = "7dd5f95dc1fd502953fd1569b99e1a5581af159d661cb512ee6570988677f70e"
-reason = "The Rust CLI needs a Nix build expression for buildRustPackage"
-acceptance_proof = "Behavior B-002: nix build produces binary + companion scripts"
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-002-package-builds-cli",
-    "B-002b-package-includes-scripts",
-]
-
-[[tasks.targets]]
-file = "package.nix"
-object = "Rust package build expression"
-required_change = "Create package.nix with buildRustPackage, source filter, and installPhase"
-
-[[tasks]]
-task_id = "TASK-2026-05-31-N03"
-plan_id = "PLAN-2026-05-31-nix-auto-update"
-status = "completed"
-title = "Create NixOS auto-update module with systemd timer"
-kind = "implementation"
-source_plan_path = "docs/plans/nix-auto-update-2026-05-31.md"
-source_plan_hash_sha256 = "7dd5f95dc1fd502953fd1569b99e1a5581af159d661cb512ee6570988677f70e"
-reason = "Machine services need automatic updates when the plugin repo changes, without manual git pull + rebuild"
-acceptance_proof = "Behavior B-003: timer and service units are valid, dev-lock is respected"
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-003-auto-update-timer",
-    "B-003b-update-respects-lock",
-]
-
-[[tasks.targets]]
-file = "modules/nixos/agent-governance-auto-update.nix"
-object = "Auto-update systemd timer + oneshot service"
-required_change = "Create module with timer that updates flake input and triggers rebuild"

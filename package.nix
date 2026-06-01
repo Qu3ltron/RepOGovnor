@@ -76,6 +76,8 @@ rustPlatform.buildRustPackage {
     cp ${./README.md} "$asset_root/README.md"
     mkdir -p "$asset_root/docs/releases"
     cp ${./docs/runtime-schemas.md} "$asset_root/docs/runtime-schemas.md"
+    cp ${./docs/migration-v2.md} "$asset_root/docs/migration-v2.md"
+    cp ${./docs/example-workflow.md} "$asset_root/docs/example-workflow.md"
     cp ${./docs/releases/v2.md} "$asset_root/docs/releases/v2.md"
   '';
 
