@@ -4,6 +4,13 @@ archive_id = "completed-003"
 archive_authority = "docs/task-registry/archive/completed-003.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-05-31-post-rollback-hardening"
+plan_path = "docs/plans/post-rollback-hardening-2026-05-31.md"
+plan_hash_sha256 = "1e38fead936ff4841618988780658c17a9f7f255ccffe0c00d615ae8545af336"
+activated_at = "2026-05-31"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-05-31-gap-closure-batch-1"
 plan_path = "docs/plans/gap-closure-2026-05-31.md"
 plan_hash_sha256 = "c36ad94618699298f2e99c4d5a0be22c0c7eadcfef7ae5a4881569e3e1c1039e"
@@ -38,12 +45,273 @@ plan_hash_sha256 = "3002c6daddc69a7250637febd77b03cb7c14c5852000c468193ebe63601a
 activated_at = "2026-05-31"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-05-31-gap-closure-batch-2"
-plan_path = "docs/plans/gap-closure-batch-2-2026-05-31.md"
-plan_hash_sha256 = "1c224e86b5cce474f1d457c0f390eb15d70d450213e440e0d6e9ad6eef1a85fa"
-activated_at = "2026-05-31"
+[[tasks]]
+task_id = "TASK-2026-05-31-H01"
+plan_id = "PLAN-2026-05-31-post-rollback-hardening"
 status = "completed"
+title = "Harden mutation hook command parsing and template JSON"
+kind = "authorization"
+source_plan_path = "docs/plans/post-rollback-hardening-2026-05-31.md"
+source_plan_hash_sha256 = "1e38fead936ff4841618988780658c17a9f7f255ccffe0c00d615ae8545af336"
+reason = "Mutation hooks must fail closed for ambiguous write-intent payloads before implementation writes can bypass registry targets."
+acceptance_proof = "Behaviors B-H01-positive, B-H01-negative, B-H04-positive, and B-H04-negative pass their verifier commands."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-H01-positive",
+    "B-H01-negative",
+    "B-H04-positive",
+    "B-H04-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/mutation_hook.rs"
+object = "shell_write_detection"
+required_change = "Deny write-intent shell commands without deterministic target extraction."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/hook_io.rs"
+object = "payload_contract"
+required_change = "Preserve canonical payload shape validation for stricter hook denial."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/hook_command_tests.rs"
+object = "hook_command_negative_suite"
+required_change = "Add shell write-intent positive and negative tests."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/mod.rs"
+object = "hook_command_module_registration"
+required_change = "Register hook command tests without adding behavior to the monolithic test file."
+
+[[tasks.targets]]
+file = "templates/tools/agent-governance/pre-tool-use-gap-closure.sh.template"
+object = "json_escape"
+required_change = "Use canonical JSON serialization for denial reasons."
+
+[[tasks.targets]]
+file = "tools/agent-governance/pre-tool-use-gap-closure.sh"
+object = "json_escape_parity"
+required_change = "Keep live hook aligned with the template."
+
+[[tasks.targets]]
+file = "scripts/test-install-modes.sh"
+object = "rendered_hook_json_negative"
+required_change = "Verify rendered hook denial JSON handles control characters."
+
+[[tasks]]
+task_id = "TASK-2026-05-31-H02"
+plan_id = "PLAN-2026-05-31-post-rollback-hardening"
+status = "completed"
+title = "Make receipt writes atomic and receipt chain strict"
+kind = "implementation"
+source_plan_path = "docs/plans/post-rollback-hardening-2026-05-31.md"
+source_plan_hash_sha256 = "1e38fead936ff4841618988780658c17a9f7f255ccffe0c00d615ae8545af336"
+reason = "Receipt writes must be durable, required receipt failures must fail, and strict chain verification must reject unchained receipts."
+acceptance_proof = "Behaviors B-H02-positive, B-H02-negative, B-H03-positive, B-H03-negative, B-H08-positive, and B-H08-negative pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-H02-positive",
+    "B-H02-negative",
+    "B-H03-positive",
+    "B-H03-negative",
+    "B-H08-positive",
+    "B-H08-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/runtime.rs"
+object = "append_event_lock_order"
+required_change = "Lock receipt file before reading previous hash and appending."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/cli.rs"
+object = "required_receipt_errors"
+required_change = "Propagate required receipt append failures."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/receipts.rs"
+object = "receipt_policy"
+required_change = "Represent required receipt append results accurately."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/metrics.rs"
+object = "unchained_failure_accounting"
+required_change = "Count unchained v2 receipts as failed receipt state."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/verify_chain.rs"
+object = "strict_chain_and_repair"
+required_change = "Fail on unchained v2 receipts and repair parseable v2 chain fields."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/receipt_chain_tests.rs"
+object = "receipt_chain_suite"
+required_change = "Add concurrency, lock, and receipt failure tests."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/verify_chain_tests.rs"
+object = "strict_unchained_suite"
+required_change = "Add unchained strict failure and repair tests."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/mod.rs"
+object = "receipt_chain_module_registration"
+required_change = "Register receipt chain tests."
+
+[[tasks.targets]]
+file = "docs/task-registry/events.jsonl"
+object = "receipt_ledger_migration"
+required_change = "Migrate local ledger to fully chained schema v2 receipts."
+
+[[tasks.targets]]
+file = "docs/runtime-schemas.md"
+object = "receipt_chain_contract"
+required_change = "Document strict chained v2 receipt state."
+
+[[tasks.targets]]
+file = "scripts/status.sh"
+object = "chain_gate"
+required_change = "Run verify-chain in strict and release-source status."
+
+[[tasks]]
+task_id = "TASK-2026-05-31-H03"
+plan_id = "PLAN-2026-05-31-post-rollback-hardening"
+status = "completed"
+title = "Expand release-source coverage and governed-source checks"
+kind = "release"
+source_plan_path = "docs/plans/post-rollback-hardening-2026-05-31.md"
+source_plan_hash_sha256 = "1e38fead936ff4841618988780658c17a9f7f255ccffe0c00d615ae8545af336"
+reason = "Release-source checks must govern every tracked Nix, Claude, hook, and template release surface."
+acceptance_proof = "Behaviors B-H05-positive and B-H05-negative pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-H05-positive",
+    "B-H05-negative",
+]
+
+[[tasks.targets]]
+file = "REQUIREMENTS.toml"
+object = "release_source_required"
+required_change = "Declare all governed release surfaces and new test modules."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/release_checks.rs"
+object = "governed_source_discovery"
+required_change = "Discover non-Rust governed release surfaces and fail omissions."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/schema.rs"
+object = "release_check_id"
+required_change = "Add canonical governed-source release check id."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/release_source_tests.rs"
+object = "release_source_negative_suite"
+required_change = "Add omitted Nix, Claude, hook, and template negative tests."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/mod.rs"
+object = "release_source_module_registration"
+required_change = "Register release source tests."
+
+[[tasks.targets]]
+file = "scripts/test-release-readiness.sh"
+object = "governed_source_negative_fixtures"
+required_change = "Assert governed-source omissions fail release readiness."
+
+[[tasks.targets]]
+file = "scripts/status.sh"
+object = "release_source_gate"
+required_change = "Surface governed-source checks in release-source status."
+
+[[tasks]]
+task_id = "TASK-2026-05-31-H04"
+plan_id = "PLAN-2026-05-31-post-rollback-hardening"
+status = "completed"
+title = "Package runtime assets and harden Nix modules"
+kind = "implementation"
+source_plan_path = "docs/plans/post-rollback-hardening-2026-05-31.md"
+source_plan_hash_sha256 = "1e38fead936ff4841618988780658c17a9f7f255ccffe0c00d615ae8545af336"
+reason = "Nix consumers must receive a complete runtime package and safe update module without relying on the mutable checkout."
+acceptance_proof = "Behaviors B-H06-positive, B-H06-negative, B-H07-positive, and B-H07-negative pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-H06-positive",
+    "B-H06-negative",
+    "B-H07-positive",
+    "B-H07-negative",
+]
+
+[[tasks.targets]]
+file = "package.nix"
+object = "runtime_asset_output"
+required_change = "Install runtime assets under stable share paths."
+
+[[tasks.targets]]
+file = "flake.nix"
+object = "module_exports"
+required_change = "Export agent-governance and auto-update NixOS modules."
+
+[[tasks.targets]]
+file = "modules/nixos/agent-governance.nix"
+object = "runtime_install_module"
+required_change = "Add module for packaged CLI and asset root."
+
+[[tasks.targets]]
+file = "modules/nixos/agent-governance-auto-update.nix"
+object = "root_safe_rollback"
+required_change = "Add root-safe rebuild, validation, lock backup, restore, rollback, and dev-lock behavior."
+
+[[tasks.targets]]
+file = "scripts/test-release-readiness.sh"
+object = "nix_asset_negative_fixtures"
+required_change = "Assert package assets and auto-update guards."
+
+[[tasks.targets]]
+file = "README.md"
+object = "nix_consumption_contract"
+required_change = "Document Nix package asset layout and modules."
+
+[[tasks]]
+task_id = "TASK-2026-05-31-H05"
+plan_id = "PLAN-2026-05-31-post-rollback-hardening"
+status = "completed"
+title = "Enforce terminal task immutability on activation"
+kind = "governance"
+source_plan_path = "docs/plans/post-rollback-hardening-2026-05-31.md"
+source_plan_hash_sha256 = "1e38fead936ff4841618988780658c17a9f7f255ccffe0c00d615ae8545af336"
+reason = "Completed and cancelled registry tasks must remain immutable after closure."
+acceptance_proof = "Behaviors B-H09-positive and B-H09-negative pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-H09-positive",
+    "B-H09-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/activation.rs"
+object = "terminal_reactivation_guard"
+required_change = "Reject terminal task rewrites unless reactivation is idempotent."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/validation.rs"
+object = "terminal_hash_policy"
+required_change = "Remove terminal hash exceptions that permit metadata drift."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/activation_terminal_tests.rs"
+object = "terminal_task_suite"
+required_change = "Add completed and cancelled task immutability tests."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/mod.rs"
+object = "activation_terminal_module_registration"
+required_change = "Register terminal activation tests."
 
 [[tasks]]
 task_id = "TASK-2026-05-31-001"
@@ -485,123 +753,3 @@ behavior_ids = [
 file = "rust/task-registry-flow-cli/src/tests/mod.rs"
 object = "temp_root"
 required_change = "add process-level atomic counter to guarantee unique directories across parallel tests"
-
-[[tasks]]
-task_id = "TASK-2026-05-31-006"
-plan_id = "PLAN-2026-05-31-gap-closure-batch-2"
-status = "completed"
-title = "Use _broken report to skip intact prefix in repair_chain"
-kind = "implementation"
-source_plan_path = "docs/plans/gap-closure-batch-2-2026-05-31.md"
-source_plan_hash_sha256 = "1c224e86b5cce474f1d457c0f390eb15d70d450213e440e0d6e9ad6eef1a85fa"
-reason = "repair_chain ignores the broken report; targeted repair skips intact prefix lines for efficiency"
-acceptance_proof = "Behavior B-006: cargo test passes, repair_chain uses first break position"
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-006-repair-uses-broken",
-    "B-006b-intact-prefix-preserved",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/verify_chain.rs"
-object = "repair_chain"
-required_change = "Extract first broken line from _broken, copy intact prefix verbatim, recompute only from break point"
-
-[[tasks]]
-task_id = "TASK-2026-05-31-007"
-plan_id = "PLAN-2026-05-31-gap-closure-batch-2"
-status = "completed"
-title = "Switch bash -lc to bash -c in verifiers and hook gate"
-kind = "implementation"
-source_plan_path = "docs/plans/gap-closure-batch-2-2026-05-31.md"
-source_plan_hash_sha256 = "1c224e86b5cce474f1d457c0f390eb15d70d450213e440e0d6e9ad6eef1a85fa"
-reason = "bash -lc sources user shell profiles, making verification environment-dependent"
-acceptance_proof = "Behavior B-007: no bash -lc in verifiers.rs or pre-tool-use-gap-closure.sh"
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-007-bash-no-login",
-    "B-007b-no-login-shell-in-source",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/verifiers.rs"
-object = "run_confirmation"
-required_change = "Change bash -lc to bash -c"
-
-[[tasks.targets]]
-file = "tools/agent-governance/pre-tool-use-gap-closure.sh"
-object = "verify_cmd execution"
-required_change = "Change bash -lc to bash -c"
-
-[[tasks]]
-task_id = "TASK-2026-05-31-008"
-plan_id = "PLAN-2026-05-31-gap-closure-batch-2"
-status = "completed"
-title = "Add VERIFY_CHAIN opcode to skill and config template"
-kind = "documentation"
-source_plan_path = "docs/plans/gap-closure-batch-2-2026-05-31.md"
-source_plan_hash_sha256 = "1c224e86b5cce474f1d457c0f390eb15d70d450213e440e0d6e9ad6eef1a85fa"
-reason = "VERIFY_CHAIN opcode is missing from skill docs; agents cannot discover the verify-chain command"
-acceptance_proof = "Behavior B-008: VERIFY_CHAIN appears in SKILL.md opcode table and agent-governance.toml.template"
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-008-verify-chain-opcode",
-    "B-008b-no-missing-opcode",
-]
-
-[[tasks.targets]]
-file = "skills/task-registry-flow/SKILL.md"
-object = "Required Opcodes table"
-required_change = "Add VERIFY_CHAIN row with description"
-
-[[tasks.targets]]
-file = "templates/.codex/agent-governance.toml.template"
-object = "[task_registry] section"
-required_change = "Add verify_chain_opcode field"
-
-[[tasks]]
-task_id = "TASK-2026-05-31-009"
-plan_id = "PLAN-2026-05-31-gap-closure-batch-2"
-status = "completed"
-title = "Document REPO_SLUG derivation in example config"
-kind = "documentation"
-source_plan_path = "docs/plans/gap-closure-batch-2-2026-05-31.md"
-source_plan_hash_sha256 = "1c224e86b5cce474f1d457c0f390eb15d70d450213e440e0d6e9ad6eef1a85fa"
-reason = "{{REPO_SLUG}} is auto-derived from repo_name but undocumented; users don't know it exists"
-acceptance_proof = "Behavior B-009: REPO_SLUG mentioned in project.config.example.toml"
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-009-repo-slug-documented",
-    "B-009b-no-hidden-substitution",
-]
-
-[[tasks.targets]]
-file = "project.config.example.toml"
-object = "project section comment"
-required_change = "Add comment documenting that REPO_SLUG is auto-derived from repo_name"
-
-[[tasks]]
-task_id = "TASK-2026-05-31-010"
-plan_id = "PLAN-2026-05-31-gap-closure-batch-2"
-status = "completed"
-title = "Use mktemp in status.sh for stderr capture"
-kind = "implementation"
-source_plan_path = "docs/plans/gap-closure-batch-2-2026-05-31.md"
-source_plan_hash_sha256 = "1c224e86b5cce474f1d457c0f390eb15d70d450213e440e0d6e9ad6eef1a85fa"
-reason = "Hardcoded /tmp path causes collisions between concurrent status.sh invocations"
-acceptance_proof = "Behavior B-010: status.sh uses mktemp, no hardcoded /tmp path"
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-010-mktemp-status",
-    "B-010b-no-hardcoded-tmp",
-]
-
-[[tasks.targets]]
-file = "scripts/status.sh"
-object = "run_status_check_json"
-required_change = "Replace hardcoded /tmp/agent-governance-status-check.err with mktemp"

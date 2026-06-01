@@ -1,0 +1,98 @@
+schema_version = 1
+registry_id = "agent-governance-task-registry"
+archive_id = "completed-006"
+archive_authority = "docs/task-registry/archive/completed-006.toml"
+
+[[plans]]
+plan_id = "PLAN-2026-05-30-production-gap-closures"
+plan_path = "docs/plans/production-gap-closures.md"
+plan_hash_sha256 = "bdb7cbbd8a51f42ef5759d9c877501a5ad8460690ba547e6c39fc679fcef721d"
+activated_at = "2026-05-30"
+status = "completed"
+
+[[tasks]]
+task_id = "TASK-2026-05-30-production-gap-closures-001"
+plan_id = "PLAN-2026-05-30-production-gap-closures"
+status = "completed"
+title = "Repair mutation hook validation order"
+kind = "implementation"
+source_plan_path = "docs/plans/production-gap-closures.md"
+source_plan_hash_sha256 = "bdb7cbbd8a51f42ef5759d9c877501a5ad8460690ba547e6c39fc679fcef721d"
+reason = "The hook currently runs full validation before path inspection and can block plan activation."
+acceptance_proof = "Behavior B-2026-05-30-hook-governance-before-validation passes."
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = ["B-2026-05-30-hook-governance-before-validation"]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/main.rs"
+object = "verify_mutation_hook_dispatch"
+required_change = "Delegate hook verification to a module without running full validation before governance path inspection."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/mutation_hook.rs"
+object = "mutation_hook_verifier"
+required_change = "Implement governance-first hook verification with negative guards for unsafe writes."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests.rs"
+object = "mutation_hook_behavior_tests"
+required_change = "Add positive and negative tests for governance writes, activation commands, and denied implementation writes."
+
+[[tasks]]
+task_id = "TASK-2026-05-30-production-gap-closures-002"
+plan_id = "PLAN-2026-05-30-production-gap-closures"
+status = "completed"
+title = "Run rendered registry wrapper from repo root"
+kind = "implementation"
+source_plan_path = "docs/plans/production-gap-closures.md"
+source_plan_hash_sha256 = "bdb7cbbd8a51f42ef5759d9c877501a5ad8460690ba547e6c39fc679fcef721d"
+reason = "The wrapper computes the repo root but currently leaves the Rust CLI running from the caller directory."
+acceptance_proof = "Behavior B-2026-05-30-wrapper-root-cwd passes."
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = ["B-2026-05-30-wrapper-root-cwd"]
+
+[[tasks.targets]]
+file = "templates/.codex/scripts/task-registry.template"
+object = "repo_root_execution"
+required_change = "Change to the repo root before invoking cargo run."
+
+[[tasks.targets]]
+file = "scripts/test-install-modes.sh"
+object = "nested_wrapper_validation"
+required_change = "Assert nested wrapper execution reads and writes only repo-root registry artifacts."
+
+[[tasks]]
+task_id = "TASK-2026-05-30-production-gap-closures-003"
+plan_id = "PLAN-2026-05-30-production-gap-closures"
+status = "completed"
+title = "Align merge install with strict status"
+kind = "implementation"
+source_plan_path = "docs/plans/production-gap-closures.md"
+source_plan_hash_sha256 = "bdb7cbbd8a51f42ef5759d9c877501a5ad8460690ba547e6c39fc679fcef721d"
+reason = "Merge currently preserves stale files that strict status rejects."
+acceptance_proof = "Behavior B-2026-05-30-merge-status-hard-cutover passes."
+created_at = "2026-05-30"
+updated_at = "2026-05-30"
+behavior_ids = ["B-2026-05-30-merge-status-hard-cutover"]
+
+[[tasks.targets]]
+file = "scripts/render-from-config.sh"
+object = "merge_stale_file_removal"
+required_change = "Remove stale legacy governance files during merge and force while keeping dry-run projection-only."
+
+[[tasks.targets]]
+file = "scripts/test-install-modes.sh"
+object = "merge_status_alignment_tests"
+required_change = "Assert merge removes stale files and never reports preserve-stale."
+
+[[tasks.targets]]
+file = "README.md"
+object = "install_mode_documentation"
+required_change = "Document merge stale removal and root-wrapper behavior."
+
+[[tasks.targets]]
+file = "examples/spectrum-arcana-overlay.md"
+object = "reference_install_mode_documentation"
+required_change = "Update reference docs to describe hard-cutover merge behavior."

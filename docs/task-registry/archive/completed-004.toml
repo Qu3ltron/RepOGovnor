@@ -4,6 +4,13 @@ archive_id = "completed-004"
 archive_authority = "docs/task-registry/archive/completed-004.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-05-31-gap-closure-batch-2"
+plan_path = "docs/plans/gap-closure-batch-2-2026-05-31.md"
+plan_hash_sha256 = "1c224e86b5cce474f1d457c0f390eb15d70d450213e440e0d6e9ad6eef1a85fa"
+activated_at = "2026-05-31"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-05-31-v2-review-gap-closure"
 plan_path = "docs/plans/v2-review-gap-closure.md"
 plan_hash_sha256 = "0a1d648af75fe2dfc56dd5465c5aafd5964d8eb7ce251689bb0661ebbb8f9c9a"
@@ -38,12 +45,125 @@ plan_hash_sha256 = "00627806a424bcd1f90d37b58017e7e6b684c9810cd16769bbfdb26afcd6
 activated_at = "2026-05-31"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-05-31-json-failure-semantics"
-plan_path = "docs/plans/json-failure-semantics-gap-closure.md"
-plan_hash_sha256 = "ff964ad41e4ecdbeb73838404e940caf899ab1a2faf6f7e7679ef94f95cf421b"
-activated_at = "2026-05-30"
+[[tasks]]
+task_id = "TASK-2026-05-31-006"
+plan_id = "PLAN-2026-05-31-gap-closure-batch-2"
 status = "completed"
+title = "Use _broken report to skip intact prefix in repair_chain"
+kind = "implementation"
+source_plan_path = "docs/plans/gap-closure-batch-2-2026-05-31.md"
+source_plan_hash_sha256 = "1c224e86b5cce474f1d457c0f390eb15d70d450213e440e0d6e9ad6eef1a85fa"
+reason = "repair_chain ignores the broken report; targeted repair skips intact prefix lines for efficiency"
+acceptance_proof = "Behavior B-006: cargo test passes, repair_chain uses first break position"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-006-repair-uses-broken",
+    "B-006b-intact-prefix-preserved",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/verify_chain.rs"
+object = "repair_chain"
+required_change = "Extract first broken line from _broken, copy intact prefix verbatim, recompute only from break point"
+
+[[tasks]]
+task_id = "TASK-2026-05-31-007"
+plan_id = "PLAN-2026-05-31-gap-closure-batch-2"
+status = "completed"
+title = "Switch bash -lc to bash -c in verifiers and hook gate"
+kind = "implementation"
+source_plan_path = "docs/plans/gap-closure-batch-2-2026-05-31.md"
+source_plan_hash_sha256 = "1c224e86b5cce474f1d457c0f390eb15d70d450213e440e0d6e9ad6eef1a85fa"
+reason = "bash -lc sources user shell profiles, making verification environment-dependent"
+acceptance_proof = "Behavior B-007: no bash -lc in verifiers.rs or pre-tool-use-gap-closure.sh"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-007-bash-no-login",
+    "B-007b-no-login-shell-in-source",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/verifiers.rs"
+object = "run_confirmation"
+required_change = "Change bash -lc to bash -c"
+
+[[tasks.targets]]
+file = "tools/agent-governance/pre-tool-use-gap-closure.sh"
+object = "verify_cmd execution"
+required_change = "Change bash -lc to bash -c"
+
+[[tasks]]
+task_id = "TASK-2026-05-31-008"
+plan_id = "PLAN-2026-05-31-gap-closure-batch-2"
+status = "completed"
+title = "Add VERIFY_CHAIN opcode to skill and config template"
+kind = "documentation"
+source_plan_path = "docs/plans/gap-closure-batch-2-2026-05-31.md"
+source_plan_hash_sha256 = "1c224e86b5cce474f1d457c0f390eb15d70d450213e440e0d6e9ad6eef1a85fa"
+reason = "VERIFY_CHAIN opcode is missing from skill docs; agents cannot discover the verify-chain command"
+acceptance_proof = "Behavior B-008: VERIFY_CHAIN appears in SKILL.md opcode table and agent-governance.toml.template"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-008-verify-chain-opcode",
+    "B-008b-no-missing-opcode",
+]
+
+[[tasks.targets]]
+file = "skills/task-registry-flow/SKILL.md"
+object = "Required Opcodes table"
+required_change = "Add VERIFY_CHAIN row with description"
+
+[[tasks.targets]]
+file = "templates/.codex/agent-governance.toml.template"
+object = "[task_registry] section"
+required_change = "Add verify_chain_opcode field"
+
+[[tasks]]
+task_id = "TASK-2026-05-31-009"
+plan_id = "PLAN-2026-05-31-gap-closure-batch-2"
+status = "completed"
+title = "Document REPO_SLUG derivation in example config"
+kind = "documentation"
+source_plan_path = "docs/plans/gap-closure-batch-2-2026-05-31.md"
+source_plan_hash_sha256 = "1c224e86b5cce474f1d457c0f390eb15d70d450213e440e0d6e9ad6eef1a85fa"
+reason = "{{REPO_SLUG}} is auto-derived from repo_name but undocumented; users don't know it exists"
+acceptance_proof = "Behavior B-009: REPO_SLUG mentioned in project.config.example.toml"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-009-repo-slug-documented",
+    "B-009b-no-hidden-substitution",
+]
+
+[[tasks.targets]]
+file = "project.config.example.toml"
+object = "project section comment"
+required_change = "Add comment documenting that REPO_SLUG is auto-derived from repo_name"
+
+[[tasks]]
+task_id = "TASK-2026-05-31-010"
+plan_id = "PLAN-2026-05-31-gap-closure-batch-2"
+status = "completed"
+title = "Use mktemp in status.sh for stderr capture"
+kind = "implementation"
+source_plan_path = "docs/plans/gap-closure-batch-2-2026-05-31.md"
+source_plan_hash_sha256 = "1c224e86b5cce474f1d457c0f390eb15d70d450213e440e0d6e9ad6eef1a85fa"
+reason = "Hardcoded /tmp path causes collisions between concurrent status.sh invocations"
+acceptance_proof = "Behavior B-010: status.sh uses mktemp, no hardcoded /tmp path"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-010-mktemp-status",
+    "B-010b-no-hardcoded-tmp",
+]
+
+[[tasks.targets]]
+file = "scripts/status.sh"
+object = "run_status_check_json"
+required_change = "Replace hardcoded /tmp/agent-governance-status-check.err with mktemp"
 
 [[tasks]]
 task_id = "TASK-2026-05-31-v2-review-001"
@@ -583,155 +703,3 @@ required_change = "Assert release templates and self docs include governance mar
 file = "README.md"
 object = "status_contract"
 required_change = "Document markerless governance docs as unaligned posture."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-json-failure-001"
-plan_id = "PLAN-2026-05-31-json-failure-semantics"
-status = "completed"
-title = "Make status-check JSON failures exit nonzero"
-kind = "diagnostics"
-source_plan_path = "docs/plans/json-failure-semantics-gap-closure.md"
-source_plan_hash_sha256 = "ff964ad41e4ecdbeb73838404e940caf899ab1a2faf6f7e7679ef94f95cf421b"
-reason = "Failed status diagnostic JSON can currently pass with exit 0."
-acceptance_proof = "Behaviors B-2026-05-31-json-G01-positive and B-2026-05-31-json-G01-negative pass."
-created_at = "2026-05-30"
-updated_at = "2026-05-30"
-behavior_ids = [
-    "B-2026-05-31-json-G01-positive",
-    "B-2026-05-31-json-G01-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/runtime.rs"
-object = "status_check_command"
-required_change = "Return nonzero on failed JSON reports while preserving JSON."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/status_checks.rs"
-object = "status_check_api"
-required_change = "Own JSON-aware status-check behavior."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/mod.rs"
-object = "status_check_json_tests"
-required_change = "Add positive and negative JSON exit assertions."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-json-failure-002"
-plan_id = "PLAN-2026-05-31-json-failure-semantics"
-status = "completed"
-title = "Preserve source-limit JSON diagnostics on failure"
-kind = "diagnostics"
-source_plan_path = "docs/plans/json-failure-semantics-gap-closure.md"
-source_plan_hash_sha256 = "ff964ad41e4ecdbeb73838404e940caf899ab1a2faf6f7e7679ef94f95cf421b"
-reason = "Source-limit JSON failure currently loses per-file diagnostics."
-acceptance_proof = "Behaviors B-2026-05-31-json-G02-positive and B-2026-05-31-json-G02-negative pass."
-created_at = "2026-05-30"
-updated_at = "2026-05-30"
-behavior_ids = [
-    "B-2026-05-31-json-G02-positive",
-    "B-2026-05-31-json-G02-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/source_limit.rs"
-object = "json_failure_report"
-required_change = "Return full CheckReport JSON and nonzero status on failed JSON checks."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/mod.rs"
-object = "source_limit_json_tests"
-required_change = "Assert over-limit JSON includes failed path diagnostics."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-json-failure-003"
-plan_id = "PLAN-2026-05-31-json-failure-semantics"
-status = "completed"
-title = "Preserve release-check JSON reports on failure"
-kind = "diagnostics"
-source_plan_path = "docs/plans/json-failure-semantics-gap-closure.md"
-source_plan_hash_sha256 = "ff964ad41e4ecdbeb73838404e940caf899ab1a2faf6f7e7679ef94f95cf421b"
-reason = "Release-check JSON failure can be prefixed as human text."
-acceptance_proof = "Behaviors B-2026-05-31-json-G03-positive and B-2026-05-31-json-G03-negative pass."
-created_at = "2026-05-30"
-updated_at = "2026-05-30"
-behavior_ids = [
-    "B-2026-05-31-json-G03-positive",
-    "B-2026-05-31-json-G03-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/release_checks.rs"
-object = "json_failure_report"
-required_change = "Return full CheckReport JSON and nonzero status on failed JSON checks."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/cli.rs"
-object = "raw_json_error_rendering"
-required_change = "Render raw JSON diagnostic failures without human prefix."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/mod.rs"
-object = "release_check_json_tests"
-required_change = "Assert failing release JSON is parseable raw JSON."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-json-failure-004"
-plan_id = "PLAN-2026-05-31-json-failure-semantics"
-status = "completed"
-title = "Report actual CLI command and receipt state"
-kind = "schema"
-source_plan_path = "docs/plans/json-failure-semantics-gap-closure.md"
-source_plan_hash_sha256 = "ff964ad41e4ecdbeb73838404e940caf899ab1a2faf6f7e7679ef94f95cf421b"
-reason = "Global JSON failure envelope hard-codes usage and receipt false."
-acceptance_proof = "Behaviors B-2026-05-31-json-G04-positive and B-2026-05-31-json-G04-negative pass."
-created_at = "2026-05-30"
-updated_at = "2026-05-30"
-behavior_ids = [
-    "B-2026-05-31-json-G04-positive",
-    "B-2026-05-31-json-G04-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/cli.rs"
-object = "failure_envelope"
-required_change = "Render parsed command and computed receipt state on failures."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/reports.rs"
-object = "failure_report_helpers"
-required_change = "Support command-specific failure envelopes."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/mod.rs"
-object = "cli_json_error_tests"
-required_change = "Assert actual command and receipt state in JSON failures."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-json-failure-005"
-plan_id = "PLAN-2026-05-31-json-failure-semantics"
-status = "completed"
-title = "Add shell migration coverage and docs"
-kind = "test"
-source_plan_path = "docs/plans/json-failure-semantics-gap-closure.md"
-source_plan_hash_sha256 = "ff964ad41e4ecdbeb73838404e940caf899ab1a2faf6f7e7679ef94f95cf421b"
-reason = "Release shell migration must prove JSON failures stay machine-readable."
-acceptance_proof = "Behavior B-2026-05-31-json-failure-validation passes."
-created_at = "2026-05-30"
-updated_at = "2026-05-30"
-behavior_ids = ["B-2026-05-31-json-failure-validation"]
-
-[[tasks.targets]]
-file = "scripts/test-release-readiness.sh"
-object = "json_failure_migration_suite"
-required_change = "Parse failing release/source JSON and assert nonzero exits."
-
-[[tasks.targets]]
-file = "docs/runtime-schemas.md"
-object = "json_failure_contract"
-required_change = "Document command-local raw JSON failures and global failure envelopes."
-
-[[tasks.targets]]
-file = "README.md"
-object = "json_failure_examples"
-required_change = "Keep user examples aligned with real JSON semantics."

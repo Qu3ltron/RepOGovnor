@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 2.0.2 - 2026-06-01
+
+### Fixed
+
+- Hardened public plugin boundaries after the repository rename to RepOGovnor.
+- Made runtime failure, receipt, report, and schema surfaces use typed enums.
+- Kept completed task archives below the governed source line limit.
+- Released the receipt event-file lock explicitly after durable appends.
+
 ## 2.0.1 - 2026-06-01
 
 ### Changed
