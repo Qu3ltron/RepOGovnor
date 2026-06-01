@@ -4,6 +4,13 @@ archive_id = "completed-001"
 archive_authority = "docs/task-registry/archive/completed-001.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-05-31-ci-nix-release-readiness"
+plan_path = "docs/plans/ci-nix-release-readiness-2026-05-31.md"
+plan_hash_sha256 = "3eb542718b31d9d7f2527936e77847a3b0ea4146e60d888dbc804e95e8c92b39"
+activated_at = "2026-05-31"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-05-31-landing-active-only"
 plan_path = "docs/plans/landing-active-only-2026-05-31.md"
 plan_hash_sha256 = "0426f2b63fcd131cf0ba3f87a38810c3b05be604f51e96e1f50ba6fd48535d78"
@@ -52,12 +59,58 @@ plan_hash_sha256 = "c36ad94618699298f2e99c4d5a0be22c0c7eadcfef7ae5a4881569e3e1c1
 activated_at = "2026-05-31"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-05-31-nix-auto-update"
-plan_path = "docs/plans/nix-auto-update-2026-05-31.md"
-plan_hash_sha256 = "7dd5f95dc1fd502953fd1569b99e1a5581af159d661cb512ee6570988677f70e"
-activated_at = "2026-05-31"
+[[tasks]]
+task_id = "TASK-2026-05-31-ci-nix-001"
+plan_id = "PLAN-2026-05-31-ci-nix-release-readiness"
 status = "completed"
+title = "Install Nix before CI release readiness"
+kind = "implementation"
+source_plan_path = "docs/plans/ci-nix-release-readiness-2026-05-31.md"
+source_plan_hash_sha256 = "3eb542718b31d9d7f2527936e77847a3b0ea4146e60d888dbc804e95e8c92b39"
+reason = "GitHub CI release readiness failed because nix was unavailable on the runner."
+acceptance_proof = "Behaviors B-2026-05-31-ci-nix-G01-positive and B-2026-05-31-ci-nix-G01-negative: workflow order verifiers pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-2026-05-31-ci-nix-G01-positive",
+    "B-2026-05-31-ci-nix-G01-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-05-31T20:59:49.339136379-04:00"
+completion_changed_files = [
+    ".github/workflows/ci.yml",
+    "docs/plans/ci-nix-release-readiness-2026-05-31.md",
+]
+
+[[tasks.targets]]
+file = ".github/workflows/ci.yml"
+object = "release_readiness_prerequisites"
+required_change = "Install pinned Nix action before Release readiness behavior."
+
+[[tasks]]
+task_id = "TASK-2026-05-31-ci-nix-002"
+plan_id = "PLAN-2026-05-31-ci-nix-release-readiness"
+status = "completed"
+title = "Validate release readiness after CI prerequisite fix"
+kind = "validation"
+source_plan_path = "docs/plans/ci-nix-release-readiness-2026-05-31.md"
+source_plan_hash_sha256 = "3eb542718b31d9d7f2527936e77847a3b0ea4146e60d888dbc804e95e8c92b39"
+reason = "Release handoff requires strict local release, registry, and receipt-chain evidence."
+acceptance_proof = "Behavior B-2026-05-31-ci-nix-G02-validation: local release readiness and registry gates pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = ["B-2026-05-31-ci-nix-G02-validation"]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-05-31T20:59:49.339136379-04:00"
+completion_changed_files = [
+    ".github/workflows/ci.yml",
+    "docs/plans/ci-nix-release-readiness-2026-05-31.md",
+]
+
+[[tasks.targets]]
+file = "docs/plans/ci-nix-release-readiness-2026-05-31.md"
+object = "walkthrough_evidence"
+required_change = "Capture release validation and receipt-chain evidence for the CI prerequisite closure."
 
 [[tasks]]
 task_id = "TASK-2026-05-31-active-landing-001"
@@ -1142,69 +1195,3 @@ behavior_ids = [
 file = "rust/task-registry-flow-cli/src/source_limit.rs"
 object = "normalize_relative_path"
 required_change = "Remove duplicate fn, import from crate::runtime instead"
-
-[[tasks]]
-task_id = "TASK-2026-05-31-N01"
-plan_id = "PLAN-2026-05-31-nix-auto-update"
-status = "completed"
-title = "Create flake.nix for Governance-plugin"
-kind = "implementation"
-source_plan_path = "docs/plans/nix-auto-update-2026-05-31.md"
-source_plan_hash_sha256 = "7dd5f95dc1fd502953fd1569b99e1a5581af159d661cb512ee6570988677f70e"
-reason = "Machine services need to consume the governance plugin as a Nix flake input rather than a local clone"
-acceptance_proof = "Behavior B-001: nix flake check passes, nix build produces working binary"
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-001-flake-exists",
-    "B-001b-no-hardcoded-paths",
-]
-
-[[tasks.targets]]
-file = "flake.nix"
-object = "Nix flake with package, app, devShell, formatter"
-required_change = "Create flake.nix exposing task-registry-flow package"
-
-[[tasks]]
-task_id = "TASK-2026-05-31-N02"
-plan_id = "PLAN-2026-05-31-nix-auto-update"
-status = "completed"
-title = "Create package.nix for task-registry-flow-cli"
-kind = "implementation"
-source_plan_path = "docs/plans/nix-auto-update-2026-05-31.md"
-source_plan_hash_sha256 = "7dd5f95dc1fd502953fd1569b99e1a5581af159d661cb512ee6570988677f70e"
-reason = "The Rust CLI needs a Nix build expression for buildRustPackage"
-acceptance_proof = "Behavior B-002: nix build produces binary + companion scripts"
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-002-package-builds-cli",
-    "B-002b-package-includes-scripts",
-]
-
-[[tasks.targets]]
-file = "package.nix"
-object = "Rust package build expression"
-required_change = "Create package.nix with buildRustPackage, source filter, and installPhase"
-
-[[tasks]]
-task_id = "TASK-2026-05-31-N03"
-plan_id = "PLAN-2026-05-31-nix-auto-update"
-status = "completed"
-title = "Create NixOS auto-update module with systemd timer"
-kind = "implementation"
-source_plan_path = "docs/plans/nix-auto-update-2026-05-31.md"
-source_plan_hash_sha256 = "7dd5f95dc1fd502953fd1569b99e1a5581af159d661cb512ee6570988677f70e"
-reason = "Machine services need automatic updates when the plugin repo changes, without manual git pull + rebuild"
-acceptance_proof = "Behavior B-003: timer and service units are valid, dev-lock is respected"
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-003-auto-update-timer",
-    "B-003b-update-respects-lock",
-]
-
-[[tasks.targets]]
-file = "modules/nixos/agent-governance-auto-update.nix"
-object = "Auto-update systemd timer + oneshot service"
-required_change = "Create module with timer that updates flake input and triggers rebuild"

@@ -34,6 +34,8 @@ jobs:
           bash -n templates/tools/agent-governance/pre-tool-use-gap-closure.sh.template
       - name: Install mode behavior
         run: bash scripts/test-install-modes.sh
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31.10.6
       - name: Release readiness behavior
         run: bash scripts/test-release-readiness.sh
       - name: Release source status
