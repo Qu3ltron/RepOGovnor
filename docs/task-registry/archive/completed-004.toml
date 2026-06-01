@@ -4,6 +4,13 @@ archive_id = "completed-004"
 archive_authority = "docs/task-registry/archive/completed-004.toml"
 
 [[plans]]
+plan_id = "verify-chain-hardening-2026-05-31"
+plan_path = "docs/plans/verify-chain-hardening-2026-05-31.md"
+plan_hash_sha256 = "3002c6daddc69a7250637febd77b03cb7c14c5852000c468193ebe63601a3522"
+activated_at = "2026-05-31"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-05-31-gap-closure-batch-2"
 plan_path = "docs/plans/gap-closure-batch-2-2026-05-31.md"
 plan_hash_sha256 = "1c224e86b5cce474f1d457c0f390eb15d70d450213e440e0d6e9ad6eef1a85fa"
@@ -38,12 +45,93 @@ plan_hash_sha256 = "3ad7520f1e9de72abd5e7e704399e4588d00628a3487ef271c337e362b4b
 activated_at = "2026-05-31"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-05-31-governance-marker-enforcement"
-plan_path = "docs/plans/governance-marker-enforcement.md"
-plan_hash_sha256 = "00627806a424bcd1f90d37b58017e7e6b684c9810cd16769bbfdb26afcd68b36"
-activated_at = "2026-05-31"
+[[tasks]]
+task_id = "TASK-2026-05-31-VC-001"
+plan_id = "verify-chain-hardening-2026-05-31"
 status = "completed"
+title = "Add new Rust source files to REQUIREMENTS.toml release_source.required"
+kind = "implementation"
+source_plan_path = "docs/plans/verify-chain-hardening-2026-05-31.md"
+source_plan_hash_sha256 = "3002c6daddc69a7250637febd77b03cb7c14c5852000c468193ebe63601a3522"
+reason = "Six new source files from the runtime.rs module split are undeclared, causing release-check required failures"
+acceptance_proof = "Behavior B-004: .codex/scripts/task-registry release-check required → 0 release-rust-source-undeclared failures"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-004-release-check-zero-undeclared",
+    "B-004-release-check-fails-missing-source-negative",
+]
+
+[[tasks.targets]]
+file = "REQUIREMENTS.toml"
+object = "release_source.required"
+required_change = "add six new source files: activation.rs, registry_io.rs, validation.rs, verify_chain.rs, state_transition_tests.rs, verify_chain_tests.rs"
+
+[[tasks]]
+task_id = "TASK-2026-05-31-VC-002"
+plan_id = "verify-chain-hardening-2026-05-31"
+status = "completed"
+title = "Add strict arg validation to verify-chain command"
+kind = "implementation"
+source_plan_path = "docs/plans/verify-chain-hardening-2026-05-31.md"
+source_plan_hash_sha256 = "3002c6daddc69a7250637febd77b03cb7c14c5852000c468193ebe63601a3522"
+reason = "Silent any() arg parsing in run_verify_chain allows unknown args to silently succeed instead of erroring with usage"
+acceptance_proof = "Behavior B-001: verify-chain BAD_ARG → exit 1 with usage"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-001-verify-chain-rejects-unknown-args",
+    "B-001-verify-chain-accepts-valid-args-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/verify_chain.rs"
+object = "run_verify_chain"
+required_change = "replace silent any() arg parsing with strict validation that rejects unknown args"
+
+[[tasks]]
+task_id = "TASK-2026-05-31-VC-003"
+plan_id = "verify-chain-hardening-2026-05-31"
+status = "completed"
+title = "Surface warnings in verify-chain text mode output"
+kind = "implementation"
+source_plan_path = "docs/plans/verify-chain-hardening-2026-05-31.md"
+source_plan_hash_sha256 = "3002c6daddc69a7250637febd77b03cb7c14c5852000c468193ebe63601a3522"
+reason = "format_chain_report only renders Fail diagnostics; Warn diagnostics are invisible in text mode while JSON mode shows them"
+acceptance_proof = "Behavior B-003: verify-chain text output includes warning count"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-003-text-mode-surfaces-warnings",
+    "B-003-warnings-dont-break-exit-code-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/verify_chain.rs"
+object = "format_chain_report"
+required_change = "surface warning count and warning details when no failures present"
+
+[[tasks]]
+task_id = "TASK-2026-05-31-VC-004"
+plan_id = "verify-chain-hardening-2026-05-31"
+status = "completed"
+title = "Make temp_root directories reliably unique for parallel test execution"
+kind = "implementation"
+source_plan_path = "docs/plans/verify-chain-hardening-2026-05-31.md"
+source_plan_hash_sha256 = "3002c6daddc69a7250637febd77b03cb7c14c5852000c468193ebe63601a3522"
+reason = "Nanosecond-precision timestamp is insufficient for parallel test uniqueness, exposed by new try_lock_exclusive in append_event"
+acceptance_proof = "Behavior B-002: cargo test -- --test-threads=4 → 95 passed, 0 lock contention failures"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-002-parallel-tests-no-contention",
+    "B-002-temp-root-unique-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/mod.rs"
+object = "temp_root"
+required_change = "add process-level atomic counter to guarantee unique directories across parallel tests"
 
 [[tasks]]
 task_id = "TASK-2026-05-31-006"
@@ -600,106 +688,3 @@ behavior_ids = ["B-001-executable-release-positive"]
 file = "docs/runtime-schemas.md"
 object = "Release Contract"
 required_change = "Document release_source.executable and release-file-executable diagnostics."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-marker-enforcement-001"
-plan_id = "PLAN-2026-05-31-governance-marker-enforcement"
-status = "completed"
-title = "Fail status on markerless governance docs"
-kind = "diagnostics"
-source_plan_path = "docs/plans/governance-marker-enforcement.md"
-source_plan_hash_sha256 = "00627806a424bcd1f90d37b58017e7e6b684c9810cd16769bbfdb26afcd68b36"
-reason = "Markerless AGENTS/GEMINI files currently pass status as notes."
-acceptance_proof = "Behaviors B-2026-05-31-marker-status-positive and B-2026-05-31-marker-status-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-2026-05-31-marker-status-positive",
-    "B-2026-05-31-marker-status-negative",
-]
-
-[[tasks.targets]]
-file = "scripts/status.sh"
-object = "check_markers"
-required_change = "Report missing governance marker blocks as failures."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/status_checks.rs"
-object = "marker_check"
-required_change = "Add typed marker diagnostics for AGENTS.md and GEMINI.md."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/mod.rs"
-object = "status_marker_tests"
-required_change = "Declare focused status-check test module without exceeding the source limit."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/status_check_tests.rs"
-object = "status_marker_tests"
-required_change = "Assert marker-bearing success and missing/malformed marker failures."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-marker-enforcement-002"
-plan_id = "PLAN-2026-05-31-governance-marker-enforcement"
-status = "completed"
-title = "Install marker-bearing full projections"
-kind = "migration"
-source_plan_path = "docs/plans/governance-marker-enforcement.md"
-source_plan_hash_sha256 = "00627806a424bcd1f90d37b58017e7e6b684c9810cd16769bbfdb26afcd68b36"
-reason = "Force projections can currently produce governance docs without marker provenance."
-acceptance_proof = "Behaviors B-2026-05-31-marker-template-positive and B-2026-05-31-marker-template-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-2026-05-31-marker-template-positive",
-    "B-2026-05-31-marker-template-negative",
-]
-
-[[tasks.targets]]
-file = "templates/AGENTS.md.template"
-object = "marker_block"
-required_change = "Add exactly one agent-governance marker block to full AGENTS projections."
-
-[[tasks.targets]]
-file = "templates/GEMINI.md.template"
-object = "marker_block"
-required_change = "Add exactly one agent-governance marker block to full GEMINI projections."
-
-[[tasks.targets]]
-file = "AGENTS.md"
-object = "self_projection"
-required_change = "Refresh self projection with marker block."
-
-[[tasks.targets]]
-file = "GEMINI.md"
-object = "self_projection"
-required_change = "Refresh self projection with marker block."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-marker-enforcement-003"
-plan_id = "PLAN-2026-05-31-governance-marker-enforcement"
-status = "completed"
-title = "Cover marker enforcement in migration and release gates"
-kind = "test"
-source_plan_path = "docs/plans/governance-marker-enforcement.md"
-source_plan_hash_sha256 = "00627806a424bcd1f90d37b58017e7e6b684c9810cd16769bbfdb26afcd68b36"
-reason = "Negative migration and release checks must prevent markerless regression."
-acceptance_proof = "Behavior B-2026-05-31-marker-validation passes."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = ["B-2026-05-31-marker-validation"]
-
-[[tasks.targets]]
-file = "scripts/test-install-modes.sh"
-object = "markerless_workspace_negative"
-required_change = "Assert strict status fails markerless workspaces and install modes repair markers."
-
-[[tasks.targets]]
-file = "scripts/test-release-readiness.sh"
-object = "marker_release_checks"
-required_change = "Assert release templates and self docs include governance marker blocks."
-
-[[tasks.targets]]
-file = "README.md"
-object = "status_contract"
-required_change = "Document markerless governance docs as unaligned posture."

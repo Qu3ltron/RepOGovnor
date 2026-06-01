@@ -4,6 +4,13 @@ archive_id = "completed-003"
 archive_authority = "docs/task-registry/archive/completed-003.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-05-31-secondary-hardening"
+plan_path = "docs/plans/secondary-hardening-2026-05-31.md"
+plan_hash_sha256 = "d2d2f67837a23e7c786c9d4bff81e697318556741cde726a079bd1dcf223450f"
+activated_at = "2026-05-31"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-05-31-post-rollback-hardening"
 plan_path = "docs/plans/post-rollback-hardening-2026-05-31.md"
 plan_hash_sha256 = "1e38fead936ff4841618988780658c17a9f7f255ccffe0c00d615ae8545af336"
@@ -38,12 +45,70 @@ plan_hash_sha256 = "fc8c802ee2e7a6cfbaf5e85a1050ab7c449916ff3812b0ea606cb1d60ddb
 activated_at = "2026-05-31"
 status = "completed"
 
-[[plans]]
-plan_id = "verify-chain-hardening-2026-05-31"
-plan_path = "docs/plans/verify-chain-hardening-2026-05-31.md"
-plan_hash_sha256 = "3002c6daddc69a7250637febd77b03cb7c14c5852000c468193ebe63601a3522"
-activated_at = "2026-05-31"
+[[tasks]]
+task_id = "TASK-2026-05-31-SH01"
+plan_id = "PLAN-2026-05-31-secondary-hardening"
 status = "completed"
+title = "Harden command write-target extraction"
+kind = "authorization"
+source_plan_path = "docs/plans/secondary-hardening-2026-05-31.md"
+source_plan_hash_sha256 = "d2d2f67837a23e7c786c9d4bff81e697318556741cde726a079bd1dcf223450f"
+reason = "Mutation hooks must fail closed for compact shell redirections and hidden inline write targets."
+acceptance_proof = "Behaviors B-SH01-positive, B-SH01-negative-compact, and B-SH01-negative-open pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-SH01-positive",
+    "B-SH01-negative-compact",
+    "B-SH01-negative-open",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/mutation_hook.rs"
+object = "compact_redirection_detection"
+required_change = "Extract compact redirect targets and mark variable compact redirects as ambiguous writes."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/mutation_hook.rs"
+object = "inline_open_write_detection"
+required_change = "Scan every inline open call and reject write-mode calls whose target is not deterministic."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/hook_command_tests.rs"
+object = "command_write_negative_suite"
+required_change = "Add compact redirect and mixed inline open tests."
+
+[[tasks]]
+task_id = "TASK-2026-05-31-SH02"
+plan_id = "PLAN-2026-05-31-secondary-hardening"
+status = "completed"
+title = "Reject symlinked release-source required files"
+kind = "release"
+source_plan_path = "docs/plans/secondary-hardening-2026-05-31.md"
+source_plan_hash_sha256 = "d2d2f67837a23e7c786c9d4bff81e697318556741cde726a079bd1dcf223450f"
+reason = "Release-source required files must be native files, not symlink indirections."
+acceptance_proof = "Behaviors B-SH02-positive and B-SH02-negative pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-SH02-positive",
+    "B-SH02-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/release_checks.rs"
+object = "required_file_native_source"
+required_change = "Use symlink metadata and fail required release-source paths that are symlinks."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/release_source_tests.rs"
+object = "required_symlink_negative"
+required_change = "Add a symlinked required-file negative fixture."
+
+[[tasks.targets]]
+file = "docs/runtime-schemas.md"
+object = "release_native_file_contract"
+required_change = "Document that release-source required artifacts must be native files."
 
 [[tasks]]
 task_id = "TASK-2026-05-31-H01"
@@ -665,91 +730,3 @@ behavior_ids = [
 file = "rust/task-registry-flow-cli/src/verify_chain.rs"
 object = "repair_chain error handling"
 required_change = "add fs::remove_file(&tmp_path) cleanup on the sync_all error path"
-
-[[tasks]]
-task_id = "TASK-2026-05-31-VC-001"
-plan_id = "verify-chain-hardening-2026-05-31"
-status = "completed"
-title = "Add new Rust source files to REQUIREMENTS.toml release_source.required"
-kind = "implementation"
-source_plan_path = "docs/plans/verify-chain-hardening-2026-05-31.md"
-source_plan_hash_sha256 = "3002c6daddc69a7250637febd77b03cb7c14c5852000c468193ebe63601a3522"
-reason = "Six new source files from the runtime.rs module split are undeclared, causing release-check required failures"
-acceptance_proof = "Behavior B-004: .codex/scripts/task-registry release-check required → 0 release-rust-source-undeclared failures"
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-004-release-check-zero-undeclared",
-    "B-004-release-check-fails-missing-source-negative",
-]
-
-[[tasks.targets]]
-file = "REQUIREMENTS.toml"
-object = "release_source.required"
-required_change = "add six new source files: activation.rs, registry_io.rs, validation.rs, verify_chain.rs, state_transition_tests.rs, verify_chain_tests.rs"
-
-[[tasks]]
-task_id = "TASK-2026-05-31-VC-002"
-plan_id = "verify-chain-hardening-2026-05-31"
-status = "completed"
-title = "Add strict arg validation to verify-chain command"
-kind = "implementation"
-source_plan_path = "docs/plans/verify-chain-hardening-2026-05-31.md"
-source_plan_hash_sha256 = "3002c6daddc69a7250637febd77b03cb7c14c5852000c468193ebe63601a3522"
-reason = "Silent any() arg parsing in run_verify_chain allows unknown args to silently succeed instead of erroring with usage"
-acceptance_proof = "Behavior B-001: verify-chain BAD_ARG → exit 1 with usage"
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-001-verify-chain-rejects-unknown-args",
-    "B-001-verify-chain-accepts-valid-args-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/verify_chain.rs"
-object = "run_verify_chain"
-required_change = "replace silent any() arg parsing with strict validation that rejects unknown args"
-
-[[tasks]]
-task_id = "TASK-2026-05-31-VC-003"
-plan_id = "verify-chain-hardening-2026-05-31"
-status = "completed"
-title = "Surface warnings in verify-chain text mode output"
-kind = "implementation"
-source_plan_path = "docs/plans/verify-chain-hardening-2026-05-31.md"
-source_plan_hash_sha256 = "3002c6daddc69a7250637febd77b03cb7c14c5852000c468193ebe63601a3522"
-reason = "format_chain_report only renders Fail diagnostics; Warn diagnostics are invisible in text mode while JSON mode shows them"
-acceptance_proof = "Behavior B-003: verify-chain text output includes warning count"
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-003-text-mode-surfaces-warnings",
-    "B-003-warnings-dont-break-exit-code-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/verify_chain.rs"
-object = "format_chain_report"
-required_change = "surface warning count and warning details when no failures present"
-
-[[tasks]]
-task_id = "TASK-2026-05-31-VC-004"
-plan_id = "verify-chain-hardening-2026-05-31"
-status = "completed"
-title = "Make temp_root directories reliably unique for parallel test execution"
-kind = "implementation"
-source_plan_path = "docs/plans/verify-chain-hardening-2026-05-31.md"
-source_plan_hash_sha256 = "3002c6daddc69a7250637febd77b03cb7c14c5852000c468193ebe63601a3522"
-reason = "Nanosecond-precision timestamp is insufficient for parallel test uniqueness, exposed by new try_lock_exclusive in append_event"
-acceptance_proof = "Behavior B-002: cargo test -- --test-threads=4 → 95 passed, 0 lock contention failures"
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-002-parallel-tests-no-contention",
-    "B-002-temp-root-unique-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/mod.rs"
-object = "temp_root"
-required_change = "add process-level atomic counter to guarantee unique directories across parallel tests"

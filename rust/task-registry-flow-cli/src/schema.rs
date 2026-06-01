@@ -279,9 +279,24 @@ impl<'de> Deserialize<'de> for SchemaVersion {
     }
 }
 
+fn deserialize_schema_version_v2<'de, D>(deserializer: D) -> Result<SchemaVersion, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let version = SchemaVersion::deserialize(deserializer)?;
+    if version == SchemaVersion::V2 {
+        Ok(version)
+    } else {
+        Err(<D::Error as de::Error>::custom(
+            "runtime schema_version must be 2",
+        ))
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct ReceiptEvent {
+    #[serde(deserialize_with = "deserialize_schema_version_v2")]
     pub(crate) schema_version: SchemaVersion,
     pub(crate) timestamp: String,
     pub(crate) command: CliCommand,
@@ -396,6 +411,7 @@ pub(crate) struct MutationDenial {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct CommandReport {
+    #[serde(deserialize_with = "deserialize_schema_version_v2")]
     pub(crate) schema_version: SchemaVersion,
     pub(crate) command: CliCommand,
     pub(crate) status: CommandStatus,

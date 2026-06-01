@@ -1,4 +1,4 @@
-use crate::cli::failure_json_for_test;
+use crate::cli::{failure_json_for_test, serialization_fallback_json};
 use crate::model::EventRecord;
 use crate::schema::{
     CheckReport, CliCommand, CommandReport, Diagnostic, EventOutcome, FailureCode, HookFormat,
@@ -72,7 +72,7 @@ fn typed_receipt_event_schema_round_trips() {
 }
 
 #[test]
-fn typed_receipt_event_schema_rejects_unknown_subject_kind() {
+fn typed_receipt_event_schema_rejects_v1_and_unknown_subjects() {
     let event = serde_json::json!({
         "schema_version": 2,
         "timestamp": "2026-06-01T00:00:00-04:00",
@@ -83,6 +83,17 @@ fn typed_receipt_event_schema_rejects_unknown_subject_kind() {
         "summary": "validated"
     });
     assert!(serde_json::from_value::<EventRecord>(event).is_err());
+
+    let v1_event_with_current_shape = serde_json::json!({
+        "schema_version": 1,
+        "timestamp": "2026-06-01T00:00:00-04:00",
+        "command": "validate",
+        "outcome": "ok",
+        "duration_ms": 7,
+        "subject": {"kind": "command", "id": "validate", "path": "."},
+        "summary": "validated"
+    });
+    assert!(serde_json::from_value::<EventRecord>(v1_event_with_current_shape).is_err());
 
     let report = serde_json::json!({
         "schema_version": 1,
@@ -104,6 +115,20 @@ fn typed_failure_code_emits_in_json_report() {
 
     let report: CommandReport = serde_json::from_value(value).expect("typed command report");
     assert_eq!(report.failure_code, Some(FailureCode::Runtime));
+
+    let fallback = serialization_fallback_json(CliCommand::Validate, "bad \"json\"");
+    let fallback_value: serde_json::Value =
+        serde_json::from_str(&fallback).expect("fallback failure report JSON");
+    assert_eq!(
+        fallback_value["failure_code"],
+        FailureCode::Serialization.as_str()
+    );
+    let fallback_report: CommandReport =
+        serde_json::from_value(fallback_value).expect("typed fallback command report");
+    assert_eq!(
+        fallback_report.failure_code,
+        Some(FailureCode::Serialization)
+    );
 }
 
 #[test]

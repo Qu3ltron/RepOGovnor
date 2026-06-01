@@ -59,13 +59,7 @@ pub(crate) fn main_entry() -> i32 {
                 println!(
                     "{}",
                     reports::success_json(command, detail, receipt_recorded)
-                        .unwrap_or_else(|error| {
-                            format!(
-                                r#"{{"schema_version":2,"command":"{}","status":"fail","summary":"serialization failed: {}","failure_code":"serialization","receipt_recorded":false}}"#,
-                                command.as_str(),
-                                error.replace('"', "\\\"")
-                            )
-                        })
+                        .unwrap_or_else(|error| serialization_fallback_json(command, &error))
                 );
             } else if !detail.is_empty() {
                 println!("{detail}");
@@ -143,13 +137,7 @@ fn render_error(
             println!(
                 "{}",
                 reports::failure_json(command, error.code(), message, receipt_recorded)
-                    .unwrap_or_else(|error| {
-                        format!(
-                            r#"{{"schema_version":2,"command":"{}","status":"fail","summary":"serialization failed: {}","failure_code":"serialization","receipt_recorded":false}}"#,
-                            command.as_str(),
-                            error.replace('"', "\\\"")
-                        )
-                    })
+                    .unwrap_or_else(|error| serialization_fallback_json(command, &error))
             );
         }
         (OutputFormat::Text, RuntimeFailure::Text { message, .. }) => {
@@ -164,11 +152,19 @@ pub(crate) fn failure_json_for_test(
     receipt_recorded: bool,
     error: &str,
 ) -> String {
-    reports::failure_json(command, FailureCode::Runtime, error, receipt_recorded).unwrap_or_else(|e| {
-        format!(
-            r#"{{"schema_version":2,"command":"{}","status":"fail","summary":"serialization failed: {}","failure_code":"serialization","receipt_recorded":false}}"#,
-            command.as_str(),
-            e.replace('"', "\\\"")
-        )
-    })
+    reports::failure_json(command, FailureCode::Runtime, error, receipt_recorded)
+        .unwrap_or_else(|e| serialization_fallback_json(command, &e))
+}
+
+pub(crate) fn serialization_fallback_json(command: CliCommand, error: &str) -> String {
+    format!(
+        r#"{{"schema_version":2,"command":"{}","status":"fail","summary":"serialization failed: {}","failure_code":"{}","receipt_recorded":false}}"#,
+        command.as_str(),
+        json_escape(error),
+        FailureCode::Serialization.as_str()
+    )
+}
+
+fn json_escape(value: &str) -> String {
+    value.replace('\\', "\\\\").replace('"', "\\\"")
 }
