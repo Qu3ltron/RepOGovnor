@@ -42,7 +42,8 @@ Target: v2.x.
 
 - Treat current Codex mutation model attribution as the first measured adapter
   step, not as token spend or universal attribution.
-- Add a cost evidence model for token spend and provider/runtime usage.
+- Current shipped cost evidence is a typed receipt model and
+  `cost-evidence-check`, not automatic collection or spend calculation.
 - Classify every cost value as measured, estimated, or unmeasured.
 - Require provider, model, usage counts, pricing snapshot, timestamp, attribution
   target, and evidence source before reporting measured cost.
@@ -109,8 +110,8 @@ Target: post-v2.x.
 - The registry proves workflow state, not product correctness.
 - Multi-repo governance is possible manually but not yet first-class.
 - There is no shipped typed policy engine command yet.
-- There is no reliable cost per commit until structured usage receipts and
-  pricing evidence exist.
+- There is no reliable cost per commit until commit-linked measured usage
+  receipts and pricing evidence exist.
 
 ## Non-goals
 

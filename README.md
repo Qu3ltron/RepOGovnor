@@ -65,6 +65,8 @@ the terms in [LICENSE](LICENSE).
 - Model attribution for supported Codex mutation hooks: Codex is the first
   measured adapter, and non-Codex mutation surfaces remain unmeasured until
   equivalent adapter evidence exists.
+- Cost evidence receipts and `cost-evidence-check`: spend evidence is
+  classified as measured, estimated, or unmeasured before any metric can use it.
 - Strict v2 plan activation: phased checklists, exact file targets, behavior
   `gap_id`, behavior `polarity`, typed verifiers, and required positive plus
   negative behavior coverage before implementation work.
@@ -79,9 +81,9 @@ Future policy work will make the input and output more explicit: a typed
 engineering policy as input, a compliance artifact as output, and token/cost
 evidence where usage can be measured honestly. Current model attribution says
 which measured adapter/model requested supported repo mutation; it is not token
-usage evidence. Cost per commit is a product goal, but it requires structured
-usage receipts and pricing evidence; hidden or unavailable usage must be
-reported as unmeasured, not guessed.
+usage evidence. Cost evidence receipts now provide measured, estimated, and
+unmeasured states, but cost per commit remains unmeasured until commit-linked
+measured usage receipts and pricing evidence exist.
 
 Important limits:
 

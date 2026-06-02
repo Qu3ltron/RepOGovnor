@@ -66,6 +66,7 @@ string_enum!(CliCommand {
     VerifyChain => "verify-chain",
     VerifyMutationHook => "verify-mutation-hook",
     ModelAttributionCheck => "model-attribution-check",
+    CostEvidenceCheck => "cost-evidence-check",
     Metrics => "metrics",
     SourceLimit => "source-limit",
     ReleaseCheck => "release-check",
@@ -101,6 +102,7 @@ string_enum!(ReportSurface {
     ReceiptChain => "receipt-chain",
     ReceiptChainFix => "receipt-chain-fix",
     ModelAttribution => "model-attribution",
+    CostEvidence => "cost-evidence",
 });
 
 string_enum!(FailureCode {
@@ -142,6 +144,23 @@ string_enum!(EventOutcome {
 string_enum!(ModelIdentityStatus {
     Measured => "measured",
     Unmeasured => "unmeasured",
+});
+
+string_enum!(CostEvidenceStatus {
+    Measured => "measured",
+    Estimated => "estimated",
+    Unmeasured => "unmeasured",
+});
+
+string_enum!(CostAttributionKind {
+    Commit => "commit",
+    Plan => "plan",
+    Task => "task",
+    VerifierRun => "verifier-run",
+    LandingAttempt => "landing-attempt",
+    Retry => "retry",
+    ReleaseCycle => "release-cycle",
+    Session => "session",
 });
 
 string_enum!(MutationAttributionDecision {
@@ -337,6 +356,8 @@ pub(crate) struct ReceiptEvent {
     pub(crate) agent_model_attribution: Option<AgentModelAttribution>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) mutation_attribution: Option<MutationAttribution>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) cost_evidence: Option<CostEvidence>,
 }
 
 impl ReceiptEvent {
@@ -362,6 +383,7 @@ impl ReceiptEvent {
             mutation_denial: None,
             agent_model_attribution: None,
             mutation_attribution: None,
+            cost_evidence: None,
         }
     }
 
@@ -386,6 +408,7 @@ impl ReceiptEvent {
             mutation_denial: Some(MutationDenial { path, reason }),
             agent_model_attribution: None,
             mutation_attribution: None,
+            cost_evidence: None,
         }
     }
 
@@ -413,6 +436,7 @@ impl ReceiptEvent {
             mutation_denial: None,
             agent_model_attribution: Some(agent_model_attribution),
             mutation_attribution: Some(mutation_attribution),
+            cost_evidence: None,
         }
     }
 }
@@ -487,6 +511,63 @@ pub(crate) struct MutationAttribution {
     pub(crate) decision: MutationAttributionDecision,
     pub(crate) hook_format: HookFormat,
     pub(crate) target_paths: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct CostEvidence {
+    pub(crate) status: CostEvidenceStatus,
+    pub(crate) evidence_source: String,
+    pub(crate) attribution_target: CostAttributionTarget,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) provider: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) model_slug: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) usage: Option<TokenUsage>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) pricing: Option<CostPricingSnapshot>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) amount: Option<CostAmount>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) measurement_timestamp: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) estimation_method: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) unmeasured_reason: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct CostAttributionTarget {
+    pub(crate) kind: CostAttributionKind,
+    pub(crate) id: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct TokenUsage {
+    pub(crate) input_tokens: u64,
+    pub(crate) output_tokens: u64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) cached_input_tokens: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) reasoning_tokens: Option<u64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct CostPricingSnapshot {
+    pub(crate) source: String,
+    pub(crate) version: String,
+    pub(crate) currency: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct CostAmount {
+    pub(crate) currency: String,
+    pub(crate) amount_micros: u64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

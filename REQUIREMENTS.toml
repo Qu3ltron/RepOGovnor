@@ -115,6 +115,7 @@ required = [
   "rust/task-registry-flow-cli/Cargo.lock",
   "rust/task-registry-flow-cli/deny.toml",
   "rust/task-registry-flow-cli/src/cli.rs",
+  "rust/task-registry-flow-cli/src/cost_evidence.rs",
   "rust/task-registry-flow-cli/src/hook_io.rs",
   "rust/task-registry-flow-cli/src/install.rs",
   "rust/task-registry-flow-cli/src/landing.rs",

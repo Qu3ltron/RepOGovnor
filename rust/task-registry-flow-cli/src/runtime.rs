@@ -109,6 +109,7 @@ pub(crate) fn run(mut args: Vec<String>) -> RuntimeResult<String> {
             Ok("TASK_VERIFY_MUTATION_HOOK ok".to_string())
         }
         CliCommand::ModelAttributionCheck => crate::model_attribution::run_command(root, &args),
+        CliCommand::CostEvidenceCheck => crate::cost_evidence::run_command(root, &args),
         CliCommand::Metrics => {
             let json = match args.as_slice() {
                 [] => false,
@@ -140,7 +141,7 @@ pub(crate) fn run(mut args: Vec<String>) -> RuntimeResult<String> {
 }
 
 fn usage() -> String {
-    "usage: task-registry-flow {validate|activate <docs/plans/file.md>|status <task_id> <status>|defer <task_id> <basis> <reactivation>|report <plan_id>|reviewer-report [--format text|markdown]|version-check {validate|next <plan_id>|prerelease <plan_id> --rc <n>|release-check} [--format json]|backlog-check [--format json]|archive-completed|verify-behaviors [plan_id|task_id]|verify-landing [--plan-id <plan_id>] --changed-files <path>...|verify-chain [--format json] [--repair]|verify-mutation-hook [--format codex|antigravity|cursor|claude]|model-attribution-check [--format json]|metrics|source-limit check|source-limit plan|release-check {required|version|tracked|all} [--format json]|install plan [--format json]|status-check [--format json]}".to_string()
+    "usage: task-registry-flow {validate|activate <docs/plans/file.md>|status <task_id> <status>|defer <task_id> <basis> <reactivation>|report <plan_id>|reviewer-report [--format text|markdown]|version-check {validate|next <plan_id>|prerelease <plan_id> --rc <n>|release-check} [--format json]|backlog-check [--format json]|archive-completed|verify-behaviors [plan_id|task_id]|verify-landing [--plan-id <plan_id>] --changed-files <path>...|verify-chain [--format json] [--repair]|verify-mutation-hook [--format codex|antigravity|cursor|claude]|model-attribution-check [--format json]|cost-evidence-check [--format json]|metrics|source-limit check|source-limit plan|release-check {required|version|tracked|all} [--format json]|install plan [--format json]|status-check [--format json]}".to_string()
 }
 
 fn install_command(root: &Path, args: &[String]) -> RuntimeResult<String> {

@@ -30,6 +30,7 @@ diagnostic payload:
 .codex/scripts/task-registry version-check validate --format json
 .codex/scripts/task-registry backlog-check --format json
 .codex/scripts/task-registry model-attribution-check --format json
+.codex/scripts/task-registry cost-evidence-check --format json
 ```
 
 For command-specific diagnostic JSON, failures still emit the raw diagnostic
@@ -85,6 +86,31 @@ Non-Codex adapters are reported as `unmeasured` until they expose equivalent
 identity evidence. `model-attribution-check` reports measured and unmeasured
 mutation attribution posture without guessing missing provider data.
 
+Receipt events may also include `cost_evidence`. Cost evidence is provider
+neutral and classified as `measured`, `estimated`, or `unmeasured`.
+`cost-evidence-check` validates the classification. Measured evidence requires
+provider, model, usage counts, pricing snapshot, measurement timestamp,
+attribution target, evidence source, and amount evidence. Estimated evidence
+requires an explicit estimation method. Unmeasured evidence requires a reason
+and must not carry a cost amount. Cost per commit remains unmeasured until
+commit-linked measured usage receipts exist.
+
+```json
+{
+  "cost_evidence": {
+    "status": "measured",
+    "evidence_source": "provider-usage-receipt",
+    "attribution_target": {"kind": "commit", "id": "abc1234"},
+    "provider": "openai",
+    "model_slug": "gpt-5-codex",
+    "usage": {"input_tokens": 1200, "output_tokens": 300},
+    "pricing": {"source": "pricing-snapshot", "version": "2026-06-02", "currency": "USD"},
+    "amount": {"currency": "USD", "amount_micros": 42},
+    "measurement_timestamp": "2026-06-02T00:00:00Z"
+  }
+}
+```
+
 Schema version 1 receipt lines are invalid for current runtime verification.
 Metrics count them as malformed, `verify-chain` fails them, and `--repair`
 refuses to rewrite them.
@@ -93,6 +119,9 @@ New schema version 2 receipts are hash-chained locally. The event hash is
 computed from canonical event JSON with `event_hash_sha256` omitted; the
 previous hash links to the immediately preceding non-empty event line. Metrics
 report chained events, unchained v2 events, malformed events, and chain breaks.
+They also count cost evidence receipts as `cost_measured_events`,
+`cost_estimated_events`, and `cost_unmeasured_events`; these are evidence-state
+counts, not calculated spend.
 Unchained v2 receipts are failures because they are not integrity evidence.
 `verify-chain --repair` may repair parseable schema version 2 receipts only.
 

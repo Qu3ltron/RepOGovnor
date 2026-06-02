@@ -110,16 +110,17 @@ to a first-class typed engineering policy manifest.
 
 ### GP-007: Token spend and cost per commit need structured usage evidence
 - Claim pressure: cost per commit is an intended first-class metric.
-- Current evidence: local workflow metrics exist, and supported Codex mutation
-  hooks now record measured model attribution. Structured token usage, pricing
-  snapshots, non-Codex measured adapters, and commit-linked cost receipts are
-  not shipped.
+- Current evidence: local workflow metrics exist, supported Codex mutation
+  hooks now record measured model attribution, and cost evidence receipts can
+  be classified by `cost-evidence-check` as measured, estimated, or unmeasured.
+  Automatic provider usage collection, pricing snapshots, non-Codex measured
+  adapters, and commit-linked measured usage receipts are not shipped.
 - User impact: any current cost claim would be false precision. Hidden or
   unavailable usage must be reported as unmeasured.
-- Next closure: add a cost evidence model that distinguishes measured,
-  estimated, and unmeasured spend, then attribute measured usage to commits,
-  plans, tasks, verifier runs, landing attempts, retries, and release cycles.
-  Codex model attribution is a prerequisite signal, not cost evidence.
+- Next closure: ingest structured usage and pricing receipts, then attribute
+  measured usage to commits, plans, tasks, verifier runs, landing attempts,
+  retries, and release cycles. Codex model attribution is a prerequisite signal,
+  not cost evidence.
 - Reactivation condition: before publishing cost per commit or token-spend
   metrics as a shipped feature.
 
@@ -132,7 +133,8 @@ to a first-class typed engineering policy manifest.
 - No remote receipt sync is shipped in this release.
 - No typed policy engine or compliance artifact command is shipped in this
   release.
-- No reliable cost per commit or guessed token spend is shipped in this release.
+- No reliable cost per commit, automated pricing lookup, or guessed token spend
+  is shipped in this release.
 
 ## Drain protocol
 

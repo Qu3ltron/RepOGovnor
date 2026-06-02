@@ -4,6 +4,13 @@ archive_id = "completed-001"
 archive_authority = "docs/task-registry/archive/completed-001.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-06-02-cost-evidence-model"
+plan_path = "docs/plans/cost-evidence-model-2026-06-02.md"
+plan_hash_sha256 = "bda69c788bef2c879a121d3b65d32317d428b9d7444502bdf8b0a1358fc03b45"
+activated_at = "2026-06-01"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-06-02-codex-model-attribution-hardening"
 plan_path = "docs/plans/codex-model-attribution-hardening-2026-06-02.md"
 plan_hash_sha256 = "6d1ed561e074db21cfb9405242ac3694138715f9b3bdd2acbca08e83c642abf2"
@@ -38,12 +45,146 @@ plan_hash_sha256 = "41c3b0a5a76a8825f43bc52f0b5f7d241db9ab82e5ba34fa32f60a9fb28f
 activated_at = "2026-06-01"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-06-01-multi-repo-boundary"
-plan_path = "docs/plans/multi-repo-boundary-2026-06-01.md"
-plan_hash_sha256 = "157360947dadb6819ed719432af55c02c980479187e9ff843673dda7a5171039"
-activated_at = "2026-06-01"
+[[tasks]]
+task_id = "TASK-2026-06-02-cost-evidence-model-001"
+plan_id = "PLAN-2026-06-02-cost-evidence-model"
 status = "completed"
+title = "Add typed cost evidence runtime validation"
+kind = "implementation"
+source_plan_path = "docs/plans/cost-evidence-model-2026-06-02.md"
+source_plan_hash_sha256 = "bda69c788bef2c879a121d3b65d32317d428b9d7444502bdf8b0a1358fc03b45"
+reason = "GP-007 needs structured usage evidence states before any honest spend metric."
+acceptance_proof = "Behaviors B-001-cost-evidence-measured-positive and B-002-cost-evidence-measured-negative."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "B-001-cost-evidence-measured-positive",
+    "B-002-cost-evidence-measured-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T23:04:35.878251809-04:00"
+completion_changed_files = [
+    "README.md",
+    "REQUIREMENTS.toml",
+    "ROADMAP.md",
+    "docs/engineering-policy-compliance.md",
+    "docs/gap-pipeline.md",
+    "docs/runtime-schemas.md",
+    "docs/version-roadmap.toml",
+    "rust/task-registry-flow-cli/src/cost_evidence.rs",
+    "rust/task-registry-flow-cli/src/main.rs",
+    "rust/task-registry-flow-cli/src/metrics.rs",
+    "rust/task-registry-flow-cli/src/model.rs",
+    "rust/task-registry-flow-cli/src/runtime.rs",
+    "rust/task-registry-flow-cli/src/schema.rs",
+    "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/schema.rs"
+object = "cost_evidence_schema"
+required_change = "Add provider-neutral cost evidence types and optional receipt field."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/cost_evidence.rs"
+object = "cost_evidence_check"
+required_change = "Validate measured, estimated, and unmeasured cost evidence honestly."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/main.rs"
+object = "module_list"
+required_change = "Include the cost evidence module."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/runtime.rs"
+object = "dispatcher"
+required_change = "Dispatch cost-evidence-check."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs"
+object = "cost_evidence_tests"
+required_change = "Add focused positive and negative cost evidence tests."
+
+[[tasks]]
+task_id = "TASK-2026-06-02-cost-evidence-model-002"
+plan_id = "PLAN-2026-06-02-cost-evidence-model"
+status = "completed"
+title = "Expose honest cost evidence docs and metrics"
+kind = "governance"
+source_plan_path = "docs/plans/cost-evidence-model-2026-06-02.md"
+source_plan_hash_sha256 = "bda69c788bef2c879a121d3b65d32317d428b9d7444502bdf8b0a1358fc03b45"
+reason = "Cost evidence state counts must not be overread as calculated spend."
+acceptance_proof = "Behaviors B-003-cost-evidence-docs-positive, B-004-cost-evidence-docs-negative, and B-005-cost-evidence-validation."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "B-003-cost-evidence-docs-positive",
+    "B-004-cost-evidence-docs-negative",
+    "B-005-cost-evidence-validation",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T23:04:35.878251809-04:00"
+completion_changed_files = [
+    "README.md",
+    "REQUIREMENTS.toml",
+    "ROADMAP.md",
+    "docs/engineering-policy-compliance.md",
+    "docs/gap-pipeline.md",
+    "docs/runtime-schemas.md",
+    "docs/version-roadmap.toml",
+    "rust/task-registry-flow-cli/src/cost_evidence.rs",
+    "rust/task-registry-flow-cli/src/main.rs",
+    "rust/task-registry-flow-cli/src/metrics.rs",
+    "rust/task-registry-flow-cli/src/model.rs",
+    "rust/task-registry-flow-cli/src/runtime.rs",
+    "rust/task-registry-flow-cli/src/schema.rs",
+    "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/model.rs"
+object = "metrics_report"
+required_change = "Add measured, estimated, and unmeasured cost evidence counts."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/metrics.rs"
+object = "cost_counts"
+required_change = "Count cost evidence receipts by status."
+
+[[tasks.targets]]
+file = "README.md"
+object = "cost_evidence"
+required_change = "Document cost-evidence-check and current non-claims."
+
+[[tasks.targets]]
+file = "ROADMAP.md"
+object = "cost_evidence"
+required_change = "Reflect typed cost evidence as the next slice before cost per commit."
+
+[[tasks.targets]]
+file = "docs/engineering-policy-compliance.md"
+object = "token_cost_evidence"
+required_change = "Document current measured, estimated, and unmeasured cost evidence posture."
+
+[[tasks.targets]]
+file = "docs/runtime-schemas.md"
+object = "cost_evidence_schema"
+required_change = "Document cost evidence receipt schema, command, and metrics."
+
+[[tasks.targets]]
+file = "docs/gap-pipeline.md"
+object = "GP-007"
+required_change = "Update current evidence and remaining cost-per-commit gap."
+
+[[tasks.targets]]
+file = "docs/version-roadmap.toml"
+object = "v2_1_0"
+required_change = "Add this plan to release evidence."
+
+[[tasks.targets]]
+file = "REQUIREMENTS.toml"
+object = "release_source"
+required_change = "Include the new cost evidence module."
 
 [[tasks]]
 task_id = "TASK-2026-06-02-codex-model-attribution-hardening-001"
@@ -829,61 +970,3 @@ required_change = "Document text and Markdown output modes."
 file = "docs/gap-pipeline.md"
 object = "GP-002"
 required_change = "Update GP-002 with local PR-format evidence and future remote integration boundary."
-
-[[tasks]]
-task_id = "TASK-2026-06-01-multi-repo-boundary-001"
-plan_id = "PLAN-2026-06-01-multi-repo-boundary"
-status = "completed"
-title = "Document multi-repo governance boundary"
-kind = "documentation"
-source_plan_path = "docs/plans/multi-repo-boundary-2026-06-01.md"
-source_plan_hash_sha256 = "157360947dadb6819ed719432af55c02c980479187e9ff843673dda7a5171039"
-reason = "GP-004 needs an honest public boundary for teams using several repos."
-acceptance_proof = "Behaviors B-2026-06-01-multi-repo-positive and B-2026-06-01-multi-repo-negative pass."
-created_at = "2026-06-01"
-updated_at = "2026-06-01"
-behavior_ids = [
-    "B-2026-06-01-multi-repo-positive",
-    "B-2026-06-01-multi-repo-negative",
-    "B-2026-06-01-multi-repo-release-validation",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-06-01T15:30:20.035271482-04:00"
-completion_changed_files = [
-    "README.md",
-    "REQUIREMENTS.toml",
-    "docs/gap-pipeline.md",
-    "docs/multi-repo.md",
-    "package.nix",
-    "scripts/test-release-readiness.sh",
-]
-
-[[tasks.targets]]
-file = "docs/multi-repo.md"
-object = "multi_repo_boundary"
-required_change = "Document current manual multi-repo consumption model and unsupported aggregation claims."
-
-[[tasks.targets]]
-file = "README.md"
-object = "files_users_should_know"
-required_change = "Link the multi-repo boundary doc."
-
-[[tasks.targets]]
-file = "REQUIREMENTS.toml"
-object = "release_required_files"
-required_change = "Declare docs/multi-repo.md as a required release file."
-
-[[tasks.targets]]
-file = "package.nix"
-object = "package_docs"
-required_change = "Install docs/multi-repo.md in the package asset root."
-
-[[tasks.targets]]
-file = "scripts/test-release-readiness.sh"
-object = "multi_repo_doc_checks"
-required_change = "Assert multi-repo doc content and package asset presence."
-
-[[tasks.targets]]
-file = "docs/gap-pipeline.md"
-object = "GP-004"
-required_change = "Update GP-004 with manual-boundary evidence and remaining reactivation conditions."

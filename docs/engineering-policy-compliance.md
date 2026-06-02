@@ -62,15 +62,18 @@ Token spend should become a first-class policy evidence domain. The end goal is
 cost per commit plus related sub-metrics for plans, tasks, verifier runs,
 landing attempts, retries, and release cycles.
 
-This must be honest. A cost value should be classified as:
+This must be honest. Cost evidence is now represented as typed receipt data and
+validated by `cost-evidence-check`. A cost value should be classified as:
 
 - `measured` when structured usage receipts and pricing evidence exist
 - `estimated` when clearly labeled assumptions are used
 - `unmeasured` when usage is hidden, unavailable, or not attributable
 
 Measured cost requires provider, model, usage counts, pricing snapshot or
-version, timestamp, attribution target, and evidence source. The system must not
-guess spend from elapsed time, commit size, file count, or agent narration.
+version, timestamp, attribution target, evidence source, and amount evidence.
+Estimated cost requires an explicit estimation method. Unmeasured cost requires
+a reason and must not carry a cost amount. The system must not guess spend from
+elapsed time, commit size, file count, or agent narration.
 
 Current shipped evidence starts with model responsibility for supported Codex
 repo mutation hooks. Codex is the first measured adapter because its hook
@@ -79,9 +82,9 @@ surfaces remain unmeasured unless an adapter exposes equivalent evidence.
 Model attribution is necessary for cost evidence, but it is not token usage or
 cost per commit.
 
-Cost per commit should only be reported when commit-linked usage receipts exist.
-Otherwise the artifact should say the metric is unmeasured and explain which
-usage evidence is missing.
+Cost per commit should only be reported when commit-linked measured usage
+receipts exist. Otherwise the artifact should say the metric is unmeasured and
+explain which usage evidence is missing.
 
 ## Current Non-Claims
 

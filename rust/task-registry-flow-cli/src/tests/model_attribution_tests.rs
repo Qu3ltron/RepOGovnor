@@ -1,6 +1,8 @@
 use super::*;
 use crate::schema::{
-    EventOutcome, ModelIdentityStatus, MutationAttributionDecision, ReportSurface,
+    CostAmount, CostAttributionKind, CostAttributionTarget, CostEvidence, CostEvidenceStatus,
+    CostPricingSnapshot, EventOutcome, ModelIdentityStatus, MutationAttributionDecision,
+    ReportSurface, TokenUsage,
 };
 
 fn codex_payload(command: &str, hook_event_name: &str) -> String {
@@ -46,6 +48,53 @@ fn receipt_events(root: &Path) -> Vec<EventRecord> {
         .filter(|line| !line.trim().is_empty())
         .map(|line| serde_json::from_str::<EventRecord>(line).unwrap())
         .collect()
+}
+
+fn cost_event(summary: &str, cost_evidence: CostEvidence) -> EventRecord {
+    let mut event = EventRecord::new(
+        timestamp(),
+        crate::schema::CliCommand::Metrics,
+        EventOutcome::Ok,
+        0,
+        summary.to_string(),
+    );
+    event.cost_evidence = Some(cost_evidence);
+    event
+}
+
+fn cost_target(kind: CostAttributionKind, id: &str) -> CostAttributionTarget {
+    CostAttributionTarget {
+        kind,
+        id: id.to_string(),
+    }
+}
+
+fn measured_cost_evidence() -> CostEvidence {
+    CostEvidence {
+        status: CostEvidenceStatus::Measured,
+        evidence_source: "provider-usage-receipt".to_string(),
+        attribution_target: cost_target(CostAttributionKind::Commit, "abc1234"),
+        provider: Some("openai".to_string()),
+        model_slug: Some("gpt-5-codex".to_string()),
+        usage: Some(TokenUsage {
+            input_tokens: 1200,
+            output_tokens: 300,
+            cached_input_tokens: Some(100),
+            reasoning_tokens: None,
+        }),
+        pricing: Some(CostPricingSnapshot {
+            source: "pricing-snapshot".to_string(),
+            version: "2026-06-02".to_string(),
+            currency: "USD".to_string(),
+        }),
+        amount: Some(CostAmount {
+            currency: "USD".to_string(),
+            amount_micros: 42,
+        }),
+        measurement_timestamp: Some("2026-06-02T00:00:00Z".to_string()),
+        estimation_method: None,
+        unmeasured_reason: None,
+    }
 }
 
 #[test]
@@ -187,5 +236,84 @@ fn model_attribution_check_rejects_false_measured_codex_receipt() {
     .unwrap();
 
     let report = crate::model_attribution::check(&root).unwrap();
+    assert_eq!(report.summary.fail, 1);
+}
+
+#[test]
+fn cost_evidence_check_reports_measured_estimated_and_unmeasured() {
+    let root = active_root("cost-evidence-check");
+    append_event(
+        &root,
+        cost_event("measured commit cost", measured_cost_evidence()),
+    )
+    .unwrap();
+    append_event(
+        &root,
+        cost_event(
+            "estimated verifier cost",
+            CostEvidence {
+                status: CostEvidenceStatus::Estimated,
+                evidence_source: "manual-estimate".to_string(),
+                attribution_target: cost_target(CostAttributionKind::VerifierRun, "B-001"),
+                provider: Some("openai".to_string()),
+                model_slug: Some("gpt-5-codex".to_string()),
+                usage: None,
+                pricing: None,
+                amount: Some(CostAmount {
+                    currency: "USD".to_string(),
+                    amount_micros: 10,
+                }),
+                measurement_timestamp: None,
+                estimation_method: Some("operator-entered estimate".to_string()),
+                unmeasured_reason: None,
+            },
+        ),
+    )
+    .unwrap();
+    append_event(
+        &root,
+        cost_event(
+            "unmeasured session cost",
+            CostEvidence {
+                status: CostEvidenceStatus::Unmeasured,
+                evidence_source: "local-session".to_string(),
+                attribution_target: cost_target(CostAttributionKind::Session, "session-1"),
+                provider: Some("codex".to_string()),
+                model_slug: Some("gpt-5-codex".to_string()),
+                usage: None,
+                pricing: None,
+                amount: None,
+                measurement_timestamp: None,
+                estimation_method: None,
+                unmeasured_reason: Some("provider usage receipt unavailable".to_string()),
+            },
+        ),
+    )
+    .unwrap();
+
+    let report = crate::cost_evidence::check(&root).unwrap();
+    assert_eq!(report.surface, ReportSurface::CostEvidence);
+    assert_eq!(report.summary.fail, 0);
+    assert_eq!(report.summary.pass, 1);
+    assert_eq!(report.summary.warn, 2);
+
+    let metrics_report = metrics(&root).unwrap();
+    assert_eq!(metrics_report.cost_measured_events, 1);
+    assert_eq!(metrics_report.cost_estimated_events, 1);
+    assert_eq!(metrics_report.cost_unmeasured_events, 1);
+    assert!(format_metrics(&metrics_report).contains("cost_measured_events=1"));
+}
+
+#[test]
+fn cost_evidence_check_rejects_false_measured_receipt() {
+    let root = active_root("cost-evidence-bad-measured");
+    let mut evidence = measured_cost_evidence();
+    evidence.provider = None;
+    evidence.usage = None;
+    evidence.pricing = None;
+
+    append_event(&root, cost_event("bad measured cost", evidence)).unwrap();
+
+    let report = crate::cost_evidence::check(&root).unwrap();
     assert_eq!(report.summary.fail, 1);
 }

@@ -31,4 +31,5 @@ covered_plan_ids = [
   "PLAN-2026-06-01-policy-posture-version-coverage",
   "PLAN-2026-06-01-version-backlog-governance",
   "PLAN-2026-06-02-codex-model-attribution-hardening",
+  "PLAN-2026-06-02-cost-evidence-model",
 ]

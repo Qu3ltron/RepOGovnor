@@ -1,6 +1,7 @@
 mod activation;
 mod backlog_check;
 mod cli;
+mod cost_evidence;
 mod hook_io;
 mod install;
 mod landing;

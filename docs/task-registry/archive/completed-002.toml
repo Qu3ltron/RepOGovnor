@@ -4,6 +4,13 @@ archive_id = "completed-002"
 archive_authority = "docs/task-registry/archive/completed-002.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-06-01-multi-repo-boundary"
+plan_path = "docs/plans/multi-repo-boundary-2026-06-01.md"
+plan_hash_sha256 = "157360947dadb6819ed719432af55c02c980479187e9ff843673dda7a5171039"
+activated_at = "2026-06-01"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-06-01-first-run-installer-guidance"
 plan_path = "docs/plans/first-run-installer-guidance-2026-06-01.md"
 plan_hash_sha256 = "2e0e04bdaf91283ee3f5261294d8d1509dea9aa3a0af5351c9218f0ac8346df4"
@@ -38,12 +45,63 @@ plan_hash_sha256 = "4be58f1eaa5deeb9895970862ad67266e99fb83777b4cc0fa92e8ed533ba
 activated_at = "2026-06-01"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-06-01-release-gap-pipeline"
-plan_path = "docs/plans/release-gap-pipeline-2026-06-01.md"
-plan_hash_sha256 = "69ff196bc27d177fca2b5549fcc1e40b5ac0a9bb253616837254565f643d93b8"
-activated_at = "2026-06-01"
+[[tasks]]
+task_id = "TASK-2026-06-01-multi-repo-boundary-001"
+plan_id = "PLAN-2026-06-01-multi-repo-boundary"
 status = "completed"
+title = "Document multi-repo governance boundary"
+kind = "documentation"
+source_plan_path = "docs/plans/multi-repo-boundary-2026-06-01.md"
+source_plan_hash_sha256 = "157360947dadb6819ed719432af55c02c980479187e9ff843673dda7a5171039"
+reason = "GP-004 needs an honest public boundary for teams using several repos."
+acceptance_proof = "Behaviors B-2026-06-01-multi-repo-positive and B-2026-06-01-multi-repo-negative pass."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "B-2026-06-01-multi-repo-positive",
+    "B-2026-06-01-multi-repo-negative",
+    "B-2026-06-01-multi-repo-release-validation",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T15:30:20.035271482-04:00"
+completion_changed_files = [
+    "README.md",
+    "REQUIREMENTS.toml",
+    "docs/gap-pipeline.md",
+    "docs/multi-repo.md",
+    "package.nix",
+    "scripts/test-release-readiness.sh",
+]
+
+[[tasks.targets]]
+file = "docs/multi-repo.md"
+object = "multi_repo_boundary"
+required_change = "Document current manual multi-repo consumption model and unsupported aggregation claims."
+
+[[tasks.targets]]
+file = "README.md"
+object = "files_users_should_know"
+required_change = "Link the multi-repo boundary doc."
+
+[[tasks.targets]]
+file = "REQUIREMENTS.toml"
+object = "release_required_files"
+required_change = "Declare docs/multi-repo.md as a required release file."
+
+[[tasks.targets]]
+file = "package.nix"
+object = "package_docs"
+required_change = "Install docs/multi-repo.md in the package asset root."
+
+[[tasks.targets]]
+file = "scripts/test-release-readiness.sh"
+object = "multi_repo_doc_checks"
+required_change = "Assert multi-repo doc content and package asset presence."
+
+[[tasks.targets]]
+file = "docs/gap-pipeline.md"
+object = "GP-004"
+required_change = "Update GP-004 with manual-boundary evidence and remaining reactivation conditions."
 
 [[tasks]]
 task_id = "TASK-2026-06-01-first-run-installer-guidance-001"
@@ -302,94 +360,3 @@ required_change = "Add a visible section separating governance proof from produc
 file = "docs/gap-pipeline.md"
 object = "GP-005"
 required_change = "Record immediate docs closure evidence and preserve reviewer-output follow-up."
-
-[[tasks]]
-task_id = "TASK-2026-06-01-release-gap-pipeline-001"
-plan_id = "PLAN-2026-06-01-release-gap-pipeline"
-status = "completed"
-title = "Gate Markdown release claim versions"
-kind = "implementation"
-source_plan_path = "docs/plans/release-gap-pipeline-2026-06-01.md"
-source_plan_hash_sha256 = "69ff196bc27d177fca2b5549fcc1e40b5ac0a9bb253616837254565f643d93b8"
-reason = "Release readiness must catch stale public release claims, not only machine metadata files."
-acceptance_proof = "Behaviors B-001-markdown-version-positive and B-002-markdown-version-negative."
-created_at = "2026-06-01"
-updated_at = "2026-06-01"
-behavior_ids = [
-    "B-001-markdown-version-positive",
-    "B-002-markdown-version-negative",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-06-01T14:32:25.080195090-04:00"
-completion_changed_files = [
-    "REQUIREMENTS.toml",
-    "docs/gap-pipeline.md",
-    "docs/releases/v2.md",
-    "rust/task-registry-flow-cli/src/release_checks.rs",
-    "rust/task-registry-flow-cli/src/schema.rs",
-    "rust/task-registry-flow-cli/src/tests/mod.rs",
-    "rust/task-registry-flow-cli/src/tests/release_source_tests.rs",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/schema.rs"
-object = "VersionFileFormat"
-required_change = "Add a typed Markdown-line release version format."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/release_checks.rs"
-object = "extract_version"
-required_change = "Extract release versions from configured Markdown claim lines."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/release_source_tests.rs"
-object = "release_source_rejects_stale_markdown_version_file"
-required_change = "Add a negative fixture test for stale Markdown release claims."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/mod.rs"
-object = "seed_release_repo"
-required_change = "Seed Markdown release version fixtures."
-
-[[tasks.targets]]
-file = "REQUIREMENTS.toml"
-object = "release_source.version_files"
-required_change = "Declare README.md and docs/releases/v2.md as version-bearing release surfaces."
-
-[[tasks.targets]]
-file = "docs/releases/v2.md"
-object = "Release version"
-required_change = "Set the documented release version to 2.0.2."
-
-[[tasks]]
-task_id = "TASK-2026-06-01-release-gap-pipeline-002"
-plan_id = "PLAN-2026-06-01-release-gap-pipeline"
-status = "completed"
-title = "Document the remaining gap pipeline"
-kind = "documentation"
-source_plan_path = "docs/plans/release-gap-pipeline-2026-06-01.md"
-source_plan_hash_sha256 = "69ff196bc27d177fca2b5549fcc1e40b5ac0a9bb253616837254565f643d93b8"
-reason = "The project needs a durable, honest backlog that can be drained through future governed closure contracts."
-acceptance_proof = "Behaviors B-003-gap-pipeline-positive and B-004-gap-pipeline-negative."
-created_at = "2026-06-01"
-updated_at = "2026-06-01"
-behavior_ids = [
-    "B-003-gap-pipeline-positive",
-    "B-004-gap-pipeline-negative",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-06-01T14:32:25.080195090-04:00"
-completion_changed_files = [
-    "REQUIREMENTS.toml",
-    "docs/gap-pipeline.md",
-    "docs/releases/v2.md",
-    "rust/task-registry-flow-cli/src/release_checks.rs",
-    "rust/task-registry-flow-cli/src/schema.rs",
-    "rust/task-registry-flow-cli/src/tests/mod.rs",
-    "rust/task-registry-flow-cli/src/tests/release_source_tests.rs",
-]
-
-[[tasks.targets]]
-file = "docs/gap-pipeline.md"
-object = "gap_pipeline"
-required_change = "Document verified claims, remaining gaps, evidence, priorities, and drain protocol."
