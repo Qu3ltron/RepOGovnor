@@ -4,6 +4,13 @@ archive_id = "completed-001"
 archive_authority = "docs/task-registry/archive/completed-001.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-06-02-task-registry-wrapper-source-alignment"
+plan_path = "docs/plans/task-registry-wrapper-source-alignment-2026-06-02.md"
+plan_hash_sha256 = "d8258aafd1043741a5e7f12a203966dcc5567f3a1c6275da85dcd5af0be23415"
+activated_at = "2026-06-02"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-06-02-task-registry-flow-skill-projection-cleanup"
 plan_path = "docs/plans/task-registry-flow-skill-projection-cleanup-2026-06-02.md"
 plan_hash_sha256 = "0fe18a8a2bc58e05e9ac3be87af0bf90685c746ef584ae38d3a160ba5ff28245"
@@ -38,12 +45,46 @@ plan_hash_sha256 = "aa9e2df39a5ed2f692e474eb722ddd48da3408c65da76f7b05d9354065eb
 activated_at = "2026-06-02"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-06-02-token-spend-hardening"
-plan_path = "docs/plans/token-spend-hardening-2026-06-02.md"
-plan_hash_sha256 = "6f62a5fa49c6540974fea3b7f5345c85b9214298eeab3d3eda31df54d03a5243"
-activated_at = "2026-06-02"
+[[tasks]]
+task_id = "TASK-2026-06-02-task-registry-wrapper-source-alignment-001"
+plan_id = "PLAN-2026-06-02-task-registry-wrapper-source-alignment"
 status = "completed"
+title = "Align repo-local task-registry wrapper to root CLI source"
+kind = "governance"
+source_plan_path = "docs/plans/task-registry-wrapper-source-alignment-2026-06-02.md"
+source_plan_hash_sha256 = "d8258aafd1043741a5e7f12a203966dcc5567f3a1c6275da85dcd5af0be23415"
+reason = "Release gates must validate the current root CLI source instead of a stale nested plugin checkout."
+acceptance_proof = "Behaviors B-TR-WRAPPER-001-root-source-positive, B-TR-WRAPPER-002-stale-source-negative, B-TR-WRAPPER-003-release-check-current-source, and B-TR-WRAPPER-004-version-coverage pass."
+created_at = "2026-06-02"
+updated_at = "2026-06-02"
+behavior_ids = [
+    "B-TR-WRAPPER-001-root-source-positive",
+    "B-TR-WRAPPER-002-stale-source-negative",
+    "B-TR-WRAPPER-003-release-check-current-source",
+    "B-TR-WRAPPER-004-version-coverage",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-02T11:35:21.027796255-04:00"
+completion_changed_files = [
+    ".codex/scripts/task-registry",
+    "docs/version-roadmap.toml",
+    "scripts/status.sh",
+]
+
+[[tasks.targets]]
+file = ".codex/scripts/task-registry"
+object = "repo-local task-registry wrapper manifest path"
+required_change = "Point the wrapper at rust/task-registry-flow-cli/Cargo.toml under the repo root."
+
+[[tasks.targets]]
+file = "scripts/status.sh"
+object = "Task registry artifacts checks"
+required_change = "Require the root CLI manifest path and reject the stale nested plugin manifest path."
+
+[[tasks.targets]]
+file = "docs/version-roadmap.toml"
+object = "releases[2.1.0].covered_plan_ids"
+required_change = "Add PLAN-2026-06-02-task-registry-wrapper-source-alignment."
 
 [[tasks]]
 task_id = "TASK-2026-06-02-task-registry-flow-skill-projection-cleanup-001"
@@ -920,304 +961,3 @@ completion_changed_files = [
 file = "scripts/test-release-readiness.sh"
 object = "nix_asset_cost_ingest_checks"
 required_change = "Assert packaged binary help, provider contract, runtime schema, and pricing snapshot."
-
-[[tasks]]
-task_id = "TASK-2026-06-02-token-spend-hardening-001"
-plan_id = "PLAN-2026-06-02-token-spend-hardening"
-status = "completed"
-title = "Implement canonical deterministic cost ingestion"
-kind = "implementation"
-source_plan_path = "docs/plans/token-spend-hardening-2026-06-02.md"
-source_plan_hash_sha256 = "6f62a5fa49c6540974fea3b7f5345c85b9214298eeab3d3eda31df54d03a5243"
-reason = "Token spend evidence must be deterministic and target-attributed before it can support engineering policy compliance."
-acceptance_proof = "Behaviors B-001 through B-006."
-created_at = "2026-06-02"
-updated_at = "2026-06-02"
-behavior_ids = [
-    "B-001-reproducible-cost-positive",
-    "B-002-reproducible-cost-negative",
-    "B-003-deterministic-selection-positive",
-    "B-004-deterministic-selection-negative",
-    "B-005-target-attribution-positive",
-    "B-006-target-attribution-negative",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-06-02T01:11:40.948395452-04:00"
-completion_changed_files = [
-    "README.md",
-    "REQUIREMENTS.toml",
-    "ROADMAP.md",
-    "docs/engineering-policy-compliance.md",
-    "docs/gap-pipeline.md",
-    "docs/plans/token-spend-hardening-2026-06-02.md",
-    "docs/pricing/openai-codex-rate-card-2026-06-02.toml",
-    "docs/provider-usage-adapter-contract.md",
-    "docs/runtime-schemas.md",
-    "docs/task-registry.toml",
-    "docs/task-registry/events.jsonl",
-    "docs/version-roadmap.toml",
-    "package.nix",
-    "rust/task-registry-flow-cli/src/cost_evidence.rs",
-    "rust/task-registry-flow-cli/src/cost_ingest.rs",
-    "rust/task-registry-flow-cli/src/cost_report.rs",
-    "rust/task-registry-flow-cli/src/main.rs",
-    "rust/task-registry-flow-cli/src/metrics.rs",
-    "rust/task-registry-flow-cli/src/model.rs",
-    "rust/task-registry-flow-cli/src/runtime.rs",
-    "rust/task-registry-flow-cli/src/schema.rs",
-    "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/schema.rs"
-object = "CostEvidence and UsageContribution"
-required_change = "Add canonical digest, session, pricing hash, service tier, and target evidence fields."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/cost_ingest.rs"
-object = "codex_transcript_ingest"
-required_change = "Require explicit session and bounded transcript range, reject legacy selectors, compute evidence digests, and record target kind/id."
-
-[[tasks]]
-task_id = "TASK-2026-06-02-token-spend-hardening-002"
-plan_id = "PLAN-2026-06-02-token-spend-hardening"
-status = "completed"
-title = "Harden pricing and cost evidence validation"
-kind = "schema"
-source_plan_path = "docs/plans/token-spend-hardening-2026-06-02.md"
-source_plan_hash_sha256 = "6f62a5fa49c6540974fea3b7f5345c85b9214298eeab3d3eda31df54d03a5243"
-reason = "Measured cost evidence must be replayable, priced from governed snapshots, and protected against double counting."
-acceptance_proof = "Behaviors B-007 through B-012."
-created_at = "2026-06-02"
-updated_at = "2026-06-02"
-behavior_ids = [
-    "B-007-pricing-positive",
-    "B-008-pricing-negative",
-    "B-009-evidence-positive",
-    "B-010-evidence-negative",
-    "B-011-migration-positive",
-    "B-012-migration-negative",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-06-02T01:11:40.948395452-04:00"
-completion_changed_files = [
-    "README.md",
-    "REQUIREMENTS.toml",
-    "ROADMAP.md",
-    "docs/engineering-policy-compliance.md",
-    "docs/gap-pipeline.md",
-    "docs/plans/token-spend-hardening-2026-06-02.md",
-    "docs/pricing/openai-codex-rate-card-2026-06-02.toml",
-    "docs/provider-usage-adapter-contract.md",
-    "docs/runtime-schemas.md",
-    "docs/task-registry.toml",
-    "docs/task-registry/events.jsonl",
-    "docs/version-roadmap.toml",
-    "package.nix",
-    "rust/task-registry-flow-cli/src/cost_evidence.rs",
-    "rust/task-registry-flow-cli/src/cost_ingest.rs",
-    "rust/task-registry-flow-cli/src/cost_report.rs",
-    "rust/task-registry-flow-cli/src/main.rs",
-    "rust/task-registry-flow-cli/src/metrics.rs",
-    "rust/task-registry-flow-cli/src/model.rs",
-    "rust/task-registry-flow-cli/src/runtime.rs",
-    "rust/task-registry-flow-cli/src/schema.rs",
-    "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs",
-]
-
-[[tasks.targets]]
-file = "docs/pricing/openai-codex-rate-card-2026-06-02.toml"
-object = "pricing_snapshot"
-required_change = "Add strict pricing provenance and service-tier fields."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/cost_evidence.rs"
-object = "measured_validation"
-required_change = "Recompute amount, validate file hashes, reject legacy measured receipts, and reject duplicate event digests."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/metrics.rs"
-object = "cost_metrics"
-required_change = "Include measured amount totals and unmeasured counts honestly."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/model.rs"
-object = "MetricsReport"
-required_change = "Add measured cost amount totals to metrics schema."
-
-[[tasks.targets]]
-file = "docs/task-registry/events.jsonl"
-object = "cost_evidence"
-required_change = "Migrate or correct current cost receipt and repair receipt chain."
-
-[[tasks]]
-task_id = "TASK-2026-06-02-token-spend-hardening-003"
-plan_id = "PLAN-2026-06-02-token-spend-hardening"
-status = "completed"
-title = "Add provider honesty and cost reporting"
-kind = "implementation"
-source_plan_path = "docs/plans/token-spend-hardening-2026-06-02.md"
-source_plan_hash_sha256 = "6f62a5fa49c6540974fea3b7f5345c85b9214298eeab3d3eda31df54d03a5243"
-reason = "Reports must distinguish measured spend from unmeasured provider gaps and must not collapse unknown cost into zero."
-acceptance_proof = "Behaviors B-013 through B-016."
-created_at = "2026-06-02"
-updated_at = "2026-06-02"
-behavior_ids = [
-    "B-013-provider-positive",
-    "B-014-provider-negative",
-    "B-015-report-positive",
-    "B-016-report-negative",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-06-02T01:11:40.948395452-04:00"
-completion_changed_files = [
-    "README.md",
-    "REQUIREMENTS.toml",
-    "ROADMAP.md",
-    "docs/engineering-policy-compliance.md",
-    "docs/gap-pipeline.md",
-    "docs/plans/token-spend-hardening-2026-06-02.md",
-    "docs/pricing/openai-codex-rate-card-2026-06-02.toml",
-    "docs/provider-usage-adapter-contract.md",
-    "docs/runtime-schemas.md",
-    "docs/task-registry.toml",
-    "docs/task-registry/events.jsonl",
-    "docs/version-roadmap.toml",
-    "package.nix",
-    "rust/task-registry-flow-cli/src/cost_evidence.rs",
-    "rust/task-registry-flow-cli/src/cost_ingest.rs",
-    "rust/task-registry-flow-cli/src/cost_report.rs",
-    "rust/task-registry-flow-cli/src/main.rs",
-    "rust/task-registry-flow-cli/src/metrics.rs",
-    "rust/task-registry-flow-cli/src/model.rs",
-    "rust/task-registry-flow-cli/src/runtime.rs",
-    "rust/task-registry-flow-cli/src/schema.rs",
-    "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/cost_report.rs"
-object = "cost_report"
-required_change = "Add target-level measured and unmeasured token spend reporting."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/main.rs"
-object = "module_list"
-required_change = "Include cost_report module."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/runtime.rs"
-object = "dispatcher"
-required_change = "Route cost-report."
-
-[[tasks.targets]]
-file = "docs/provider-usage-adapter-contract.md"
-object = "provider_adapter_contract"
-required_change = "Document provider-neutral measured/unmeasured requirements."
-
-[[tasks]]
-task_id = "TASK-2026-06-02-token-spend-hardening-004"
-plan_id = "PLAN-2026-06-02-token-spend-hardening"
-status = "completed"
-title = "Add tests, docs, release-source alignment, and final validation"
-kind = "validation"
-source_plan_path = "docs/plans/token-spend-hardening-2026-06-02.md"
-source_plan_hash_sha256 = "6f62a5fa49c6540974fea3b7f5345c85b9214298eeab3d3eda31df54d03a5243"
-reason = "The migration must have positive and negative behavior coverage and public claims must match the runtime."
-acceptance_proof = "Behaviors B-001 through B-017."
-created_at = "2026-06-02"
-updated_at = "2026-06-02"
-behavior_ids = [
-    "B-001-reproducible-cost-positive",
-    "B-002-reproducible-cost-negative",
-    "B-003-deterministic-selection-positive",
-    "B-004-deterministic-selection-negative",
-    "B-005-target-attribution-positive",
-    "B-006-target-attribution-negative",
-    "B-007-pricing-positive",
-    "B-008-pricing-negative",
-    "B-009-evidence-positive",
-    "B-010-evidence-negative",
-    "B-012-migration-negative",
-    "B-013-provider-positive",
-    "B-014-provider-negative",
-    "B-015-report-positive",
-    "B-016-report-negative",
-    "B-017-token-spend-validation",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-06-02T01:11:40.948395452-04:00"
-completion_changed_files = [
-    "README.md",
-    "REQUIREMENTS.toml",
-    "ROADMAP.md",
-    "docs/engineering-policy-compliance.md",
-    "docs/gap-pipeline.md",
-    "docs/plans/token-spend-hardening-2026-06-02.md",
-    "docs/pricing/openai-codex-rate-card-2026-06-02.toml",
-    "docs/provider-usage-adapter-contract.md",
-    "docs/runtime-schemas.md",
-    "docs/task-registry.toml",
-    "docs/task-registry/events.jsonl",
-    "docs/version-roadmap.toml",
-    "package.nix",
-    "rust/task-registry-flow-cli/src/cost_evidence.rs",
-    "rust/task-registry-flow-cli/src/cost_ingest.rs",
-    "rust/task-registry-flow-cli/src/cost_report.rs",
-    "rust/task-registry-flow-cli/src/main.rs",
-    "rust/task-registry-flow-cli/src/metrics.rs",
-    "rust/task-registry-flow-cli/src/model.rs",
-    "rust/task-registry-flow-cli/src/runtime.rs",
-    "rust/task-registry-flow-cli/src/schema.rs",
-    "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs"
-object = "cost_capture_tests"
-required_change = "Add comprehensive positive and negative token spend tests without extending tests/mod.rs."
-
-[[tasks.targets]]
-file = "docs/plans/token-spend-hardening-2026-06-02.md"
-object = "closure_contract"
-required_change = "Track approved scope, behavior verifiers, target files, and validation evidence."
-
-[[tasks.targets]]
-file = "docs/runtime-schemas.md"
-object = "token_spend_schema"
-required_change = "Document canonical cost evidence and reporting."
-
-[[tasks.targets]]
-file = "README.md"
-object = "policy_compliance_cost_evidence"
-required_change = "State token spend evidence accurately."
-
-[[tasks.targets]]
-file = "ROADMAP.md"
-object = "token_spend_direction"
-required_change = "Align product direction with provider adapter and cost-per-commit goals."
-
-[[tasks.targets]]
-file = "docs/engineering-policy-compliance.md"
-object = "token_spend_policy"
-required_change = "Document token spend as engineering policy compliance evidence."
-
-[[tasks.targets]]
-file = "docs/gap-pipeline.md"
-object = "GP-007"
-required_change = "Update gap status and remaining limitations."
-
-[[tasks.targets]]
-file = "docs/version-roadmap.toml"
-object = "v2_1_0"
-required_change = "Include this hardening plan."
-
-[[tasks.targets]]
-file = "REQUIREMENTS.toml"
-object = "release_source"
-required_change = "Include new source and docs files."
-
-[[tasks.targets]]
-file = "package.nix"
-object = "release_source"
-required_change = "Keep release-source packaging aligned when explicit path lists require it."

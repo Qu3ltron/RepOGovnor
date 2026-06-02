@@ -40,4 +40,5 @@ covered_plan_ids = [
   "PLAN-2026-06-02-token-capture-review-gap-closure",
   "PLAN-2026-06-02-token-capture-review-version-coverage",
   "PLAN-2026-06-02-task-registry-flow-skill-projection-cleanup",
+  "PLAN-2026-06-02-task-registry-wrapper-source-alignment",
 ]

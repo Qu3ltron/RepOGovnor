@@ -4,6 +4,13 @@ archive_id = "completed-004"
 archive_authority = "docs/task-registry/archive/completed-004.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-06-01-reviewer-report"
+plan_path = "docs/plans/reviewer-report-2026-06-01.md"
+plan_hash_sha256 = "3a79a250dcaf6ed428f09122eccd27665cf42f1a4136da7c705074271362f566"
+activated_at = "2026-06-01"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-06-01-adoption-docs"
 plan_path = "docs/plans/adoption-docs-2026-06-01.md"
 plan_hash_sha256 = "bad39efb5202ecf995fb5cb3772c3611fee07dfcf49720c226cee4397172ddd3"
@@ -38,12 +45,88 @@ plan_hash_sha256 = "422a7e5b9cfec24f1d0ef05193d017dd8f67efb0c859be29c183e0cd3057
 activated_at = "2026-06-01"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-06-01-receipt-lock-release"
-plan_path = "docs/plans/receipt-lock-release-2026-06-01.md"
-plan_hash_sha256 = "4c7f53dd8c3f68457a50b693499893cc1eb6f004d13a0605a73809e9762a3ee9"
-activated_at = "2026-06-01"
+[[tasks]]
+task_id = "TASK-2026-06-01-reviewer-report-001"
+plan_id = "PLAN-2026-06-01-reviewer-report"
 status = "completed"
+title = "Add compact reviewer report"
+kind = "implementation"
+source_plan_path = "docs/plans/reviewer-report-2026-06-01.md"
+source_plan_hash_sha256 = "3a79a250dcaf6ed428f09122eccd27665cf42f1a4136da7c705074271362f566"
+reason = "Maintainers need one local handoff surface for governance proof without overstating product correctness."
+acceptance_proof = "Behaviors B-001 through B-004."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "B-001-reviewer-report-positive",
+    "B-002-reviewer-report-negative",
+    "B-003-proof-boundary-positive",
+    "B-004-proof-boundary-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T14:56:55.300147275-04:00"
+completion_changed_files = [
+    "README.md",
+    "REQUIREMENTS.toml",
+    "docs/gap-pipeline.md",
+    "docs/runtime-schemas.md",
+    "rust/task-registry-flow-cli/src/main.rs",
+    "rust/task-registry-flow-cli/src/reviewer_report.rs",
+    "rust/task-registry-flow-cli/src/runtime.rs",
+    "rust/task-registry-flow-cli/src/schema.rs",
+    "rust/task-registry-flow-cli/src/tests/mod.rs",
+    "rust/task-registry-flow-cli/src/tests/reviewer_report_tests.rs",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/schema.rs"
+object = "CliCommand"
+required_change = "Add typed reviewer-report command value."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/reviewer_report.rs"
+object = "reviewer_report"
+required_change = "Render compact reviewer handoff evidence from registry and receipts."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/runtime.rs"
+object = "dispatcher"
+required_change = "Route reviewer-report command and update usage."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/main.rs"
+object = "modules"
+required_change = "Include reviewer_report module."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/mod.rs"
+object = "reviewer_report_tests_module"
+required_change = "Register reviewer report tests."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/reviewer_report_tests.rs"
+object = "reviewer_report_tests"
+required_change = "Add positive and negative reviewer report tests."
+
+[[tasks.targets]]
+file = "REQUIREMENTS.toml"
+object = "release_source.required"
+required_change = "Declare reviewer_report.rs as a release source."
+
+[[tasks.targets]]
+file = "README.md"
+object = "reviewer handoff"
+required_change = "Document reviewer-report usage."
+
+[[tasks.targets]]
+file = "docs/runtime-schemas.md"
+object = "Reviewer Report"
+required_change = "Document reviewer report purpose and proof boundary."
+
+[[tasks.targets]]
+file = "docs/gap-pipeline.md"
+object = "GP-002 and GP-005"
+required_change = "Record compact reviewer report closure evidence and remaining PR integration gap."
 
 [[tasks]]
 task_id = "TASK-2026-06-01-adoption-docs-001"
@@ -376,61 +459,6 @@ required_change = "Document post-2.0.1 release blocker fixes."
 
 [[tasks.targets]]
 file = "docs/plans/patch-release-2-0-2-2026-06-01.md"
-object = "closure contract"
-required_change = "Track approved scope, behavior verifiers, and validation evidence."
-
-[[tasks.targets]]
-file = "docs/task-registry.toml"
-object = "task registry activation and landing"
-required_change = "Record this plan state through task-registry CLI only."
-
-[[tasks.targets]]
-file = "docs/task-registry/events.jsonl"
-object = "task registry receipts"
-required_change = "Append activation and landing receipts through task-registry CLI only."
-
-[[tasks.targets]]
-file = "docs/task-registry/archive/"
-object = "completed task archives"
-required_change = "Archive completed task rows after landing."
-
-[[tasks]]
-task_id = "TASK-2026-06-01-receipt-lock-release-001"
-plan_id = "PLAN-2026-06-01-receipt-lock-release"
-status = "completed"
-title = "Release receipt file locks after durable append"
-kind = "implementation"
-source_plan_path = "docs/plans/receipt-lock-release-2026-06-01.md"
-source_plan_hash_sha256 = "4c7f53dd8c3f68457a50b693499893cc1eb6f004d13a0605a73809e9762a3ee9"
-reason = "CI/Nix package check exposed sequential receipt append lock retention."
-acceptance_proof = "Behaviors B-001 and B-002."
-created_at = "2026-06-01"
-updated_at = "2026-06-01"
-behavior_ids = [
-    "B-001-receipt-lock-positive",
-    "B-002-nix-lock-negative",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-06-01T12:28:44.386055840-04:00"
-completion_changed_files = [
-    "docs/plans/receipt-lock-release-2026-06-01.md",
-    "docs/task-registry.toml",
-    "docs/task-registry/events.jsonl",
-    "rust/task-registry-flow-cli/src/runtime.rs",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/runtime.rs"
-object = "append_event lock release"
-required_change = "Explicitly unlock the events file after sync succeeds."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/metrics_tests.rs"
-object = "receipt metrics lock regression"
-required_change = "Use existing focused metrics test as behavior proof."
-
-[[tasks.targets]]
-file = "docs/plans/receipt-lock-release-2026-06-01.md"
 object = "closure contract"
 required_change = "Track approved scope, behavior verifiers, and validation evidence."
 

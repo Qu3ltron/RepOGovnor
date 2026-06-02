@@ -46,13 +46,14 @@ bad()  { printf '  FAIL %s\n' "$1"; fail=$((fail + 1)); }
 
 task_registry() {
   local manifest="${PLUGIN_ROOT}/rust/task-registry-flow-cli/Cargo.toml"
+  local target_key="${PLUGIN_ROOT//[^A-Za-z0-9_.-]/_}"
   if [[ ! -f "$manifest" ]]; then
     echo "plugin-owned task registry manifest missing: $manifest" >&2
     return 1
   fi
   (
     cd "$TARGET_ROOT"
-    CARGO_TARGET_DIR="${AGENT_GOVERNANCE_CARGO_TARGET_DIR:-/tmp/agent-governance-cargo-target}" \
+    CARGO_TARGET_DIR="${AGENT_GOVERNANCE_CARGO_TARGET_DIR:-/tmp/agent-governance-cargo-target-${target_key}}" \
       cargo run --locked --quiet --manifest-path "$manifest" -- "$@"
   )
 }
@@ -184,6 +185,15 @@ check_plugin_checkout() {
 check_file_contains() {
   local file="$1" needle="$2" label="$3"
   if [[ -f "$file" ]] && grep -q "$needle" "$file"; then
+    ok "$label"
+  else
+    bad "$label"
+  fi
+}
+
+check_file_not_contains() {
+  local file="$1" needle="$2" label="$3"
+  if [[ -f "$file" ]] && ! grep -q "$needle" "$file"; then
     ok "$label"
   else
     bad "$label"
@@ -534,7 +544,8 @@ echo ""
 
 echo "Task registry artifacts"
 check_executable "${TARGET_ROOT}/.codex/scripts/task-registry" ".codex/scripts/task-registry is executable"
-check_file_contains "${TARGET_ROOT}/.codex/scripts/task-registry" 'task-registry-flow-cli/Cargo.toml' "task-registry wrapper points at plugin Rust CLI"
+check_file_contains "${TARGET_ROOT}/.codex/scripts/task-registry" 'rust/task-registry-flow-cli/Cargo.toml' "task-registry wrapper points at root Rust CLI"
+check_file_not_contains "${TARGET_ROOT}/.codex/scripts/task-registry" 'plugins/agent-governance/rust/task-registry-flow-cli/Cargo.toml' "task-registry wrapper does not use stale nested plugin source"
 check_file_contains "${TARGET_ROOT}/.codex/config.toml" 'hooks = true' ".codex/config.toml enables Codex hooks"
 check_file_contains "${TARGET_ROOT}/.codex/hooks.json" 'PreToolUse' ".codex/hooks.json defines Codex PreToolUse hook"
 check_file_contains "${TARGET_ROOT}/.codex/agent-governance.toml" 'cli_command = ".codex/scripts/task-registry"' ".codex/agent-governance.toml uses plugin-owned registry CLI"

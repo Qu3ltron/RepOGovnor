@@ -2,13 +2,14 @@
 set -euo pipefail
 
 root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-manifest="${root}/plugins/agent-governance/rust/task-registry-flow-cli/Cargo.toml"
+manifest="${root}/rust/task-registry-flow-cli/Cargo.toml"
 
 if [[ ! -f "$manifest" ]]; then
-  echo "agent-governance plugin checkout missing at ${root}/plugins/agent-governance" >&2
+  echo "task-registry Rust CLI manifest missing at ${manifest}" >&2
   exit 1
 fi
 
 cd "$root"
-export CARGO_TARGET_DIR="${AGENT_GOVERNANCE_CARGO_TARGET_DIR:-/tmp/agent-governance-cargo-target}"
+target_key="${root//[^A-Za-z0-9_.-]/_}"
+export CARGO_TARGET_DIR="${AGENT_GOVERNANCE_CARGO_TARGET_DIR:-/tmp/agent-governance-cargo-target-${target_key}}"
 exec cargo run --locked --quiet --manifest-path "$manifest" -- "$@"
