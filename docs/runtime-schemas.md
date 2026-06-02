@@ -31,6 +31,7 @@ diagnostic payload:
 .codex/scripts/task-registry backlog-check --format json
 .codex/scripts/task-registry model-attribution-check --format json
 .codex/scripts/task-registry cost-evidence-check --format json
+.codex/scripts/task-registry cost-ingest codex-transcript --transcript-path <path> --since-line <n> --until-line <n> --pricing-snapshot <path> --commit <sha|HEAD> --format json
 ```
 
 For command-specific diagnostic JSON, failures still emit the raw diagnostic
@@ -90,22 +91,32 @@ Receipt events may also include `cost_evidence`. Cost evidence is provider
 neutral and classified as `measured`, `estimated`, or `unmeasured`.
 `cost-evidence-check` validates the classification. Measured evidence requires
 provider, model, usage counts, pricing snapshot, measurement timestamp,
-attribution target, evidence source, and amount evidence. Estimated evidence
-requires an explicit estimation method. Unmeasured evidence requires a reason
-and must not carry a cost amount. Cost per commit remains unmeasured until
-commit-linked measured usage receipts exist.
+attribution target, evidence source, amount evidence, pricing rates, and usage
+contribution evidence. Estimated evidence requires an explicit estimation
+method. Unmeasured evidence requires a reason and must not carry a cost amount.
+Cost per commit is measured only for commits with commit-linked measured usage
+receipts.
+
+`cost-ingest codex-transcript` reads actual local Codex transcript
+`token_count` events. Codex hook docs expose `transcript_path`, but the
+transcript format is not a stable hook interface, so ingestion fails closed when
+required token-count fields are missing. The command supports `--since-line` and
+`--until-line` to constrain attribution to a stable transcript range.
+`--append-receipt` records the measured cost evidence locally.
 
 ```json
 {
   "cost_evidence": {
     "status": "measured",
-    "evidence_source": "provider-usage-receipt",
+    "evidence_source": "codex-transcript-token-count",
     "attribution_target": {"kind": "commit", "id": "abc1234"},
     "provider": "openai",
-    "model_slug": "gpt-5-codex",
-    "usage": {"input_tokens": 1200, "output_tokens": 300},
-    "pricing": {"source": "pricing-snapshot", "version": "2026-06-02", "currency": "USD"},
-    "amount": {"currency": "USD", "amount_micros": 42},
+    "model_slug": "gpt-5.5",
+    "usage": {"input_tokens": 1200, "cached_input_tokens": 100, "output_tokens": 300},
+    "pricing": {"source": "https://help.openai.com/en/articles/20001106-codex-rate-card", "version": "2026-06-02", "currency": "CREDITS"},
+    "pricing_rates": {"input_micros_per_million": 125000000, "cached_input_micros_per_million": 12500000, "output_micros_per_million": 750000000},
+    "amount": {"currency": "CREDITS", "amount_micros": 42},
+    "usage_contributions": [{"source_kind": "codex-transcript-token-count", "source_path": "/home/user/.codex/sessions/x.jsonl", "start_line": 10, "end_line": 20, "event_count": 3, "model_slug": "gpt-5.5"}],
     "measurement_timestamp": "2026-06-02T00:00:00Z"
   }
 }
@@ -285,10 +296,12 @@ waivers, and unproven controls.
 
 Token and cost evidence should be modeled as measured, estimated, or unmeasured.
 Measured cost requires structured usage evidence, provider and model identity,
-pricing snapshot or version, timestamp, attribution target, and evidence source.
-The current release measures Codex mutation model identity for supported hook
-paths, but it does not calculate reliable cost per commit; unavailable or hidden
-usage must be reported as unmeasured rather than guessed.
+pricing snapshot or version, timestamp, attribution target, evidence source,
+pricing rates, and contribution evidence. The current release can calculate
+Codex credit spend from actual local transcript token-count events for priced
+Codex models. Cost per commit is reliable only for explicit commit-linked
+measured receipts; unavailable, hidden, or unpriced usage must be reported as
+unmeasured rather than guessed.
 
 ## Activation Plan Contract
 

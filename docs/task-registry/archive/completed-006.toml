@@ -4,6 +4,20 @@ archive_id = "completed-006"
 archive_authority = "docs/task-registry/archive/completed-006.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-05-31-nix-auto-update"
+plan_path = "docs/plans/nix-auto-update-2026-05-31.md"
+plan_hash_sha256 = "7dd5f95dc1fd502953fd1569b99e1a5581af159d661cb512ee6570988677f70e"
+activated_at = "2026-05-31"
+status = "completed"
+
+[[plans]]
+plan_id = "PLAN-2026-05-31-claude-cli-template-pipeline"
+plan_path = "docs/plans/claude-cli-template-pipeline-2026-05-31.md"
+plan_hash_sha256 = "6338b2c727644de355c316df3bdda1cea004ee3b860c890e5759c760a372adf5"
+activated_at = "2026-05-31"
+status = "completed"
+
+[[plans]]
 plan_id = "verify-chain-hardening-batch-2-2026-05-31"
 plan_path = "docs/plans/verify-chain-hardening-batch-2-2026-05-31.md"
 plan_hash_sha256 = "fc8c802ee2e7a6cfbaf5e85a1050ab7c449916ff3812b0ea606cb1d60ddbe8d2"
@@ -31,19 +45,159 @@ plan_hash_sha256 = "0a1d648af75fe2dfc56dd5465c5aafd5964d8eb7ce251689bb0661ebbb8f
 activated_at = "2026-05-31"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-05-31-v2-hardening-followup"
-plan_path = "docs/plans/v2-hardening-followup.md"
-plan_hash_sha256 = "e80365453e837a7b1fa6f8c56e2127c3def82279d3a064de7ab811f183b0638c"
-activated_at = "2026-05-31"
+[[tasks]]
+task_id = "TASK-2026-05-31-N01"
+plan_id = "PLAN-2026-05-31-nix-auto-update"
 status = "completed"
+title = "Create flake.nix for Governance-plugin"
+kind = "implementation"
+source_plan_path = "docs/plans/nix-auto-update-2026-05-31.md"
+source_plan_hash_sha256 = "7dd5f95dc1fd502953fd1569b99e1a5581af159d661cb512ee6570988677f70e"
+reason = "Machine services need to consume the governance plugin as a Nix flake input rather than a local clone"
+acceptance_proof = "Behavior B-001: nix flake check passes, nix build produces working binary"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-001-flake-exists",
+    "B-001b-no-hardcoded-paths",
+]
 
-[[plans]]
-plan_id = "PLAN-2026-05-31-strict-marker-block-validation"
-plan_path = "docs/plans/strict-marker-block-validation.md"
-plan_hash_sha256 = "ad84fbf9f6187483c4ba626b35a358a2748231bdc335065ad59130fa7eff4277"
-activated_at = "2026-05-31"
+[[tasks.targets]]
+file = "flake.nix"
+object = "Nix flake with package, app, devShell, formatter"
+required_change = "Create flake.nix exposing task-registry-flow package"
+
+[[tasks]]
+task_id = "TASK-2026-05-31-N02"
+plan_id = "PLAN-2026-05-31-nix-auto-update"
 status = "completed"
+title = "Create package.nix for task-registry-flow-cli"
+kind = "implementation"
+source_plan_path = "docs/plans/nix-auto-update-2026-05-31.md"
+source_plan_hash_sha256 = "7dd5f95dc1fd502953fd1569b99e1a5581af159d661cb512ee6570988677f70e"
+reason = "The Rust CLI needs a Nix build expression for buildRustPackage"
+acceptance_proof = "Behavior B-002: nix build produces binary + companion scripts"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-002-package-builds-cli",
+    "B-002b-package-includes-scripts",
+]
+
+[[tasks.targets]]
+file = "package.nix"
+object = "Rust package build expression"
+required_change = "Create package.nix with buildRustPackage, source filter, and installPhase"
+
+[[tasks]]
+task_id = "TASK-2026-05-31-N03"
+plan_id = "PLAN-2026-05-31-nix-auto-update"
+status = "completed"
+title = "Create NixOS auto-update module with systemd timer"
+kind = "implementation"
+source_plan_path = "docs/plans/nix-auto-update-2026-05-31.md"
+source_plan_hash_sha256 = "7dd5f95dc1fd502953fd1569b99e1a5581af159d661cb512ee6570988677f70e"
+reason = "Machine services need automatic updates when the plugin repo changes, without manual git pull + rebuild"
+acceptance_proof = "Behavior B-003: timer and service units are valid, dev-lock is respected"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-003-auto-update-timer",
+    "B-003b-update-respects-lock",
+]
+
+[[tasks.targets]]
+file = "modules/nixos/agent-governance-auto-update.nix"
+object = "Auto-update systemd timer + oneshot service"
+required_change = "Create module with timer that updates flake input and triggers rebuild"
+
+[[tasks]]
+task_id = "TASK-2026-05-31-C01"
+plan_id = "PLAN-2026-05-31-claude-cli-template-pipeline"
+status = "completed"
+title = "Create templates/CLAUDE.md.template"
+kind = "implementation"
+source_plan_path = "docs/plans/claude-cli-template-pipeline-2026-05-31.md"
+source_plan_hash_sha256 = "6338b2c727644de355c316df3bdda1cea004ee3b860c890e5759c760a372adf5"
+reason = "Consumer repos need a Claude Code entry-point template for the render pipeline"
+acceptance_proof = "Behavior B-001: template exists with all required placeholders"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-001-claude-md-template-exists",
+    "B-001b-no-stale-agents-refs",
+]
+
+[[tasks.targets]]
+file = "templates/CLAUDE.md.template"
+object = "Full Claude Code entry-point template"
+required_change = "Create template with all standard placeholders, Claude Code agent paths"
+
+[[tasks]]
+task_id = "TASK-2026-05-31-C02"
+plan_id = "PLAN-2026-05-31-claude-cli-template-pipeline"
+status = "completed"
+title = "Create templates/CLAUDE.overlay.md.template"
+kind = "implementation"
+source_plan_path = "docs/plans/claude-cli-template-pipeline-2026-05-31.md"
+source_plan_hash_sha256 = "6338b2c727644de355c316df3bdda1cea004ee3b860c890e5759c760a372adf5"
+reason = "Merge mode needs an overlay to update the agent-governance block in existing CLAUDE.md files"
+acceptance_proof = "Behavior B-002: overlay template exists with agent-governance block markers"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-002-overlay-template-exists",
+    "B-002b-overlay-not-empty",
+]
+
+[[tasks.targets]]
+file = "templates/CLAUDE.overlay.md.template"
+object = "Claude Code merge-block overlay"
+required_change = "Create overlay template with agent-governance block content"
+
+[[tasks]]
+task_id = "TASK-2026-05-31-C03"
+plan_id = "PLAN-2026-05-31-claude-cli-template-pipeline"
+status = "completed"
+title = "Add CLAUDE.md render entries to MANIFEST.toml"
+kind = "implementation"
+source_plan_path = "docs/plans/claude-cli-template-pipeline-2026-05-31.md"
+source_plan_hash_sha256 = "6338b2c727644de355c316df3bdda1cea004ee3b860c890e5759c760a372adf5"
+reason = "MANIFEST.toml must declare CLAUDE.md render entries so install plan discovers them"
+acceptance_proof = "Behavior B-003: MANIFEST.toml has [[render]] entries for both CLAUDE.md templates"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-003-manifest-has-claude-render",
+    "B-003b-no-non-existent-template-ref",
+]
+
+[[tasks.targets]]
+file = "MANIFEST.toml"
+object = "[[render]] entries for CLAUDE.md"
+required_change = "Add full and overlay render entries for CLAUDE.md templates"
+
+[[tasks]]
+task_id = "TASK-2026-05-31-C04"
+plan_id = "PLAN-2026-05-31-claude-cli-template-pipeline"
+status = "completed"
+title = "Add CLAUDE.md rendering to render-from-config.sh"
+kind = "implementation"
+source_plan_path = "docs/plans/claude-cli-template-pipeline-2026-05-31.md"
+source_plan_hash_sha256 = "6338b2c727644de355c316df3bdda1cea004ee3b860c890e5759c760a372adf5"
+reason = "render-from-config.sh must handle CLAUDE.md alongside AGENTS.md/GEMINI.md in both modes"
+acceptance_proof = "Behavior B-004: render-from-config.sh includes CLAUDE.md in merge and force modes"
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-004-render-script-claude-support",
+    "B-004b-dry-run-includes-claude",
+]
+
+[[tasks.targets]]
+file = "scripts/render-from-config.sh"
+object = "CLAUDE.md rendering logic"
+required_change = "Add CLAUDE.md template rendering in merge and force mode blocks"
 
 [[tasks]]
 task_id = "TASK-2026-05-31-VH2-001"
@@ -444,255 +598,3 @@ required_change = "Document Rust source completeness and release-rust-source-und
 file = "docs/task-registry.toml"
 object = "task_completion"
 required_change = "Record completion after focused and full validation pass."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-v2-hardening-001"
-plan_id = "PLAN-2026-05-31-v2-hardening-followup"
-status = "completed"
-title = "Split metrics runtime under source limit"
-kind = "implementation"
-source_plan_path = "docs/plans/v2-hardening-followup.md"
-source_plan_hash_sha256 = "e80365453e837a7b1fa6f8c56e2127c3def82279d3a064de7ab811f183b0638c"
-reason = "runtime.rs is near the source limit before receipt-chain behavior is added."
-acceptance_proof = "Behaviors B-009-receipt-chain-positive and B-010-receipt-chain-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-009-receipt-chain-positive",
-    "B-010-receipt-chain-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/runtime.rs"
-object = "metrics_dispatch"
-required_change = "Move metrics implementation to a dedicated module while preserving behavior."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/metrics.rs"
-object = "metrics_runtime"
-required_change = "Own metrics report parsing, formatting, and validation."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-v2-hardening-002"
-plan_id = "PLAN-2026-05-31-v2-hardening-followup"
-status = "completed"
-title = "Make Rust status diagnostics authoritative"
-kind = "implementation"
-source_plan_path = "docs/plans/v2-hardening-followup.md"
-source_plan_hash_sha256 = "e80365453e837a7b1fa6f8c56e2127c3def82279d3a064de7ab811f183b0638c"
-reason = "Shell marker policy can drift from Rust status-check."
-acceptance_proof = "Behaviors B-001-status-rust-owned-positive, B-002-status-rust-owned-negative, B-003-marker-content-positive, and B-004-marker-content-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-001-status-rust-owned-positive",
-    "B-002-status-rust-owned-negative",
-    "B-003-marker-content-positive",
-    "B-004-marker-content-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/status_checks.rs"
-object = "marker_check"
-required_change = "Validate marker shape and managed content."
-
-[[tasks.targets]]
-file = "scripts/status.sh"
-object = "check_markers"
-required_change = "Render Rust status-check diagnostics instead of parsing marker policy locally."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/status_check_tests.rs"
-object = "marker_status_tests"
-required_change = "Add stale-content and malformed-marker negative coverage."
-
-[[tasks.targets]]
-file = "scripts/test-install-modes.sh"
-object = "status_migration_tests"
-required_change = "Add shell migration tests for stale marker content."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-v2-hardening-003"
-plan_id = "PLAN-2026-05-31-v2-hardening-followup"
-status = "completed"
-title = "Complete release executable policy checks"
-kind = "implementation"
-source_plan_path = "docs/plans/v2-hardening-followup.md"
-source_plan_hash_sha256 = "e80365453e837a7b1fa6f8c56e2127c3def82279d3a064de7ab811f183b0638c"
-reason = "Required scripts omitted from release_source.executable can pass release checks."
-acceptance_proof = "Behaviors B-005-release-executable-positive, B-006-release-executable-negative, B-011-platform-positive, and B-012-platform-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-005-release-executable-positive",
-    "B-006-release-executable-negative",
-    "B-011-platform-positive",
-    "B-012-platform-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/release_checks.rs"
-object = "executable_policy_checks"
-required_change = "Detect undeclared script-like release artifacts and explicit platform executable semantics."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/schema.rs"
-object = "ReleaseCheckId"
-required_change = "Add release check IDs for undeclared executable scripts and platform semantics."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/mod.rs"
-object = "release_executable_tests"
-required_change = "Add positive and negative executable policy tests."
-
-[[tasks.targets]]
-file = "scripts/test-release-readiness.sh"
-object = "check_executable"
-required_change = "Add executable-policy omission migration fixture."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-v2-hardening-004"
-plan_id = "PLAN-2026-05-31-v2-hardening-followup"
-status = "completed"
-title = "Require reasoned release waivers"
-kind = "implementation"
-source_plan_path = "docs/plans/v2-hardening-followup.md"
-source_plan_hash_sha256 = "e80365453e837a7b1fa6f8c56e2127c3def82279d3a064de7ab811f183b0638c"
-reason = "Waiver env vars currently lack structured reason and final-release rejection."
-acceptance_proof = "Behaviors B-007-waiver-positive and B-008-waiver-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-007-waiver-positive",
-    "B-008-waiver-negative",
-]
-
-[[tasks.targets]]
-file = "scripts/status.sh"
-object = "release_waivers"
-required_change = "Require waiver reasons and fail waivers in final release mode."
-
-[[tasks.targets]]
-file = "scripts/release-audit.sh"
-object = "audit_waiver"
-required_change = "Require audit waiver reason and fail waiver in final release mode."
-
-[[tasks.targets]]
-file = "scripts/test-release-readiness.sh"
-object = "check_waivers"
-required_change = "Add positive and negative waiver tests."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-v2-hardening-005"
-plan_id = "PLAN-2026-05-31-v2-hardening-followup"
-status = "completed"
-title = "Add local receipt chain validation"
-kind = "implementation"
-source_plan_path = "docs/plans/v2-hardening-followup.md"
-source_plan_hash_sha256 = "e80365453e837a7b1fa6f8c56e2127c3def82279d3a064de7ab811f183b0638c"
-reason = "Receipt metrics do not detect tampering in otherwise valid event logs."
-acceptance_proof = "Behaviors B-009-receipt-chain-positive and B-010-receipt-chain-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-009-receipt-chain-positive",
-    "B-010-receipt-chain-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/schema.rs"
-object = "ReceiptEvent"
-required_change = "Add optional previous/current receipt hash fields."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/receipts.rs"
-object = "append_command_event"
-required_change = "Append hash-chained receipt events."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/metrics.rs"
-object = "chain_validation"
-required_change = "Validate receipt chains and report legacy unchained receipts."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/mod.rs"
-object = "receipt_chain_tests"
-required_change = "Add chained and tampered receipt tests."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-v2-hardening-006"
-plan_id = "PLAN-2026-05-31-v2-hardening-followup"
-status = "completed"
-title = "Document v2 hardening runtime contracts"
-kind = "documentation"
-source_plan_path = "docs/plans/v2-hardening-followup.md"
-source_plan_hash_sha256 = "e80365453e837a7b1fa6f8c56e2127c3def82279d3a064de7ab811f183b0638c"
-reason = "Changed status, release, waiver, platform, and receipt contracts must be documented."
-acceptance_proof = "Behavior B-013-v2-hardening-validation passes and docs name receipt chain, reasoned waivers, and executable completeness."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = ["B-013-v2-hardening-validation"]
-
-[[tasks.targets]]
-file = "docs/runtime-schemas.md"
-object = "runtime_contracts"
-required_change = "Document status, release executable completeness, waiver, platform, and receipt-chain behavior."
-
-[[tasks.targets]]
-file = "README.md"
-object = "v2_hardening_note"
-required_change = "Document user-facing waiver/status behavior changes."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-strict-marker-block-001"
-plan_id = "PLAN-2026-05-31-strict-marker-block-validation"
-status = "completed"
-title = "Enforce exact ordered marker blocks"
-kind = "implementation"
-source_plan_path = "docs/plans/strict-marker-block-validation.md"
-source_plan_hash_sha256 = "ad84fbf9f6187483c4ba626b35a358a2748231bdc335065ad59130fa7eff4277"
-reason = "Count-only marker validation accepts prose-only and reversed marker tokens."
-acceptance_proof = "Behaviors B-001-marker-block-positive and B-002-marker-block-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-001-marker-block-positive",
-    "B-002-marker-block-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/status_checks.rs"
-object = "marker_check"
-required_change = "Validate exact ordered HTML comment marker lines."
-
-[[tasks.targets]]
-file = "scripts/status.sh"
-object = "check_markers"
-required_change = "Reject prose-only tokens and end-before-begin marker order."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-strict-marker-block-002"
-plan_id = "PLAN-2026-05-31-strict-marker-block-validation"
-status = "completed"
-title = "Add strict marker negative tests"
-kind = "validation"
-source_plan_path = "docs/plans/strict-marker-block-validation.md"
-source_plan_hash_sha256 = "ad84fbf9f6187483c4ba626b35a358a2748231bdc335065ad59130fa7eff4277"
-reason = "Malformed marker bypasses must be locked by behavioral tests."
-acceptance_proof = "Behaviors B-002-marker-block-negative and B-003-shell-marker-block-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-002-marker-block-negative",
-    "B-003-shell-marker-block-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/status_check_tests.rs"
-object = "status_check_json_rejects_non_block_marker_tokens"
-required_change = "Assert prose-only tokens and reversed comment markers fail JSON status."
-
-[[tasks.targets]]
-file = "scripts/test-install-modes.sh"
-object = "strict_marker_negative_cases"
-required_change = "Assert shell status rejects markerless, prose-only, and reversed-marker workspaces."

@@ -1,0 +1,38 @@
+schema_version = 1
+provider = "openai"
+surface = "codex"
+currency = "CREDITS"
+source_url = "https://help.openai.com/en/articles/20001106-codex-rate-card"
+retrieved_at = "2026-06-02T00:00:00Z"
+version = "2026-06-02"
+notes = "OpenAI Help Center Codex token-based rate card, credits per 1M input, cached input, and output tokens."
+
+[[models]]
+model_slug = "gpt-5.5"
+input_micros_per_million = 125000000
+cached_input_micros_per_million = 12500000
+output_micros_per_million = 750000000
+
+[[models]]
+model_slug = "gpt-5.4"
+input_micros_per_million = 62500000
+cached_input_micros_per_million = 6250000
+output_micros_per_million = 375000000
+
+[[models]]
+model_slug = "gpt-5.4-mini"
+input_micros_per_million = 18750000
+cached_input_micros_per_million = 1875000
+output_micros_per_million = 113000000
+
+[[models]]
+model_slug = "gpt-5.3-codex"
+input_micros_per_million = 43750000
+cached_input_micros_per_million = 4375000
+output_micros_per_million = 350000000
+
+[[models]]
+model_slug = "gpt-5.2"
+input_micros_per_million = 43750000
+cached_input_micros_per_million = 4375000
+output_micros_per_million = 350000000

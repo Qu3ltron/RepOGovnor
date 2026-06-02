@@ -1,6 +1,7 @@
 { lib
 , rustPlatform
 , installShellFiles
+, git
 }:
 
 let
@@ -48,6 +49,7 @@ rustPlatform.buildRustPackage {
 
   nativeBuildInputs = [
     installShellFiles
+    git
   ];
 
   # The Rust binary is the primary artifact. Companion scripts are

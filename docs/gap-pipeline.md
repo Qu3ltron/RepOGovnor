@@ -112,15 +112,19 @@ to a first-class typed engineering policy manifest.
 - Claim pressure: cost per commit is an intended first-class metric.
 - Current evidence: local workflow metrics exist, supported Codex mutation
   hooks now record measured model attribution, and cost evidence receipts can
-  be classified by `cost-evidence-check` as measured, estimated, or unmeasured.
-  Automatic provider usage collection, pricing snapshots, non-Codex measured
-  adapters, and commit-linked measured usage receipts are not shipped.
-- User impact: any current cost claim would be false precision. Hidden or
-  unavailable usage must be reported as unmeasured.
-- Next closure: ingest structured usage and pricing receipts, then attribute
-  measured usage to commits, plans, tasks, verifier runs, landing attempts,
-  retries, and release cycles. Codex model attribution is a prerequisite signal,
-  not cost evidence.
+  be classified by `cost-evidence-check` as measured, estimated, or
+  unmeasured. `cost-ingest codex-transcript` now reads actual local Codex
+  transcript `token_count` events, applies a declared OpenAI Codex credit rate
+  snapshot, and can append commit-linked measured usage receipts with transcript
+  line-range contribution evidence.
+- User impact: maintainers can produce honest Codex credit evidence for priced
+  Codex models when the local transcript contains usable token-count events.
+  Unpriced research-preview models, non-Codex providers, unavailable usage, and
+  hidden remote billing data must still be reported as unmeasured.
+- Next closure: expand attribution beyond explicit commit targets to plans,
+  tasks, verifier runs, landing attempts, retries, and release cycles; add
+  non-Codex adapters only when they expose equivalent model, usage, pricing, and
+  contribution evidence.
 - Reactivation condition: before publishing cost per commit or token-spend
   metrics as a shipped feature.
 
@@ -133,8 +137,10 @@ to a first-class typed engineering policy manifest.
 - No remote receipt sync is shipped in this release.
 - No typed policy engine or compliance artifact command is shipped in this
   release.
-- No reliable cost per commit, automated pricing lookup, or guessed token spend
-  is shipped in this release.
+- No automated pricing lookup, non-Codex measured adapter, or guessed token
+  spend is shipped in this release.
+- Cost per commit is limited to explicit commit-linked measured receipts from
+  actual supported usage sources.
 
 ## Drain protocol
 

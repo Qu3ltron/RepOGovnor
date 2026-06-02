@@ -67,6 +67,9 @@ the terms in [LICENSE](LICENSE).
   equivalent adapter evidence exists.
 - Cost evidence receipts and `cost-evidence-check`: spend evidence is
   classified as measured, estimated, or unmeasured before any metric can use it.
+- `cost-ingest codex-transcript`: actual local Codex transcript token-count
+  events can be priced with an OpenAI Codex credit-rate snapshot and attributed
+  to an explicit commit.
 - Strict v2 plan activation: phased checklists, exact file targets, behavior
   `gap_id`, behavior `polarity`, typed verifiers, and required positive plus
   negative behavior coverage before implementation work.
@@ -82,8 +85,9 @@ engineering policy as input, a compliance artifact as output, and token/cost
 evidence where usage can be measured honestly. Current model attribution says
 which measured adapter/model requested supported repo mutation; it is not token
 usage evidence. Cost evidence receipts now provide measured, estimated, and
-unmeasured states, but cost per commit remains unmeasured until commit-linked
-measured usage receipts and pricing evidence exist.
+unmeasured states. Codex transcript ingestion can create commit-linked measured
+credit evidence when actual token-count events and a pricing snapshot exist.
+Non-Codex providers and unpriced research-preview models remain unmeasured.
 
 Important limits:
 

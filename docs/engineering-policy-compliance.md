@@ -75,6 +75,13 @@ Estimated cost requires an explicit estimation method. Unmeasured cost requires
 a reason and must not carry a cost amount. The system must not guess spend from
 elapsed time, commit size, file count, or agent narration.
 
+For Codex, measured usage can be ingested from actual local transcript
+`token_count` events with `cost-ingest codex-transcript`. The pricing basis is
+the OpenAI Codex token-based rate card in credits per 1M input, cached input,
+and output tokens. The receipt records the transcript path, line range, event
+count, model, pricing snapshot, and explicit commit target. Research-preview or
+otherwise unpriced models are not priced.
+
 Current shipped evidence starts with model responsibility for supported Codex
 repo mutation hooks. Codex is the first measured adapter because its hook
 payload exposes model/session/turn/tool-use identity. Non-Codex mutation
@@ -82,9 +89,9 @@ surfaces remain unmeasured unless an adapter exposes equivalent evidence.
 Model attribution is necessary for cost evidence, but it is not token usage or
 cost per commit.
 
-Cost per commit should only be reported when commit-linked measured usage
-receipts exist. Otherwise the artifact should say the metric is unmeasured and
-explain which usage evidence is missing.
+Cost per commit should only be reported for commits with commit-linked measured
+usage receipts. Otherwise the artifact should say the metric is unmeasured and
+explain which usage or pricing evidence is missing.
 
 ## Current Non-Claims
 
@@ -93,5 +100,5 @@ explain which usage evidence is missing.
 - No hosted compliance dashboard.
 - No remote telemetry.
 - No proof that product behavior is correct.
-- No reliable cost per commit in the current release.
+- No cost per commit beyond explicit commit-linked measured usage receipts.
 - No guessed or silently inferred token spend.

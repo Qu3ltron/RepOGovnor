@@ -42,15 +42,16 @@ Target: v2.x.
 
 - Treat current Codex mutation model attribution as the first measured adapter
   step, not as token spend or universal attribution.
-- Current shipped cost evidence is a typed receipt model and
-  `cost-evidence-check`, not automatic collection or spend calculation.
+- Current shipped cost evidence includes typed receipts, `cost-evidence-check`,
+  and `cost-ingest codex-transcript` for actual local Codex token-count
+  transcripts priced against an OpenAI Codex credit-rate snapshot.
 - Classify every cost value as measured, estimated, or unmeasured.
 - Require provider, model, usage counts, pricing snapshot, timestamp, attribution
   target, and evidence source before reporting measured cost.
 - Attribute measured spend to commits, plans, tasks, verifier runs, landing
   attempts, retries, and release cycles.
-- Produce cost per commit only when commit-linked usage receipts exist; otherwise
-  report the metric as unmeasured.
+- Produce cost per commit only when commit-linked measured usage receipts exist;
+  otherwise report the metric as unmeasured.
 
 ## Next: adoption quality
 
@@ -110,8 +111,8 @@ Target: post-v2.x.
 - The registry proves workflow state, not product correctness.
 - Multi-repo governance is possible manually but not yet first-class.
 - There is no shipped typed policy engine command yet.
-- There is no reliable cost per commit until commit-linked measured usage
-  receipts and pricing evidence exist.
+- Cost per commit is available only for commits with measured usage receipts and
+  pricing evidence; missing providers or unpriced models remain unmeasured.
 
 ## Non-goals
 

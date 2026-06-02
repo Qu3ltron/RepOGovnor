@@ -139,19 +139,25 @@ fn validate_cost_evidence(evidence: &CostEvidence, line_number: usize) -> Vec<Di
             } else {
                 missing.push("amount");
             }
+            if evidence.pricing_rates.is_none() {
+                missing.push("pricing_rates");
+            }
+            if evidence.usage_contributions.is_empty() {
+                missing.push("usage_contributions");
+            }
             if missing.is_empty() {
                 vec![Diagnostic::pass(
                     format!("cost-evidence-measured-{line_number}"),
                     ReportSurface::CostEvidence,
                     path,
-                    "measured cost evidence includes provider, model, usage, pricing, timestamp, target, evidence source, and amount",
+                    "measured cost evidence includes provider, model, usage, pricing, rates, timestamp, target, evidence source, amount, and contributions",
                 )]
             } else {
                 vec![Diagnostic::fail(
                     format!("cost-evidence-measured-{line_number}"),
                     ReportSurface::CostEvidence,
                     path,
-                    "measured cost evidence includes all required fields",
+                    "measured cost evidence includes all required fields and contribution evidence",
                     format!("missing {}", missing.join(", ")),
                     "record measured cost only from structured usage and pricing evidence",
                 )]

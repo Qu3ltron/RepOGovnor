@@ -67,6 +67,7 @@ string_enum!(CliCommand {
     VerifyMutationHook => "verify-mutation-hook",
     ModelAttributionCheck => "model-attribution-check",
     CostEvidenceCheck => "cost-evidence-check",
+    CostIngest => "cost-ingest",
     Metrics => "metrics",
     SourceLimit => "source-limit",
     ReleaseCheck => "release-check",
@@ -530,6 +531,10 @@ pub(crate) struct CostEvidence {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) amount: Option<CostAmount>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) pricing_rates: Option<CostPricingRates>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub(crate) usage_contributions: Vec<UsageContribution>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) measurement_timestamp: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) estimation_method: Option<String>,
@@ -568,6 +573,27 @@ pub(crate) struct CostPricingSnapshot {
 pub(crate) struct CostAmount {
     pub(crate) currency: String,
     pub(crate) amount_micros: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct CostPricingRates {
+    pub(crate) input_micros_per_million: u64,
+    pub(crate) cached_input_micros_per_million: u64,
+    pub(crate) output_micros_per_million: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct UsageContribution {
+    pub(crate) source_kind: String,
+    pub(crate) source_path: String,
+    pub(crate) start_line: usize,
+    pub(crate) end_line: usize,
+    pub(crate) event_count: usize,
+    pub(crate) model_slug: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub(crate) turn_ids: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

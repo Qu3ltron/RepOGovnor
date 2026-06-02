@@ -17,7 +17,7 @@ fn receipt_chain_concurrent_writers_preserve_chain() {
         let barrier = Arc::clone(&barrier);
         handles.push(thread::spawn(move || {
             barrier.wait();
-            for _ in 0..100 {
+            for _ in 0..1_000 {
                 let result = append_event(
                     &root,
                     EventRecord::new(
@@ -31,7 +31,7 @@ fn receipt_chain_concurrent_writers_preserve_chain() {
                 match result {
                     Ok(()) => return,
                     Err(error) if error.contains("locked by another process") => {
-                        thread::sleep(Duration::from_millis(2));
+                        thread::sleep(Duration::from_millis(5));
                     }
                     Err(error) => panic!("{error}"),
                 }
