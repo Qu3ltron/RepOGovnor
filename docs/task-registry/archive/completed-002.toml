@@ -4,46 +4,617 @@ archive_id = "completed-002"
 archive_authority = "docs/task-registry/archive/completed-002.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-06-02-cost-ingest-nix-git-dependency"
+plan_path = "docs/plans/cost-ingest-nix-git-dependency-2026-06-02.md"
+plan_hash_sha256 = "1e7a7e6e66362be7e614bcca5c350a8d3f8d8bba4666397e9cdd7200e1377c25"
+activated_at = "2026-06-01"
+status = "completed"
+
+[[plans]]
+plan_id = "PLAN-2026-06-02-provider-usage-ingestion"
+plan_path = "docs/plans/provider-usage-ingestion-2026-06-02.md"
+plan_hash_sha256 = "f4d035f216edefec55329e1cf999574cf30ac3d4ed6670c14f55d25d96530cc9"
+activated_at = "2026-06-01"
+status = "completed"
+
+[[plans]]
+plan_id = "PLAN-2026-06-02-cost-evidence-model"
+plan_path = "docs/plans/cost-evidence-model-2026-06-02.md"
+plan_hash_sha256 = "bda69c788bef2c879a121d3b65d32317d428b9d7444502bdf8b0a1358fc03b45"
+activated_at = "2026-06-01"
+status = "completed"
+
+[[plans]]
+plan_id = "PLAN-2026-06-02-codex-model-attribution-hardening"
+plan_path = "docs/plans/codex-model-attribution-hardening-2026-06-02.md"
+plan_hash_sha256 = "6d1ed561e074db21cfb9405242ac3694138715f9b3bdd2acbca08e83c642abf2"
+activated_at = "2026-06-01"
+status = "completed"
+
+[[plans]]
+plan_id = "PLAN-2026-06-01-policy-posture-version-coverage"
+plan_path = "docs/plans/policy-posture-version-coverage-2026-06-01.md"
+plan_hash_sha256 = "d7ef271f9c761ab66d0fa68350cbff565feb84e42eb9c9ef94ab9d14e431dc10"
+activated_at = "2026-06-01"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-06-01-policy-compliance-cost-posture"
 plan_path = "docs/plans/policy-compliance-cost-posture-2026-06-01.md"
 plan_hash_sha256 = "f66f74959575ed5e630d1b421399db4d7c5b14f5f09e50732b277a3ad94242ff"
 activated_at = "2026-06-01"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-06-01-version-backlog-governance"
-plan_path = "docs/plans/version-backlog-governance-2026-06-01.md"
-plan_hash_sha256 = "c626f9522d88805958b26335a302510407067b4d61ba8f41fba361924a73b555"
-activated_at = "2026-06-01"
+[[tasks]]
+task_id = "TASK-2026-06-02-cost-ingest-nix-git-dependency-001"
+plan_id = "PLAN-2026-06-02-cost-ingest-nix-git-dependency"
 status = "completed"
+title = "Declare Git for Nix package cost-ingest tests"
+kind = "release"
+source_plan_path = "docs/plans/cost-ingest-nix-git-dependency-2026-06-02.md"
+source_plan_hash_sha256 = "1e7a7e6e66362be7e614bcca5c350a8d3f8d8bba4666397e9cdd7200e1377c25"
+reason = "Cost-ingest commit attribution uses real Git commit resolution, so package tests need Git available."
+acceptance_proof = "Behaviors B-001, B-002, and B-003."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "B-001-nix-package-git-positive",
+    "B-002-commit-required-negative",
+    "B-003-release-readiness-validation",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T23:56:44.169946521-04:00"
+completion_changed_files = [
+    "docs/plans/cost-ingest-nix-git-dependency-2026-06-02.md",
+    "docs/task-registry.toml",
+    "docs/task-registry/events.jsonl",
+    "package.nix",
+    "rust/task-registry-flow-cli/src/tests/receipt_chain_tests.rs",
+]
 
-[[plans]]
-plan_id = "PLAN-2026-06-01-reviewer-markdown-format"
-plan_path = "docs/plans/reviewer-markdown-format-2026-06-01.md"
-plan_hash_sha256 = "41c3b0a5a76a8825f43bc52f0b5f7d241db9ab82e5ba34fa32f60a9fb28f451f"
-activated_at = "2026-06-01"
-status = "completed"
+[[tasks.targets]]
+file = "package.nix"
+object = "native_build_inputs"
+required_change = "Include git for package tests that resolve commits."
 
-[[plans]]
-plan_id = "PLAN-2026-06-01-multi-repo-boundary"
-plan_path = "docs/plans/multi-repo-boundary-2026-06-01.md"
-plan_hash_sha256 = "157360947dadb6819ed719432af55c02c980479187e9ff843673dda7a5171039"
-activated_at = "2026-06-01"
-status = "completed"
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/receipt_chain_tests.rs"
+object = "concurrent_writer_retry_budget"
+required_change = "Make receipt lock contention retry budget adequate for slow Nix package sandboxes."
 
-[[plans]]
-plan_id = "PLAN-2026-06-01-first-run-installer-guidance"
-plan_path = "docs/plans/first-run-installer-guidance-2026-06-01.md"
-plan_hash_sha256 = "2e0e04bdaf91283ee3f5261294d8d1509dea9aa3a0af5351c9218f0ac8346df4"
-activated_at = "2026-06-01"
-status = "completed"
+[[tasks.targets]]
+file = "docs/plans/cost-ingest-nix-git-dependency-2026-06-02.md"
+object = "closure_contract"
+required_change = "Track the follow-up package-gate gap and validation evidence."
 
-[[plans]]
-plan_id = "PLAN-2026-06-01-migration-preflight-diagnostics"
-plan_path = "docs/plans/migration-preflight-diagnostics-2026-06-01.md"
-plan_hash_sha256 = "00bf9b4b3ccca500cd8775716fa09ccaa5754a7f0acfe93ca76ecabe7ebaf3f9"
-activated_at = "2026-06-01"
+[[tasks.targets]]
+file = "docs/task-registry.toml"
+object = "active_registry"
+required_change = "Record activated package dependency task."
+
+[[tasks.targets]]
+file = "docs/task-registry/events.jsonl"
+object = "release_gate_receipts"
+required_change = "Append activation, landing, and validation receipts."
+
+[[tasks]]
+task_id = "TASK-2026-06-02-provider-usage-ingestion-001"
+plan_id = "PLAN-2026-06-02-provider-usage-ingestion"
 status = "completed"
+title = "Implement actual Codex transcript cost ingestion"
+kind = "implementation"
+source_plan_path = "docs/plans/provider-usage-ingestion-2026-06-02.md"
+source_plan_hash_sha256 = "f4d035f216edefec55329e1cf999574cf30ac3d4ed6670c14f55d25d96530cc9"
+reason = "GP-007 requires real provider usage ingestion and pricing evidence before honest spend metrics."
+acceptance_proof = "Behaviors B-001, B-002, B-003, B-004, and B-006."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "B-001-live-codex-usage-positive",
+    "B-002-live-codex-usage-negative",
+    "B-003-pricing-snapshot-positive",
+    "B-004-pricing-snapshot-negative",
+    "B-006-commit-attribution-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T23:36:22.939781065-04:00"
+completion_changed_files = [
+    "README.md",
+    "REQUIREMENTS.toml",
+    "ROADMAP.md",
+    "docs/engineering-policy-compliance.md",
+    "docs/gap-pipeline.md",
+    "docs/plans/provider-usage-ingestion-2026-06-02.md",
+    "docs/pricing/openai-codex-rate-card-2026-06-02.toml",
+    "docs/runtime-schemas.md",
+    "docs/task-registry.toml",
+    "docs/task-registry/events.jsonl",
+    "docs/version-roadmap.toml",
+    "rust/task-registry-flow-cli/src/cost_evidence.rs",
+    "rust/task-registry-flow-cli/src/cost_ingest.rs",
+    "rust/task-registry-flow-cli/src/main.rs",
+    "rust/task-registry-flow-cli/src/runtime.rs",
+    "rust/task-registry-flow-cli/src/schema.rs",
+    "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/schema.rs"
+object = "cost_evidence_contributions"
+required_change = "Add transcript contribution and pricing-rate evidence fields."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/cost_ingest.rs"
+object = "codex_transcript_ingest"
+required_change = "Parse real Codex token_count events, calculate credit cost, and optionally append receipts."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/main.rs"
+object = "module_list"
+required_change = "Include cost_ingest module."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/runtime.rs"
+object = "dispatcher"
+required_change = "Route cost-ingest command and usage."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/cost_evidence.rs"
+object = "measured_validation"
+required_change = "Require contribution and pricing evidence for measured receipts."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs"
+object = "cost_ingest_tests"
+required_change = "Cover parser and fail-closed behavior."
+
+[[tasks]]
+task_id = "TASK-2026-06-02-provider-usage-ingestion-002"
+plan_id = "PLAN-2026-06-02-provider-usage-ingestion"
+status = "completed"
+title = "Add pricing snapshot, docs, and live commit attribution proof"
+kind = "governance"
+source_plan_path = "docs/plans/provider-usage-ingestion-2026-06-02.md"
+source_plan_hash_sha256 = "f4d035f216edefec55329e1cf999574cf30ac3d4ed6670c14f55d25d96530cc9"
+reason = "Measured cost evidence must carry official pricing provenance and commit attribution."
+acceptance_proof = "Behaviors B-005 and B-007."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "B-005-commit-attribution-positive",
+    "B-007-provider-ingestion-validation",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T23:36:22.939781065-04:00"
+completion_changed_files = [
+    "README.md",
+    "REQUIREMENTS.toml",
+    "ROADMAP.md",
+    "docs/engineering-policy-compliance.md",
+    "docs/gap-pipeline.md",
+    "docs/plans/provider-usage-ingestion-2026-06-02.md",
+    "docs/pricing/openai-codex-rate-card-2026-06-02.toml",
+    "docs/runtime-schemas.md",
+    "docs/task-registry.toml",
+    "docs/task-registry/events.jsonl",
+    "docs/version-roadmap.toml",
+    "rust/task-registry-flow-cli/src/cost_evidence.rs",
+    "rust/task-registry-flow-cli/src/cost_ingest.rs",
+    "rust/task-registry-flow-cli/src/main.rs",
+    "rust/task-registry-flow-cli/src/runtime.rs",
+    "rust/task-registry-flow-cli/src/schema.rs",
+    "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs",
+]
+
+[[tasks.targets]]
+file = "docs/pricing/openai-codex-rate-card-2026-06-02.toml"
+object = "official_rate_card_snapshot"
+required_change = "Record official OpenAI Codex token-based credit rates."
+
+[[tasks.targets]]
+file = "README.md"
+object = "cost_ingest"
+required_change = "Document live transcript ingestion and commit attribution."
+
+[[tasks.targets]]
+file = "ROADMAP.md"
+object = "cost_evidence"
+required_change = "Update token/cost evidence posture."
+
+[[tasks.targets]]
+file = "docs/engineering-policy-compliance.md"
+object = "token_cost_evidence"
+required_change = "Document measured Codex transcript usage evidence."
+
+[[tasks.targets]]
+file = "docs/runtime-schemas.md"
+object = "cost_ingest_schema"
+required_change = "Document cost-ingest command and receipt contribution schema."
+
+[[tasks.targets]]
+file = "docs/gap-pipeline.md"
+object = "GP-007"
+required_change = "Update current evidence and remaining gaps."
+
+[[tasks.targets]]
+file = "docs/version-roadmap.toml"
+object = "v2_1_0"
+required_change = "Add this plan to release evidence."
+
+[[tasks.targets]]
+file = "REQUIREMENTS.toml"
+object = "release_source"
+required_change = "Include new ingestion source and pricing snapshot."
+
+[[tasks.targets]]
+file = "docs/plans/provider-usage-ingestion-2026-06-02.md"
+object = "closure_contract"
+required_change = "Track approved scope, bounded transcript verifiers, targets, and validation evidence."
+
+[[tasks.targets]]
+file = "docs/task-registry.toml"
+object = "active_registry"
+required_change = "Record activated provider usage ingestion tasks."
+
+[[tasks.targets]]
+file = "docs/task-registry/events.jsonl"
+object = "cost_receipt"
+required_change = "Append bounded actual Codex transcript cost evidence receipt and activation receipts."
+
+[[tasks]]
+task_id = "TASK-2026-06-02-cost-evidence-model-001"
+plan_id = "PLAN-2026-06-02-cost-evidence-model"
+status = "completed"
+title = "Add typed cost evidence runtime validation"
+kind = "implementation"
+source_plan_path = "docs/plans/cost-evidence-model-2026-06-02.md"
+source_plan_hash_sha256 = "bda69c788bef2c879a121d3b65d32317d428b9d7444502bdf8b0a1358fc03b45"
+reason = "GP-007 needs structured usage evidence states before any honest spend metric."
+acceptance_proof = "Behaviors B-001-cost-evidence-measured-positive and B-002-cost-evidence-measured-negative."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "B-001-cost-evidence-measured-positive",
+    "B-002-cost-evidence-measured-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T23:04:35.878251809-04:00"
+completion_changed_files = [
+    "README.md",
+    "REQUIREMENTS.toml",
+    "ROADMAP.md",
+    "docs/engineering-policy-compliance.md",
+    "docs/gap-pipeline.md",
+    "docs/runtime-schemas.md",
+    "docs/version-roadmap.toml",
+    "rust/task-registry-flow-cli/src/cost_evidence.rs",
+    "rust/task-registry-flow-cli/src/main.rs",
+    "rust/task-registry-flow-cli/src/metrics.rs",
+    "rust/task-registry-flow-cli/src/model.rs",
+    "rust/task-registry-flow-cli/src/runtime.rs",
+    "rust/task-registry-flow-cli/src/schema.rs",
+    "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/schema.rs"
+object = "cost_evidence_schema"
+required_change = "Add provider-neutral cost evidence types and optional receipt field."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/cost_evidence.rs"
+object = "cost_evidence_check"
+required_change = "Validate measured, estimated, and unmeasured cost evidence honestly."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/main.rs"
+object = "module_list"
+required_change = "Include the cost evidence module."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/runtime.rs"
+object = "dispatcher"
+required_change = "Dispatch cost-evidence-check."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs"
+object = "cost_evidence_tests"
+required_change = "Add focused positive and negative cost evidence tests."
+
+[[tasks]]
+task_id = "TASK-2026-06-02-cost-evidence-model-002"
+plan_id = "PLAN-2026-06-02-cost-evidence-model"
+status = "completed"
+title = "Expose honest cost evidence docs and metrics"
+kind = "governance"
+source_plan_path = "docs/plans/cost-evidence-model-2026-06-02.md"
+source_plan_hash_sha256 = "bda69c788bef2c879a121d3b65d32317d428b9d7444502bdf8b0a1358fc03b45"
+reason = "Cost evidence state counts must not be overread as calculated spend."
+acceptance_proof = "Behaviors B-003-cost-evidence-docs-positive, B-004-cost-evidence-docs-negative, and B-005-cost-evidence-validation."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "B-003-cost-evidence-docs-positive",
+    "B-004-cost-evidence-docs-negative",
+    "B-005-cost-evidence-validation",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T23:04:35.878251809-04:00"
+completion_changed_files = [
+    "README.md",
+    "REQUIREMENTS.toml",
+    "ROADMAP.md",
+    "docs/engineering-policy-compliance.md",
+    "docs/gap-pipeline.md",
+    "docs/runtime-schemas.md",
+    "docs/version-roadmap.toml",
+    "rust/task-registry-flow-cli/src/cost_evidence.rs",
+    "rust/task-registry-flow-cli/src/main.rs",
+    "rust/task-registry-flow-cli/src/metrics.rs",
+    "rust/task-registry-flow-cli/src/model.rs",
+    "rust/task-registry-flow-cli/src/runtime.rs",
+    "rust/task-registry-flow-cli/src/schema.rs",
+    "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/model.rs"
+object = "metrics_report"
+required_change = "Add measured, estimated, and unmeasured cost evidence counts."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/metrics.rs"
+object = "cost_counts"
+required_change = "Count cost evidence receipts by status."
+
+[[tasks.targets]]
+file = "README.md"
+object = "cost_evidence"
+required_change = "Document cost-evidence-check and current non-claims."
+
+[[tasks.targets]]
+file = "ROADMAP.md"
+object = "cost_evidence"
+required_change = "Reflect typed cost evidence as the next slice before cost per commit."
+
+[[tasks.targets]]
+file = "docs/engineering-policy-compliance.md"
+object = "token_cost_evidence"
+required_change = "Document current measured, estimated, and unmeasured cost evidence posture."
+
+[[tasks.targets]]
+file = "docs/runtime-schemas.md"
+object = "cost_evidence_schema"
+required_change = "Document cost evidence receipt schema, command, and metrics."
+
+[[tasks.targets]]
+file = "docs/gap-pipeline.md"
+object = "GP-007"
+required_change = "Update current evidence and remaining cost-per-commit gap."
+
+[[tasks.targets]]
+file = "docs/version-roadmap.toml"
+object = "v2_1_0"
+required_change = "Add this plan to release evidence."
+
+[[tasks.targets]]
+file = "REQUIREMENTS.toml"
+object = "release_source"
+required_change = "Include the new cost evidence module."
+
+[[tasks]]
+task_id = "TASK-2026-06-02-codex-model-attribution-hardening-001"
+plan_id = "PLAN-2026-06-02-codex-model-attribution-hardening"
+status = "completed"
+title = "Implement runtime model attribution"
+kind = "implementation"
+source_plan_path = "docs/plans/codex-model-attribution-hardening-2026-06-02.md"
+source_plan_hash_sha256 = "6d1ed561e074db21cfb9405242ac3694138715f9b3bdd2acbca08e83c642abf2"
+reason = "Codex mutation governance must record which active model is responsible for supported repo mutation attempts."
+acceptance_proof = "Behaviors B-001, B-002, B-003, and B-004 pass their typed verifiers."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "B-001-codex-attribution-positive",
+    "B-002-codex-attribution-negative",
+    "B-003-model-check-positive",
+    "B-004-model-check-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T21:49:33.302634831-04:00"
+completion_changed_files = [
+    ".codex/hooks.json",
+    "README.md",
+    "REQUIREMENTS.toml",
+    "ROADMAP.md",
+    "docs/engineering-policy-compliance.md",
+    "docs/gap-pipeline.md",
+    "docs/runtime-schemas.md",
+    "docs/version-roadmap.toml",
+    "hooks/codex-hooks.json",
+    "rust/task-registry-flow-cli/src/main.rs",
+    "rust/task-registry-flow-cli/src/metrics.rs",
+    "rust/task-registry-flow-cli/src/model.rs",
+    "rust/task-registry-flow-cli/src/model_attribution.rs",
+    "rust/task-registry-flow-cli/src/mutation_hook.rs",
+    "rust/task-registry-flow-cli/src/runtime.rs",
+    "rust/task-registry-flow-cli/src/schema.rs",
+    "rust/task-registry-flow-cli/src/tests/hook_command_tests.rs",
+    "rust/task-registry-flow-cli/src/tests/mod.rs",
+    "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs",
+    "templates/.codex/hooks.json.template",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/schema.rs"
+object = "receipt_schema"
+required_change = "Add attribution enums, structs, report surface, and command."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/model.rs"
+object = "metrics_report"
+required_change = "Add model attribution metrics counts."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/main.rs"
+object = "module_list"
+required_change = "Include the model attribution module."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/model_attribution.rs"
+object = "model_attribution_check"
+required_change = "Implement receipt scanning and diagnostics for model attribution."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/runtime.rs"
+object = "dispatcher"
+required_change = "Route model-attribution-check and update usage."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/mutation_hook.rs"
+object = "codex_attribution"
+required_change = "Require Codex PreToolUse model identity for supported writes and append attribution receipts."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/metrics.rs"
+object = "attribution_counts"
+required_change = "Count measured and unmeasured mutation attribution receipts."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/reviewer_report.rs"
+object = "attribution_summary"
+required_change = "Show model attribution counts in reviewer reports."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs"
+object = "model_attribution_tests"
+required_change = "Add focused attribution runtime tests."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/mod.rs"
+object = "test_module_list"
+required_change = "Include model attribution tests."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/hook_command_tests.rs"
+object = "codex_identity_fixture"
+required_change = "Carry required Codex identity fields in existing write-scope hook command fixtures."
+
+[[tasks]]
+task_id = "TASK-2026-06-02-codex-model-attribution-hardening-002"
+plan_id = "PLAN-2026-06-02-codex-model-attribution-hardening"
+status = "completed"
+title = "Document and package model attribution hardening"
+kind = "documentation"
+source_plan_path = "docs/plans/codex-model-attribution-hardening-2026-06-02.md"
+source_plan_hash_sha256 = "6d1ed561e074db21cfb9405242ac3694138715f9b3bdd2acbca08e83c642abf2"
+reason = "Public posture must state Codex as first measured adapter without claiming token spend or universal attribution."
+acceptance_proof = "Behaviors B-005 and B-006 pass their typed verifiers."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "B-005-docs-positive",
+    "B-006-docs-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T21:49:33.302634831-04:00"
+completion_changed_files = [
+    ".codex/hooks.json",
+    "README.md",
+    "REQUIREMENTS.toml",
+    "ROADMAP.md",
+    "docs/engineering-policy-compliance.md",
+    "docs/gap-pipeline.md",
+    "docs/runtime-schemas.md",
+    "docs/version-roadmap.toml",
+    "hooks/codex-hooks.json",
+    "rust/task-registry-flow-cli/src/main.rs",
+    "rust/task-registry-flow-cli/src/metrics.rs",
+    "rust/task-registry-flow-cli/src/model.rs",
+    "rust/task-registry-flow-cli/src/model_attribution.rs",
+    "rust/task-registry-flow-cli/src/mutation_hook.rs",
+    "rust/task-registry-flow-cli/src/runtime.rs",
+    "rust/task-registry-flow-cli/src/schema.rs",
+    "rust/task-registry-flow-cli/src/tests/hook_command_tests.rs",
+    "rust/task-registry-flow-cli/src/tests/mod.rs",
+    "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs",
+    "templates/.codex/hooks.json.template",
+]
+
+[[tasks.targets]]
+file = ".codex/hooks.json"
+object = "codex_posttooluse"
+required_change = "Add Codex PostToolUse model attribution hook."
+
+[[tasks.targets]]
+file = "hooks/codex-hooks.json"
+object = "codex_posttooluse"
+required_change = "Mirror packaged Codex PostToolUse hook."
+
+[[tasks.targets]]
+file = "templates/.codex/hooks.json.template"
+object = "codex_posttooluse"
+required_change = "Project PostToolUse hook projection."
+
+[[tasks.targets]]
+file = "README.md"
+object = "model_attribution"
+required_change = "Document Codex as first measured adapter and non-Codex as unmeasured."
+
+[[tasks.targets]]
+file = "ROADMAP.md"
+object = "cost_evidence"
+required_change = "Reflect shipped model attribution before token/cost evidence."
+
+[[tasks.targets]]
+file = "docs/engineering-policy-compliance.md"
+object = "model_evidence"
+required_change = "Clarify model identity versus token spend evidence."
+
+[[tasks.targets]]
+file = "docs/runtime-schemas.md"
+object = "receipt_schema"
+required_change = "Document attribution fields and model-attribution-check."
+
+[[tasks.targets]]
+file = "docs/gap-pipeline.md"
+object = "cost_gap"
+required_change = "Update current evidence and remaining cost gap."
+
+[[tasks.targets]]
+file = "docs/version-roadmap.toml"
+object = "covered_plan_ids"
+required_change = "Add this plan to 2.1.0 release coverage."
+
+[[tasks.targets]]
+file = "REQUIREMENTS.toml"
+object = "release_source.required"
+required_change = "Include model attribution module and tests."
+
+[[tasks]]
+task_id = "TASK-2026-06-01-policy-posture-version-coverage-001"
+plan_id = "PLAN-2026-06-01-policy-posture-version-coverage"
+status = "completed"
+title = "Cover policy posture work in version roadmap"
+kind = "release"
+source_plan_path = "docs/plans/policy-posture-version-coverage-2026-06-01.md"
+source_plan_hash_sha256 = "d7ef271f9c761ab66d0fa68350cbff565feb84e42eb9c9ef94ab9d14e431dc10"
+reason = "Completed post-cutover plans must be represented in release coverage before 2.1.0 validation can pass."
+acceptance_proof = "Behaviors B-001 and B-002 pass their typed verifiers."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "B-001-version-coverage-positive",
+    "B-002-version-coverage-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T19:17:53.275238256-04:00"
+completion_changed_files = ["docs/version-roadmap.toml"]
+
+[[tasks.targets]]
+file = "docs/version-roadmap.toml"
+object = "covered_plan_ids"
+required_change = "Add policy posture and version coverage plan ids to the 2.1.0 release coverage list."
 
 [[tasks]]
 task_id = "TASK-2026-06-01-policy-compliance-cost-posture-001"
@@ -171,590 +742,3 @@ required_change = "Require docs/engineering-policy-compliance.md as a release-so
 file = "package.nix"
 object = "asset_docs"
 required_change = "Package docs/engineering-policy-compliance.md in Nix assets."
-
-[[tasks]]
-task_id = "TASK-2026-06-01-VBG-001"
-plan_id = "PLAN-2026-06-01-version-backlog-governance"
-status = "completed"
-title = "Activate version and backlog governance plan"
-kind = "governance"
-source_plan_path = "docs/plans/version-backlog-governance-2026-06-01.md"
-source_plan_hash_sha256 = "c626f9522d88805958b26335a302510407067b4d61ba8f41fba361924a73b555"
-reason = "The approved scope needs task-bound provenance before implementation edits."
-acceptance_proof = "Behavior VBG-B-006-plan-activation-positive."
-created_at = "2026-06-01"
-updated_at = "2026-06-01"
-behavior_ids = ["VBG-B-006-plan-activation-positive"]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-06-01T18:09:58.484380039-04:00"
-completion_changed_files = [
-    ".codex-plugin/plugin.json",
-    "AGENTS.md",
-    "CHANGELOG.md",
-    "CLAUDE.md",
-    "GEMINI.md",
-    "MANIFEST.toml",
-    "README.md",
-    "REQUIREMENTS.toml",
-    "VERSION",
-    "docs/gap-pipeline.md",
-    "docs/plans/version-backlog-governance-2026-06-01.md",
-    "docs/releases/v2.md",
-    "docs/runtime-schemas.md",
-    "docs/task-registry.toml",
-    "docs/version-roadmap.toml",
-    "docs/versioning.md",
-    "package.nix",
-    "plugin.json",
-    "rust/task-registry-flow-cli/Cargo.lock",
-    "rust/task-registry-flow-cli/Cargo.toml",
-    "rust/task-registry-flow-cli/src/backlog_check.rs",
-    "rust/task-registry-flow-cli/src/main.rs",
-    "rust/task-registry-flow-cli/src/runtime.rs",
-    "rust/task-registry-flow-cli/src/schema.rs",
-    "rust/task-registry-flow-cli/src/tests/backlog_check_tests.rs",
-    "rust/task-registry-flow-cli/src/tests/mod.rs",
-    "rust/task-registry-flow-cli/src/tests/version_check_tests.rs",
-    "rust/task-registry-flow-cli/src/version_check.rs",
-    "templates/AGENTS.md.template",
-    "templates/CLAUDE.md.template",
-    "templates/GEMINI.md.template",
-]
-
-[[tasks.targets]]
-file = "docs/plans/version-backlog-governance-2026-06-01.md"
-object = "closure_contract"
-required_change = "Capture approved scope, behaviors, validation, and task targets."
-
-[[tasks.targets]]
-file = "docs/task-registry.toml"
-object = "task_registry"
-required_change = "Activate and complete this plan through registry CLI."
-
-[[tasks]]
-task_id = "TASK-2026-06-01-VBG-002"
-plan_id = "PLAN-2026-06-01-version-backlog-governance"
-status = "completed"
-title = "Implement version governance"
-kind = "implementation"
-source_plan_path = "docs/plans/version-backlog-governance-2026-06-01.md"
-source_plan_hash_sha256 = "c626f9522d88805958b26335a302510407067b4d61ba8f41fba361924a73b555"
-reason = "Release authority must catch post-tag governed work and forbid automatic final release."
-acceptance_proof = "Behaviors VBG-B-001-version-positive and VBG-B-002-version-negative."
-created_at = "2026-06-01"
-updated_at = "2026-06-01"
-behavior_ids = [
-    "VBG-B-001-version-positive",
-    "VBG-B-002-version-negative",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-06-01T18:09:58.484380039-04:00"
-completion_changed_files = [
-    ".codex-plugin/plugin.json",
-    "AGENTS.md",
-    "CHANGELOG.md",
-    "CLAUDE.md",
-    "GEMINI.md",
-    "MANIFEST.toml",
-    "README.md",
-    "REQUIREMENTS.toml",
-    "VERSION",
-    "docs/gap-pipeline.md",
-    "docs/plans/version-backlog-governance-2026-06-01.md",
-    "docs/releases/v2.md",
-    "docs/runtime-schemas.md",
-    "docs/task-registry.toml",
-    "docs/version-roadmap.toml",
-    "docs/versioning.md",
-    "package.nix",
-    "plugin.json",
-    "rust/task-registry-flow-cli/Cargo.lock",
-    "rust/task-registry-flow-cli/Cargo.toml",
-    "rust/task-registry-flow-cli/src/backlog_check.rs",
-    "rust/task-registry-flow-cli/src/main.rs",
-    "rust/task-registry-flow-cli/src/runtime.rs",
-    "rust/task-registry-flow-cli/src/schema.rs",
-    "rust/task-registry-flow-cli/src/tests/backlog_check_tests.rs",
-    "rust/task-registry-flow-cli/src/tests/mod.rs",
-    "rust/task-registry-flow-cli/src/tests/version_check_tests.rs",
-    "rust/task-registry-flow-cli/src/version_check.rs",
-    "templates/AGENTS.md.template",
-    "templates/CLAUDE.md.template",
-    "templates/GEMINI.md.template",
-]
-
-[[tasks.targets]]
-file = "docs/versioning.md"
-object = "version_governance"
-required_change = "Document Governed SemVer, prerelease automation, and manual final release."
-
-[[tasks.targets]]
-file = "docs/version-roadmap.toml"
-object = "version_roadmap"
-required_change = "Declare 2.1.0, covered plans, rc tag, final tag, and manual final release policy."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/version_check.rs"
-object = "version_check"
-required_change = "Implement validate, next, prerelease, and release-check."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/version_check_tests.rs"
-object = "version_check_tests"
-required_change = "Add positive and negative version governance tests."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/schema.rs"
-object = "cli_command"
-required_change = "Add version-check and backlog-check command variants."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/runtime.rs"
-object = "dispatcher"
-required_change = "Route version-check and backlog-check commands."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/main.rs"
-object = "module_registration"
-required_change = "Register version_check and backlog_check modules."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/mod.rs"
-object = "test_module_registration"
-required_change = "Register version_check_tests and backlog_check_tests modules."
-
-[[tasks]]
-task_id = "TASK-2026-06-01-VBG-003"
-plan_id = "PLAN-2026-06-01-version-backlog-governance"
-status = "completed"
-title = "Implement backlog governance"
-kind = "implementation"
-source_plan_path = "docs/plans/version-backlog-governance-2026-06-01.md"
-source_plan_hash_sha256 = "c626f9522d88805958b26335a302510407067b4d61ba8f41fba361924a73b555"
-reason = "The drainable gap pipeline needs executable required-field and overclaim checks."
-acceptance_proof = "Behaviors VBG-B-003-backlog-positive and VBG-B-004-backlog-negative."
-created_at = "2026-06-01"
-updated_at = "2026-06-01"
-behavior_ids = [
-    "VBG-B-003-backlog-positive",
-    "VBG-B-004-backlog-negative",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-06-01T18:09:58.484380039-04:00"
-completion_changed_files = [
-    ".codex-plugin/plugin.json",
-    "AGENTS.md",
-    "CHANGELOG.md",
-    "CLAUDE.md",
-    "GEMINI.md",
-    "MANIFEST.toml",
-    "README.md",
-    "REQUIREMENTS.toml",
-    "VERSION",
-    "docs/gap-pipeline.md",
-    "docs/plans/version-backlog-governance-2026-06-01.md",
-    "docs/releases/v2.md",
-    "docs/runtime-schemas.md",
-    "docs/task-registry.toml",
-    "docs/version-roadmap.toml",
-    "docs/versioning.md",
-    "package.nix",
-    "plugin.json",
-    "rust/task-registry-flow-cli/Cargo.lock",
-    "rust/task-registry-flow-cli/Cargo.toml",
-    "rust/task-registry-flow-cli/src/backlog_check.rs",
-    "rust/task-registry-flow-cli/src/main.rs",
-    "rust/task-registry-flow-cli/src/runtime.rs",
-    "rust/task-registry-flow-cli/src/schema.rs",
-    "rust/task-registry-flow-cli/src/tests/backlog_check_tests.rs",
-    "rust/task-registry-flow-cli/src/tests/mod.rs",
-    "rust/task-registry-flow-cli/src/tests/version_check_tests.rs",
-    "rust/task-registry-flow-cli/src/version_check.rs",
-    "templates/AGENTS.md.template",
-    "templates/CLAUDE.md.template",
-    "templates/GEMINI.md.template",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/backlog_check.rs"
-object = "backlog_check"
-required_change = "Validate gap pipeline required fields, reactivation conditions, and negative non-claims."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/backlog_check_tests.rs"
-object = "backlog_check_tests"
-required_change = "Add positive and negative backlog governance tests."
-
-[[tasks.targets]]
-file = "docs/gap-pipeline.md"
-object = "negative_non_claims"
-required_change = "Add executable required fields and negative non-claims."
-
-[[tasks]]
-task_id = "TASK-2026-06-01-VBG-004"
-plan_id = "PLAN-2026-06-01-version-backlog-governance"
-status = "completed"
-title = "Update release and agent surfaces"
-kind = "release"
-source_plan_path = "docs/plans/version-backlog-governance-2026-06-01.md"
-source_plan_hash_sha256 = "c626f9522d88805958b26335a302510407067b4d61ba8f41fba361924a73b555"
-reason = "New governance commands and release coverage must be public and package-tracked."
-acceptance_proof = "Behavior VBG-B-007-release-surface-positive."
-created_at = "2026-06-01"
-updated_at = "2026-06-01"
-behavior_ids = ["VBG-B-007-release-surface-positive"]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-06-01T18:09:58.484380039-04:00"
-completion_changed_files = [
-    ".codex-plugin/plugin.json",
-    "AGENTS.md",
-    "CHANGELOG.md",
-    "CLAUDE.md",
-    "GEMINI.md",
-    "MANIFEST.toml",
-    "README.md",
-    "REQUIREMENTS.toml",
-    "VERSION",
-    "docs/gap-pipeline.md",
-    "docs/plans/version-backlog-governance-2026-06-01.md",
-    "docs/releases/v2.md",
-    "docs/runtime-schemas.md",
-    "docs/task-registry.toml",
-    "docs/version-roadmap.toml",
-    "docs/versioning.md",
-    "package.nix",
-    "plugin.json",
-    "rust/task-registry-flow-cli/Cargo.lock",
-    "rust/task-registry-flow-cli/Cargo.toml",
-    "rust/task-registry-flow-cli/src/backlog_check.rs",
-    "rust/task-registry-flow-cli/src/main.rs",
-    "rust/task-registry-flow-cli/src/runtime.rs",
-    "rust/task-registry-flow-cli/src/schema.rs",
-    "rust/task-registry-flow-cli/src/tests/backlog_check_tests.rs",
-    "rust/task-registry-flow-cli/src/tests/mod.rs",
-    "rust/task-registry-flow-cli/src/tests/version_check_tests.rs",
-    "rust/task-registry-flow-cli/src/version_check.rs",
-    "templates/AGENTS.md.template",
-    "templates/CLAUDE.md.template",
-    "templates/GEMINI.md.template",
-]
-
-[[tasks.targets]]
-file = "VERSION"
-object = "release_version"
-required_change = "Set release version to 2.1.0."
-
-[[tasks.targets]]
-file = "plugin.json"
-object = "release_version"
-required_change = "Set release version to 2.1.0."
-
-[[tasks.targets]]
-file = ".codex-plugin/plugin.json"
-object = "release_version"
-required_change = "Set release version to 2.1.0."
-
-[[tasks.targets]]
-file = "MANIFEST.toml"
-object = "plugin_version"
-required_change = "Set plugin version and package new files."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/Cargo.toml"
-object = "package_version"
-required_change = "Set package version to 2.1.0."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/Cargo.lock"
-object = "package_version"
-required_change = "Set package version to 2.1.0."
-
-[[tasks.targets]]
-file = "package.nix"
-object = "package_version"
-required_change = "Set package version and package new docs."
-
-[[tasks.targets]]
-file = "README.md"
-object = "version_backlog_docs"
-required_change = "Document version-check, backlog-check, and prerelease-only automation."
-
-[[tasks.targets]]
-file = "docs/releases/v2.md"
-object = "release_docs"
-required_change = "Set release version and describe 2.1.0 governance commands."
-
-[[tasks.targets]]
-file = "docs/runtime-schemas.md"
-object = "runtime_docs"
-required_change = "Document version-check and backlog-check outputs."
-
-[[tasks.targets]]
-file = "CHANGELOG.md"
-object = "release_notes"
-required_change = "Add 2.1.0 release notes."
-
-[[tasks.targets]]
-file = "REQUIREMENTS.toml"
-object = "release_source"
-required_change = "Track new docs, Rust modules, and tests as release-source files."
-
-[[tasks.targets]]
-file = "AGENTS.md"
-object = "agent_version_policy"
-required_change = "Add prerelease-only automation and manual final release policy."
-
-[[tasks.targets]]
-file = "GEMINI.md"
-object = "agent_version_policy"
-required_change = "Mirror prerelease-only automation and manual final release policy."
-
-[[tasks.targets]]
-file = "CLAUDE.md"
-object = "agent_version_policy"
-required_change = "Mirror prerelease-only automation and manual final release policy."
-
-[[tasks.targets]]
-file = "templates/AGENTS.md.template"
-object = "agent_version_policy"
-required_change = "Template prerelease-only automation and manual final release policy."
-
-[[tasks.targets]]
-file = "templates/GEMINI.md.template"
-object = "agent_version_policy"
-required_change = "Template prerelease-only automation and manual final release policy."
-
-[[tasks.targets]]
-file = "templates/CLAUDE.md.template"
-object = "agent_version_policy"
-required_change = "Template prerelease-only automation and manual final release policy."
-
-[[tasks]]
-task_id = "TASK-2026-06-01-VBG-005"
-plan_id = "PLAN-2026-06-01-version-backlog-governance"
-status = "completed"
-title = "Validate and land version and backlog governance"
-kind = "validation"
-source_plan_path = "docs/plans/version-backlog-governance-2026-06-01.md"
-source_plan_hash_sha256 = "c626f9522d88805958b26335a302510407067b4d61ba8f41fba361924a73b555"
-reason = "This shared governance change must pass behavior, registry, chain, and release-readiness gates."
-acceptance_proof = "Behavior VBG-B-005-full-validation and final TASK_REPORT."
-created_at = "2026-06-01"
-updated_at = "2026-06-01"
-behavior_ids = ["VBG-B-005-full-validation"]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-06-01T18:19:19.787357870-04:00"
-completion_changed_files = [
-    "docs/plans/version-backlog-governance-2026-06-01.md",
-    "docs/task-registry.toml",
-]
-
-[[tasks.targets]]
-file = "docs/task-registry.toml"
-object = "landing_report"
-required_change = "Complete tasks through verify-landing, report, metrics, and archive if needed."
-
-[[tasks.targets]]
-file = "docs/plans/version-backlog-governance-2026-06-01.md"
-object = "validation_evidence"
-required_change = "Record final verifier evidence and behavior IDs for landing."
-
-[[tasks]]
-task_id = "TASK-2026-06-01-reviewer-markdown-format-001"
-plan_id = "PLAN-2026-06-01-reviewer-markdown-format"
-status = "completed"
-title = "Add local Markdown reviewer handoff"
-kind = "implementation"
-source_plan_path = "docs/plans/reviewer-markdown-format-2026-06-01.md"
-source_plan_hash_sha256 = "41c3b0a5a76a8825f43bc52f0b5f7d241db9ab82e5ba34fa32f60a9fb28f451f"
-reason = "GP-002 needs PR-oriented local reviewer output without remote integration."
-acceptance_proof = "Behaviors B-2026-06-01-reviewer-markdown-positive and B-2026-06-01-reviewer-markdown-negative pass."
-created_at = "2026-06-01"
-updated_at = "2026-06-01"
-behavior_ids = [
-    "B-2026-06-01-reviewer-markdown-positive",
-    "B-2026-06-01-reviewer-markdown-negative",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-06-01T15:34:07.533778871-04:00"
-completion_changed_files = [
-    "README.md",
-    "docs/gap-pipeline.md",
-    "docs/runtime-schemas.md",
-    "rust/task-registry-flow-cli/src/reviewer_report.rs",
-    "rust/task-registry-flow-cli/src/runtime.rs",
-    "rust/task-registry-flow-cli/src/tests/reviewer_report_tests.rs",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/reviewer_report.rs"
-object = "markdown_format"
-required_change = "Accept --format markdown, render local Markdown handoff, reject unknown formats, preserve default text."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/runtime.rs"
-object = "usage"
-required_change = "Advertise reviewer-report optional Markdown format."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/reviewer_report_tests.rs"
-object = "markdown_format_tests"
-required_change = "Assert Markdown output and unknown format rejection."
-
-[[tasks.targets]]
-file = "README.md"
-object = "daily_workflow"
-required_change = "Document local Markdown reviewer handoff usage."
-
-[[tasks.targets]]
-file = "docs/runtime-schemas.md"
-object = "Reviewer Report"
-required_change = "Document text and Markdown output modes."
-
-[[tasks.targets]]
-file = "docs/gap-pipeline.md"
-object = "GP-002"
-required_change = "Update GP-002 with local PR-format evidence and future remote integration boundary."
-
-[[tasks]]
-task_id = "TASK-2026-06-01-multi-repo-boundary-001"
-plan_id = "PLAN-2026-06-01-multi-repo-boundary"
-status = "completed"
-title = "Document multi-repo governance boundary"
-kind = "documentation"
-source_plan_path = "docs/plans/multi-repo-boundary-2026-06-01.md"
-source_plan_hash_sha256 = "157360947dadb6819ed719432af55c02c980479187e9ff843673dda7a5171039"
-reason = "GP-004 needs an honest public boundary for teams using several repos."
-acceptance_proof = "Behaviors B-2026-06-01-multi-repo-positive and B-2026-06-01-multi-repo-negative pass."
-created_at = "2026-06-01"
-updated_at = "2026-06-01"
-behavior_ids = [
-    "B-2026-06-01-multi-repo-positive",
-    "B-2026-06-01-multi-repo-negative",
-    "B-2026-06-01-multi-repo-release-validation",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-06-01T15:30:20.035271482-04:00"
-completion_changed_files = [
-    "README.md",
-    "REQUIREMENTS.toml",
-    "docs/gap-pipeline.md",
-    "docs/multi-repo.md",
-    "package.nix",
-    "scripts/test-release-readiness.sh",
-]
-
-[[tasks.targets]]
-file = "docs/multi-repo.md"
-object = "multi_repo_boundary"
-required_change = "Document current manual multi-repo consumption model and unsupported aggregation claims."
-
-[[tasks.targets]]
-file = "README.md"
-object = "files_users_should_know"
-required_change = "Link the multi-repo boundary doc."
-
-[[tasks.targets]]
-file = "REQUIREMENTS.toml"
-object = "release_required_files"
-required_change = "Declare docs/multi-repo.md as a required release file."
-
-[[tasks.targets]]
-file = "package.nix"
-object = "package_docs"
-required_change = "Install docs/multi-repo.md in the package asset root."
-
-[[tasks.targets]]
-file = "scripts/test-release-readiness.sh"
-object = "multi_repo_doc_checks"
-required_change = "Assert multi-repo doc content and package asset presence."
-
-[[tasks.targets]]
-file = "docs/gap-pipeline.md"
-object = "GP-004"
-required_change = "Update GP-004 with manual-boundary evidence and remaining reactivation conditions."
-
-[[tasks]]
-task_id = "TASK-2026-06-01-first-run-installer-guidance-001"
-plan_id = "PLAN-2026-06-01-first-run-installer-guidance"
-status = "completed"
-title = "Clarify first-run installer output"
-kind = "documentation"
-source_plan_path = "docs/plans/first-run-installer-guidance-2026-06-01.md"
-source_plan_hash_sha256 = "2e0e04bdaf91283ee3f5261294d8d1509dea9aa3a0af5351c9218f0ac8346df4"
-reason = "GP-001 needs direct first-run guidance in the command output new public users see."
-acceptance_proof = "Behaviors B-2026-06-01-first-run-positive and B-2026-06-01-first-run-negative pass."
-created_at = "2026-06-01"
-updated_at = "2026-06-01"
-behavior_ids = [
-    "B-2026-06-01-first-run-positive",
-    "B-2026-06-01-first-run-negative",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-06-01T15:19:07.998431282-04:00"
-completion_changed_files = [
-    "docs/gap-pipeline.md",
-    "scripts/install-to-workspace.sh",
-    "scripts/test-install-modes.sh",
-]
-
-[[tasks.targets]]
-file = "scripts/install-to-workspace.sh"
-object = "first_run_next_steps"
-required_change = "Print explicit dry-run continuation and applied-install first-run validation guidance."
-
-[[tasks.targets]]
-file = "scripts/test-install-modes.sh"
-object = "first_run_output_assertions"
-required_change = "Assert installer output includes dry-run continuation and applied-install next steps."
-
-[[tasks.targets]]
-file = "docs/gap-pipeline.md"
-object = "GP-001"
-required_change = "Update GP-001 with current first-run installer evidence and remaining reactivation conditions."
-
-[[tasks]]
-task_id = "TASK-2026-06-01-migration-preflight-001"
-plan_id = "PLAN-2026-06-01-migration-preflight-diagnostics"
-status = "completed"
-title = "Add migration preflight diagnostics"
-kind = "migration"
-source_plan_path = "docs/plans/migration-preflight-diagnostics-2026-06-01.md"
-source_plan_hash_sha256 = "00bf9b4b3ccca500cd8775716fa09ccaa5754a7f0acfe93ca76ecabe7ebaf3f9"
-reason = "GP-003 needs targeted old-layout diagnostics before broader public migration."
-acceptance_proof = "Behaviors B-2026-06-01-migration-preflight-positive and B-2026-06-01-migration-preflight-negative pass."
-created_at = "2026-06-01"
-updated_at = "2026-06-01"
-behavior_ids = [
-    "B-2026-06-01-migration-preflight-positive",
-    "B-2026-06-01-migration-preflight-negative",
-    "B-2026-06-01-migration-fixture-validation",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-06-01T15:11:57.167266735-04:00"
-completion_changed_files = [
-    "docs/gap-pipeline.md",
-    "rust/task-registry-flow-cli/src/status_checks.rs",
-    "rust/task-registry-flow-cli/src/tests/status_check_tests.rs",
-    "scripts/test-install-modes.sh",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/status_checks.rs"
-object = "migration_preflight_checks"
-required_change = "Report stale legacy paths and both required native .agents skill projections."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/status_check_tests.rs"
-object = "migration_preflight_tests"
-required_change = "Assert clean v2 success and stale old-layout remediation failures."
-
-[[tasks.targets]]
-file = "scripts/test-install-modes.sh"
-object = "old_layout_fixture"
-required_change = "Seed additional stale hook/settings layouts and assert merge/force removal."
-
-[[tasks.targets]]
-file = "docs/gap-pipeline.md"
-object = "GP-003"
-required_change = "Update GP-003 with current migration preflight evidence and remaining reactivation conditions."

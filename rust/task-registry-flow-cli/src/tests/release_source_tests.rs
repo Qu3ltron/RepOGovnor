@@ -85,3 +85,57 @@ fn release_source_rejects_stale_markdown_version_file() {
             && check.actual == "version 2.0.1"
     }));
 }
+
+#[test]
+fn public_cost_evidence_allows_sanitized_paths() {
+    let root = temp_root("release-source-public-cost-sanitized");
+    seed_release_repo(&root);
+    fs::create_dir_all(root.join("docs/task-registry")).unwrap();
+    declare_cost_events_release_source(&root);
+    fs::write(
+        root.join("docs/task-registry/events.jsonl"),
+        r#"{"cost_evidence":{"usage_contributions":[{"source_path":"docs/private-cost-redacted.jsonl"}]}}"#,
+    )
+    .unwrap();
+
+    let report = release_checks::report(&root, release_checks::Mode::Required).unwrap();
+
+    assert!(report.checks.iter().any(|check| {
+        check.check_id == "release-private-cost-evidence-absent"
+            && check.status == CheckStatus::Pass
+    }));
+}
+
+#[test]
+fn public_cost_evidence_rejects_private_transcript_paths() {
+    let root = temp_root("release-source-private-cost-path");
+    seed_release_repo(&root);
+    fs::create_dir_all(root.join("docs/task-registry")).unwrap();
+    declare_cost_events_release_source(&root);
+    fs::write(
+        root.join("docs/task-registry/events.jsonl"),
+        "/home/hasnamuss/.codex/sessions/2026/05/31/private.jsonl\n",
+    )
+    .unwrap();
+
+    let report = release_checks::report(&root, release_checks::Mode::Required).unwrap();
+
+    assert!(report.checks.iter().any(|check| {
+        check.check_id == "release-private-cost-evidence-absent"
+            && check.status == CheckStatus::Fail
+            && check.actual.contains("/home/hasnamuss/.codex/sessions/")
+    }));
+}
+
+fn declare_cost_events_release_source(root: &Path) {
+    let path = root.join("REQUIREMENTS.toml");
+    let body = fs::read_to_string(&path).unwrap();
+    fs::write(
+        path,
+        body.replace(
+            r#"required = ["VERSION", "README.md","#,
+            r#"required = ["VERSION", "README.md", "docs/task-registry/events.jsonl","#,
+        ),
+    )
+    .unwrap();
+}

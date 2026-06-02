@@ -20,4 +20,5 @@ archive_paths = [
     "docs/task-registry/archive/completed-006.toml",
     "docs/task-registry/archive/completed-007.toml",
     "docs/task-registry/archive/completed-008.toml",
+    "docs/task-registry/archive/completed-009.toml",
 ]

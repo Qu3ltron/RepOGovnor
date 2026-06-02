@@ -7,7 +7,8 @@ retrieved_at = "2026-06-02T00:00:00Z"
 effective_from = "2026-06-02"
 version = "2026-06-02"
 service_tier = "codex-cloud"
-notes = "OpenAI Help Center Codex token-based rate card, credits per 1M input, cached input, and output tokens."
+reasoning_token_policy = "reasoning_tokens_not_billed_separately"
+notes = "OpenAI Help Center Codex token-based rate card, credits per 1M input, cached input, and output tokens. Reasoning token counters are recorded for provenance and are not priced separately by this snapshot."
 
 [[models]]
 model_slug = "gpt-5.5"

@@ -1,9 +1,13 @@
 mod activation;
 mod backlog_check;
 mod cli;
+mod cost_coverage;
 mod cost_evidence;
 mod cost_ingest;
+mod cost_pricing;
+mod cost_record;
 mod cost_report;
+mod cost_targets;
 mod hook_io;
 mod install;
 mod landing;

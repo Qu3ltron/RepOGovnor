@@ -4,46 +4,1075 @@ archive_id = "completed-005"
 archive_authority = "docs/task-registry/archive/completed-005.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-06-01-archive-line-budget"
+plan_path = "docs/plans/archive-line-budget-2026-06-01.md"
+plan_hash_sha256 = "de8a6769abcc5ab6ec73ff209ea004601970e282885f2b9b1b053bf1598281a1"
+activated_at = "2026-06-01"
+status = "completed"
+
+[[plans]]
+plan_id = "PLAN-2026-06-01-typed-runtime-surfaces"
+plan_path = "docs/plans/typed-runtime-surfaces-2026-06-01.md"
+plan_hash_sha256 = "68afb6dae13bf251613c5e498b732b2a84aba0426cf130171b6ba88fb58f83a6"
+activated_at = "2026-06-01"
+status = "completed"
+
+[[plans]]
+plan_id = "PLAN-2026-06-01-security-hardening"
+plan_path = "docs/plans/security-hardening-2026-06-01.md"
+plan_hash_sha256 = "e5e821a28da569cfd8d18e9a4b9ac6587c268125eeb25e37e6f9022ea809b0f0"
+activated_at = "2026-06-01"
+status = "completed"
+
+[[plans]]
+plan_id = "PLAN-2026-06-01-public-release-2-0-1"
+plan_path = "docs/plans/public-release-2-0-1-2026-06-01.md"
+plan_hash_sha256 = "7a684d01328786329d292ff45325add7d7f0d56938aff1972dd1ca9fc8ec8d01"
+activated_at = "2026-05-31"
+status = "completed"
+
+[[plans]]
+plan_id = "PLAN-2026-05-31-ci-nix-release-readiness"
+plan_path = "docs/plans/ci-nix-release-readiness-2026-05-31.md"
+plan_hash_sha256 = "3eb542718b31d9d7f2527936e77847a3b0ea4146e60d888dbc804e95e8c92b39"
+activated_at = "2026-05-31"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-05-31-landing-active-only"
 plan_path = "docs/plans/landing-active-only-2026-05-31.md"
 plan_hash_sha256 = "0426f2b63fcd131cf0ba3f87a38810c3b05be604f51e96e1f50ba6fd48535d78"
 activated_at = "2026-05-31"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-05-31-ci-owned-landing"
-plan_path = "docs/plans/ci-owned-landing-2026-05-31.md"
-plan_hash_sha256 = "8b9cf69a4e0c1d0dfcc4c030a9c64e5a9cce194da099c9b92e22e0b8c765e35b"
-activated_at = "2026-05-31"
+[[tasks]]
+task_id = "TASK-2026-06-01-archive-line-budget-001"
+plan_id = "PLAN-2026-06-01-archive-line-budget"
 status = "completed"
+title = "Keep generated registry archives under source limit"
+kind = "implementation"
+source_plan_path = "docs/plans/archive-line-budget-2026-06-01.md"
+source_plan_hash_sha256 = "de8a6769abcc5ab6ec73ff209ea004601970e282885f2b9b1b053bf1598281a1"
+reason = "CI install smoke failed because generated completed archive files exceeded the source line limit."
+acceptance_proof = "Behaviors B-001 and B-002."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "B-001-archive-budget-positive",
+    "B-002-install-source-limit-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T12:11:36.353986792-04:00"
+completion_changed_files = [
+    "REQUIREMENTS.toml",
+    "docs/plans/archive-line-budget-2026-06-01.md",
+    "docs/task-registry.toml",
+    "docs/task-registry/archive/completed-001.toml",
+    "docs/task-registry/archive/completed-002.toml",
+    "docs/task-registry/archive/completed-003.toml",
+    "docs/task-registry/archive/completed-004.toml",
+    "docs/task-registry/archive/completed-005.toml",
+    "docs/task-registry/events.jsonl",
+    "rust/task-registry-flow-cli/src/model.rs",
+    "rust/task-registry-flow-cli/src/tests/archive_tests.rs",
+    "rust/task-registry-flow-cli/src/tests/mod.rs",
+]
 
-[[plans]]
-plan_id = "PLAN-2026-05-31-claude-runbook-doc-sync"
-plan_path = "docs/plans/claude-runbook-doc-sync-2026-05-31.md"
-plan_hash_sha256 = "42ca1674087d6e1bc74e9d8109b7569d51b671a42ed2edb00b34d29008ebb0f9"
-activated_at = "2026-05-31"
-status = "completed"
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/model.rs"
+object = "archive chunk size"
+required_change = "Reduce completed-plan archive chunk size to keep generated archive files under source limit."
 
-[[plans]]
-plan_id = "PLAN-2026-05-31-documentation-sync"
-plan_path = "docs/plans/documentation-sync-2026-05-31.md"
-plan_hash_sha256 = "3117f1306aa73aae251ec6a9476b395ba53c61048395acdf479f8d81373baf52"
-activated_at = "2026-05-31"
-status = "completed"
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/archive_tests.rs"
+object = "archive source-limit regression"
+required_change = "Assert archive-completed generates archive files at or below SOURCE_LINE_LIMIT."
 
-[[plans]]
-plan_id = "PLAN-2026-05-31-secondary-hardening"
-plan_path = "docs/plans/secondary-hardening-2026-05-31.md"
-plan_hash_sha256 = "d2d2f67837a23e7c786c9d4bff81e697318556741cde726a079bd1dcf223450f"
-activated_at = "2026-05-31"
-status = "completed"
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/mod.rs"
+object = "test module list"
+required_change = "Include archive_tests."
 
-[[plans]]
-plan_id = "PLAN-2026-05-31-post-rollback-hardening"
-plan_path = "docs/plans/post-rollback-hardening-2026-05-31.md"
-plan_hash_sha256 = "1e38fead936ff4841618988780658c17a9f7f255ccffe0c00d615ae8545af336"
-activated_at = "2026-05-31"
+[[tasks.targets]]
+file = "REQUIREMENTS.toml"
+object = "release_source.required"
+required_change = "Declare archive_tests as release source."
+
+[[tasks.targets]]
+file = "docs/plans/archive-line-budget-2026-06-01.md"
+object = "closure contract"
+required_change = "Track approved scope, behavior verifiers, and validation evidence."
+
+[[tasks.targets]]
+file = "docs/task-registry.toml"
+object = "task registry activation and landing"
+required_change = "Record this plan state through task-registry CLI only."
+
+[[tasks.targets]]
+file = "docs/task-registry/events.jsonl"
+object = "task registry receipts"
+required_change = "Append activation and landing receipts through task-registry CLI only."
+
+[[tasks.targets]]
+file = "docs/task-registry/archive/"
+object = "completed task archives"
+required_change = "Regenerate completed archives with all files below the source line limit."
+
+[[tasks]]
+task_id = "TASK-2026-06-01-typed-runtime-surfaces-001"
+plan_id = "PLAN-2026-06-01-typed-runtime-surfaces"
 status = "completed"
+title = "Enforce typed runtime command, hook, receipt, and failure surfaces"
+kind = "implementation"
+source_plan_path = "docs/plans/typed-runtime-surfaces-2026-06-01.md"
+source_plan_hash_sha256 = "68afb6dae13bf251613c5e498b732b2a84aba0426cf130171b6ba88fb58f83a6"
+reason = "Runtime machine interfaces must use typed discriminators instead of open strings."
+acceptance_proof = "Behaviors B-001 through B-008."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "B-001-command-enum-positive",
+    "B-002-command-enum-negative",
+    "B-003-hook-format-positive",
+    "B-004-hook-format-negative",
+    "B-005-receipt-schema-positive",
+    "B-006-receipt-schema-negative",
+    "B-007-failure-code-positive",
+    "B-008-failure-code-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T11:55:12.429456182-04:00"
+completion_changed_files = [
+    "REQUIREMENTS.toml",
+    "docs/plans/typed-runtime-surfaces-2026-06-01.md",
+    "docs/runtime-schemas.md",
+    "docs/task-registry.toml",
+    "docs/task-registry/events.jsonl",
+    "rust/task-registry-flow-cli/src/cli.rs",
+    "rust/task-registry-flow-cli/src/release_checks.rs",
+    "rust/task-registry-flow-cli/src/reports.rs",
+    "rust/task-registry-flow-cli/src/runtime.rs",
+    "rust/task-registry-flow-cli/src/schema.rs",
+    "rust/task-registry-flow-cli/src/source_limit.rs",
+    "rust/task-registry-flow-cli/src/status_checks.rs",
+    "rust/task-registry-flow-cli/src/tests/mod.rs",
+    "rust/task-registry-flow-cli/src/tests/status_check_tests.rs",
+    "rust/task-registry-flow-cli/src/tests/typed_runtime_surface_tests.rs",
+    "rust/task-registry-flow-cli/src/verifiers.rs",
+    "rust/task-registry-flow-cli/src/verify_chain.rs",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/schema.rs"
+object = "typed runtime schema"
+required_change = "Add typed schema version, subject kind, report surface, and failure code fields."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/reports.rs"
+object = "typed RuntimeFailure"
+required_change = "Carry typed failure codes through runtime errors and JSON payloads."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/cli.rs"
+object = "failure rendering"
+required_change = "Emit typed failure_code in command reports."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/runtime.rs"
+object = "typed dispatch"
+required_change = "Preserve typed command and hook parsing without string aliases."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/source_limit.rs"
+object = "typed report surfaces"
+required_change = "Use typed report surface enum values."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/status_checks.rs"
+object = "typed report surfaces"
+required_change = "Use typed report surface enum values."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/release_checks.rs"
+object = "typed report surfaces"
+required_change = "Use typed report surface enum values."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/typed_runtime_surface_tests.rs"
+object = "typed runtime regressions"
+required_change = "Add positive and negative tests for typed command, hook, receipt, and failure surfaces."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/verify_chain.rs"
+object = "typed report surfaces and failures"
+required_change = "Use typed receipt-chain surface and typed runtime failures."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/verifiers.rs"
+object = "typed verifier subject"
+required_change = "Use typed verifier-target runtime subject kind."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/mod.rs"
+object = "test module list"
+required_change = "Include typed_runtime_surface_tests."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/status_check_tests.rs"
+object = "status check typed surface tests"
+required_change = "Update status-check tests for typed report surfaces and typed JSON runtime failures."
+
+[[tasks.targets]]
+file = "REQUIREMENTS.toml"
+object = "release_source.required"
+required_change = "Declare new typed runtime test source."
+
+[[tasks.targets]]
+file = "docs/plans/typed-runtime-surfaces-2026-06-01.md"
+object = "closure contract"
+required_change = "Track approved scope, typed behavior verifiers, targets, and validation evidence."
+
+[[tasks.targets]]
+file = "docs/runtime-schemas.md"
+object = "runtime schema documentation"
+required_change = "Document typed failure codes, typed subject kinds, and typed report surfaces."
+
+[[tasks.targets]]
+file = "docs/task-registry.toml"
+object = "task registry activation and landing"
+required_change = "Record this plan state through task-registry CLI only."
+
+[[tasks.targets]]
+file = "docs/task-registry/events.jsonl"
+object = "task registry receipts"
+required_change = "Append activation and landing receipts through task-registry CLI only."
+
+[[tasks.targets]]
+file = "docs/task-registry/archive/"
+object = "completed task archive"
+required_change = "Archive completed task rows after landing."
+
+[[tasks]]
+task_id = "TASK-2026-06-01-001"
+plan_id = "PLAN-2026-06-01-security-hardening"
+status = "completed"
+title = "Harden mutation hook env handling"
+kind = "implementation"
+source_plan_path = "docs/plans/security-hardening-2026-06-01.md"
+source_plan_hash_sha256 = "e5e821a28da569cfd8d18e9a4b9ac6587c268125eeb25e37e6f9022ea809b0f0"
+reason = "Eliminate sourced env and shell-string execution from mutation hook."
+acceptance_proof = "Behaviors B-001-hook-canonical-positive and B-002-hook-env-negative."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "B-001-hook-canonical-positive",
+    "B-002-hook-env-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T11:16:41.937651501-04:00"
+completion_changed_files = [
+    ".codex-plugin/plugin.json",
+    ".codex/agent-governance.toml",
+    ".codex/scripts/task-registry",
+    ".github/workflows/agent-governance.yml",
+    ".github/workflows/ci.yml",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "CONTRIBUTING.md",
+    "GEMINI.md",
+    "README.md",
+    "REQUIREMENTS.toml",
+    "SECURITY.md",
+    "docs/plans/security-hardening-2026-06-01.md",
+    "docs/task-registry.toml",
+    "docs/task-registry/events.jsonl",
+    "flake.nix",
+    "modules/nixos/agent-governance-auto-update.nix",
+    "modules/nixos/agent-governance.nix",
+    "package.nix",
+    "plugin.json",
+    "rust/task-registry-flow-cli/src/tests/mod.rs",
+    "rust/task-registry-flow-cli/src/tests/security_tests.rs",
+    "scripts/render-from-config.sh",
+    "scripts/status.sh",
+    "scripts/test-install-modes.sh",
+    "templates/.codex/scripts/task-registry.template",
+    "templates/.github/workflows/agent-governance.yml.template",
+    "templates/tools/agent-governance/pre-tool-use-gap-closure.sh.template",
+    "tools/agent-governance/pre-tool-use-gap-closure.sh",
+]
+
+[[tasks.targets]]
+file = "tools/agent-governance/pre-tool-use-gap-closure.sh"
+object = "mutation hook env parser and verifier execution"
+required_change = "Parse governance-cli.env as data, require canonical verifier, execute fixed argv."
+
+[[tasks.targets]]
+file = "templates/tools/agent-governance/pre-tool-use-gap-closure.sh.template"
+object = "mutation hook template env parser and verifier execution"
+required_change = "Mirror canonical hardened hook behavior."
+
+[[tasks]]
+task_id = "TASK-2026-06-01-002"
+plan_id = "PLAN-2026-06-01-security-hardening"
+status = "completed"
+title = "Harden installer path handling"
+kind = "implementation"
+source_plan_path = "docs/plans/security-hardening-2026-06-01.md"
+source_plan_hash_sha256 = "e5e821a28da569cfd8d18e9a4b9ac6587c268125eeb25e37e6f9022ea809b0f0"
+reason = "Prevent config-controlled writes outside target repo while preserving install behavior."
+acceptance_proof = "Behaviors B-003-installer-path-negative and B-004-installer-positive."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "B-003-installer-path-negative",
+    "B-004-installer-positive",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T11:16:41.937651501-04:00"
+completion_changed_files = [
+    ".codex-plugin/plugin.json",
+    ".codex/agent-governance.toml",
+    ".codex/scripts/task-registry",
+    ".github/workflows/agent-governance.yml",
+    ".github/workflows/ci.yml",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "CONTRIBUTING.md",
+    "GEMINI.md",
+    "README.md",
+    "REQUIREMENTS.toml",
+    "SECURITY.md",
+    "docs/plans/security-hardening-2026-06-01.md",
+    "docs/task-registry.toml",
+    "docs/task-registry/events.jsonl",
+    "flake.nix",
+    "modules/nixos/agent-governance-auto-update.nix",
+    "modules/nixos/agent-governance.nix",
+    "package.nix",
+    "plugin.json",
+    "rust/task-registry-flow-cli/src/tests/mod.rs",
+    "rust/task-registry-flow-cli/src/tests/security_tests.rs",
+    "scripts/render-from-config.sh",
+    "scripts/status.sh",
+    "scripts/test-install-modes.sh",
+    "templates/.codex/scripts/task-registry.template",
+    "templates/.github/workflows/agent-governance.yml.template",
+    "templates/tools/agent-governance/pre-tool-use-gap-closure.sh.template",
+    "tools/agent-governance/pre-tool-use-gap-closure.sh",
+]
+
+[[tasks.targets]]
+file = "scripts/render-from-config.sh"
+object = "hook_script_path validation"
+required_change = "Reject unsafe hook script paths before writes."
+
+[[tasks.targets]]
+file = "scripts/test-install-modes.sh"
+object = "install mode regression coverage"
+required_change = "Assert canonical install modes still pass and unsafe hook paths fail."
+
+[[tasks.targets]]
+file = "templates/.codex/scripts/task-registry.template"
+object = "task registry wrapper"
+required_change = "Require repo-local plugin checkout; remove absolute fallback."
+
+[[tasks.targets]]
+file = ".codex/scripts/task-registry"
+object = "repo task registry wrapper"
+required_change = "Align local wrapper with hardened template."
+
+[[tasks]]
+task_id = "TASK-2026-06-01-003"
+plan_id = "PLAN-2026-06-01-security-hardening"
+status = "completed"
+title = "Harden status script execution boundary"
+kind = "implementation"
+source_plan_path = "docs/plans/security-hardening-2026-06-01.md"
+source_plan_hash_sha256 = "e5e821a28da569cfd8d18e9a4b9ac6587c268125eeb25e37e6f9022ea809b0f0"
+reason = "Avoid executing target-controlled wrappers during posture checks."
+acceptance_proof = "Behaviors B-005-status-wrapper-negative and B-006-status-positive."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "B-005-status-wrapper-negative",
+    "B-006-status-positive",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T11:16:41.937651501-04:00"
+completion_changed_files = [
+    ".codex-plugin/plugin.json",
+    ".codex/agent-governance.toml",
+    ".codex/scripts/task-registry",
+    ".github/workflows/agent-governance.yml",
+    ".github/workflows/ci.yml",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "CONTRIBUTING.md",
+    "GEMINI.md",
+    "README.md",
+    "REQUIREMENTS.toml",
+    "SECURITY.md",
+    "docs/plans/security-hardening-2026-06-01.md",
+    "docs/task-registry.toml",
+    "docs/task-registry/events.jsonl",
+    "flake.nix",
+    "modules/nixos/agent-governance-auto-update.nix",
+    "modules/nixos/agent-governance.nix",
+    "package.nix",
+    "plugin.json",
+    "rust/task-registry-flow-cli/src/tests/mod.rs",
+    "rust/task-registry-flow-cli/src/tests/security_tests.rs",
+    "scripts/render-from-config.sh",
+    "scripts/status.sh",
+    "scripts/test-install-modes.sh",
+    "templates/.codex/scripts/task-registry.template",
+    "templates/.github/workflows/agent-governance.yml.template",
+    "templates/tools/agent-governance/pre-tool-use-gap-closure.sh.template",
+    "tools/agent-governance/pre-tool-use-gap-closure.sh",
+]
+
+[[tasks.targets]]
+file = "scripts/status.sh"
+object = "task_registry function"
+required_change = "Invoke plugin-owned Rust manifest instead of target wrapper."
+
+[[tasks]]
+task_id = "TASK-2026-06-01-004"
+plan_id = "PLAN-2026-06-01-security-hardening"
+status = "completed"
+title = "Pin workflows and read-only permissions"
+kind = "implementation"
+source_plan_path = "docs/plans/security-hardening-2026-06-01.md"
+source_plan_hash_sha256 = "e5e821a28da569cfd8d18e9a4b9ac6587c268125eeb25e37e6f9022ea809b0f0"
+reason = "Reduce GitHub Actions supply-chain and token-permission exposure."
+acceptance_proof = "Behaviors B-007-workflow-pinning and B-008-workflow-negative."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "B-007-workflow-pinning",
+    "B-008-workflow-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T11:16:41.937651501-04:00"
+completion_changed_files = [
+    ".codex-plugin/plugin.json",
+    ".codex/agent-governance.toml",
+    ".codex/scripts/task-registry",
+    ".github/workflows/agent-governance.yml",
+    ".github/workflows/ci.yml",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "CONTRIBUTING.md",
+    "GEMINI.md",
+    "README.md",
+    "REQUIREMENTS.toml",
+    "SECURITY.md",
+    "docs/plans/security-hardening-2026-06-01.md",
+    "docs/task-registry.toml",
+    "docs/task-registry/events.jsonl",
+    "flake.nix",
+    "modules/nixos/agent-governance-auto-update.nix",
+    "modules/nixos/agent-governance.nix",
+    "package.nix",
+    "plugin.json",
+    "rust/task-registry-flow-cli/src/tests/mod.rs",
+    "rust/task-registry-flow-cli/src/tests/security_tests.rs",
+    "scripts/render-from-config.sh",
+    "scripts/status.sh",
+    "scripts/test-install-modes.sh",
+    "templates/.codex/scripts/task-registry.template",
+    "templates/.github/workflows/agent-governance.yml.template",
+    "templates/tools/agent-governance/pre-tool-use-gap-closure.sh.template",
+    "tools/agent-governance/pre-tool-use-gap-closure.sh",
+]
+
+[[tasks.targets]]
+file = ".github/workflows/ci.yml"
+object = "CI action refs and permissions"
+required_change = "Set read-only permissions and pin external actions by SHA."
+
+[[tasks.targets]]
+file = ".github/workflows/agent-governance.yml"
+object = "governance action refs and permissions"
+required_change = "Set read-only permissions and pin external actions by SHA."
+
+[[tasks.targets]]
+file = "templates/.github/workflows/agent-governance.yml.template"
+object = "installed governance workflow action refs and permissions"
+required_change = "Set read-only permissions and pin external actions by SHA."
+
+[[tasks.targets]]
+file = "package.nix"
+object = "Nix source filter"
+required_change = "Include workflow fixtures needed by security tests during package checks."
+
+[[tasks]]
+task_id = "TASK-2026-06-01-005"
+plan_id = "PLAN-2026-06-01-security-hardening"
+status = "completed"
+title = "Harden Nix auto-update flake input handling"
+kind = "implementation"
+source_plan_path = "docs/plans/security-hardening-2026-06-01.md"
+source_plan_hash_sha256 = "e5e821a28da569cfd8d18e9a4b9ac6587c268125eeb25e37e6f9022ea809b0f0"
+reason = "Avoid root service shell interpolation of unvalidated flake input values."
+acceptance_proof = "Behaviors B-009-nix-flake-input and B-011-nix-flake-input-negative."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "B-009-nix-flake-input",
+    "B-011-nix-flake-input-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T11:16:41.937651501-04:00"
+completion_changed_files = [
+    ".codex-plugin/plugin.json",
+    ".codex/agent-governance.toml",
+    ".codex/scripts/task-registry",
+    ".github/workflows/agent-governance.yml",
+    ".github/workflows/ci.yml",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "CONTRIBUTING.md",
+    "GEMINI.md",
+    "README.md",
+    "REQUIREMENTS.toml",
+    "SECURITY.md",
+    "docs/plans/security-hardening-2026-06-01.md",
+    "docs/task-registry.toml",
+    "docs/task-registry/events.jsonl",
+    "flake.nix",
+    "modules/nixos/agent-governance-auto-update.nix",
+    "modules/nixos/agent-governance.nix",
+    "package.nix",
+    "plugin.json",
+    "rust/task-registry-flow-cli/src/tests/mod.rs",
+    "rust/task-registry-flow-cli/src/tests/security_tests.rs",
+    "scripts/render-from-config.sh",
+    "scripts/status.sh",
+    "scripts/test-install-modes.sh",
+    "templates/.codex/scripts/task-registry.template",
+    "templates/.github/workflows/agent-governance.yml.template",
+    "templates/tools/agent-governance/pre-tool-use-gap-closure.sh.template",
+    "tools/agent-governance/pre-tool-use-gap-closure.sh",
+]
+
+[[tasks.targets]]
+file = "modules/nixos/agent-governance-auto-update.nix"
+object = "flakeInput validation and jq invocation"
+required_change = "Validate flake input names and use jq --arg input."
+
+[[tasks]]
+task_id = "TASK-2026-06-01-006"
+plan_id = "PLAN-2026-06-01-security-hardening"
+status = "completed"
+title = "Synchronize release metadata and security docs"
+kind = "documentation"
+source_plan_path = "docs/plans/security-hardening-2026-06-01.md"
+source_plan_hash_sha256 = "e5e821a28da569cfd8d18e9a4b9ac6587c268125eeb25e37e6f9022ea809b0f0"
+reason = "Keep public release source and security reporting posture aligned with hardening changes."
+acceptance_proof = "Behavior B-010-full-security-validation."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = ["B-010-full-security-validation"]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T11:16:41.937651501-04:00"
+completion_changed_files = [
+    ".codex-plugin/plugin.json",
+    ".codex/agent-governance.toml",
+    ".codex/scripts/task-registry",
+    ".github/workflows/agent-governance.yml",
+    ".github/workflows/ci.yml",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "CONTRIBUTING.md",
+    "GEMINI.md",
+    "README.md",
+    "REQUIREMENTS.toml",
+    "SECURITY.md",
+    "docs/plans/security-hardening-2026-06-01.md",
+    "docs/task-registry.toml",
+    "docs/task-registry/events.jsonl",
+    "flake.nix",
+    "modules/nixos/agent-governance-auto-update.nix",
+    "modules/nixos/agent-governance.nix",
+    "package.nix",
+    "plugin.json",
+    "rust/task-registry-flow-cli/src/tests/mod.rs",
+    "rust/task-registry-flow-cli/src/tests/security_tests.rs",
+    "scripts/render-from-config.sh",
+    "scripts/status.sh",
+    "scripts/test-install-modes.sh",
+    "templates/.codex/scripts/task-registry.template",
+    "templates/.github/workflows/agent-governance.yml.template",
+    "templates/tools/agent-governance/pre-tool-use-gap-closure.sh.template",
+    "tools/agent-governance/pre-tool-use-gap-closure.sh",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/mod.rs"
+object = "test module list"
+required_change = "Include security_tests without expanding existing near-limit test file."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/security_tests.rs"
+object = "security regression tests"
+required_change = "Cover hook env parsing, installer paths, status boundary, workflow pinning, and Nix flake input handling."
+
+[[tasks.targets]]
+file = "REQUIREMENTS.toml"
+object = "release_source.required"
+required_change = "Declare new Rust security test source."
+
+[[tasks.targets]]
+file = "SECURITY.md"
+object = "Security posture notes"
+required_change = "Document local trust boundaries and reporting posture."
+
+[[tasks]]
+task_id = "TASK-2026-06-01-007"
+plan_id = "PLAN-2026-06-01-security-hardening"
+status = "completed"
+title = "Align repository rename metadata"
+kind = "governance"
+source_plan_path = "docs/plans/security-hardening-2026-06-01.md"
+source_plan_hash_sha256 = "e5e821a28da569cfd8d18e9a4b9ac6587c268125eeb25e37e6f9022ea809b0f0"
+reason = "Public release metadata and local governance boundaries must point at RepOGovnor after the repo rename."
+acceptance_proof = "Behaviors B-012-repogovnor-remote-positive and B-013-repogovnor-stale-negative."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "B-012-repogovnor-remote-positive",
+    "B-013-repogovnor-stale-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T11:16:41.937651501-04:00"
+completion_changed_files = [
+    ".codex-plugin/plugin.json",
+    ".codex/agent-governance.toml",
+    ".codex/scripts/task-registry",
+    ".github/workflows/agent-governance.yml",
+    ".github/workflows/ci.yml",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "CONTRIBUTING.md",
+    "GEMINI.md",
+    "README.md",
+    "REQUIREMENTS.toml",
+    "SECURITY.md",
+    "docs/plans/security-hardening-2026-06-01.md",
+    "docs/task-registry.toml",
+    "docs/task-registry/events.jsonl",
+    "flake.nix",
+    "modules/nixos/agent-governance-auto-update.nix",
+    "modules/nixos/agent-governance.nix",
+    "package.nix",
+    "plugin.json",
+    "rust/task-registry-flow-cli/src/tests/mod.rs",
+    "rust/task-registry-flow-cli/src/tests/security_tests.rs",
+    "scripts/render-from-config.sh",
+    "scripts/status.sh",
+    "scripts/test-install-modes.sh",
+    "templates/.codex/scripts/task-registry.template",
+    "templates/.github/workflows/agent-governance.yml.template",
+    "templates/tools/agent-governance/pre-tool-use-gap-closure.sh.template",
+    "tools/agent-governance/pre-tool-use-gap-closure.sh",
+]
+
+[[tasks.targets]]
+file = ".codex/agent-governance.toml"
+object = "workspace boundary"
+required_change = "Use RepOGovnor repo name, root, mutation root, and scratch root."
+
+[[tasks.targets]]
+file = "project.config.toml"
+object = "project metadata"
+required_change = "Use RepOGovnor repo name and scratch root."
+
+[[tasks.targets]]
+file = "README.md"
+object = "install URL"
+required_change = "Point public submodule instructions at Qu3ltron/RepOGovnor."
+
+[[tasks.targets]]
+file = "AGENTS.md"
+object = "workspace boundary"
+required_change = "Use the RepOGovnor local repo path and scratch root."
+
+[[tasks.targets]]
+file = "GEMINI.md"
+object = "repo boundary"
+required_change = "Use the RepOGovnor local repo path and scratch root."
+
+[[tasks.targets]]
+file = "CLAUDE.md"
+object = "workspace boundary"
+required_change = "Use the RepOGovnor local repo path and scratch root."
+
+[[tasks.targets]]
+file = "CONTRIBUTING.md"
+object = "intro repository name"
+required_change = "Use RepOGovnor as the public repository name."
+
+[[tasks.targets]]
+file = "plugin.json"
+object = "repository metadata"
+required_change = "Point repository and homepage at Qu3ltron/RepOGovnor."
+
+[[tasks.targets]]
+file = ".codex-plugin/plugin.json"
+object = "repository metadata"
+required_change = "Point repository and homepage at Qu3ltron/RepOGovnor."
+
+[[tasks.targets]]
+file = "flake.nix"
+object = "dev shell banner"
+required_change = "Use RepOGovnor as the displayed repo name."
+
+[[tasks.targets]]
+file = "modules/nixos/agent-governance.nix"
+object = "package defaultText"
+required_change = "Use the renamed repository placeholder."
+
+[[tasks.targets]]
+file = "docs/plans/security-hardening-2026-06-01.md"
+object = "validation references"
+required_change = "Use Qu3ltron/RepOGovnor for release validation examples."
+
+[[tasks]]
+task_id = "TASK-2026-06-01-public-release-001"
+plan_id = "PLAN-2026-06-01-public-release-2-0-1"
+status = "completed"
+title = "Update public release metadata to 2.0.1"
+kind = "release"
+source_plan_path = "docs/plans/public-release-2-0-1-2026-06-01.md"
+source_plan_hash_sha256 = "7a684d01328786329d292ff45325add7d7f0d56938aff1972dd1ca9fc8ec8d01"
+reason = "Public release metadata must identify the actual post-fix release."
+acceptance_proof = "Behaviors B-2026-06-01-public-release-G01-positive and B-2026-06-01-public-release-G01-negative pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-2026-06-01-public-release-G01-positive",
+    "B-2026-06-01-public-release-G01-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-05-31T22:08:31.015973206-04:00"
+completion_changed_files = [
+    ".codex-plugin/plugin.json",
+    ".github/workflows/agent-governance.yml",
+    ".github/workflows/ci.yml",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "MANIFEST.toml",
+    "README.md",
+    "REQUIREMENTS.toml",
+    "SECURITY.md",
+    "VERSION",
+    "docs/plans/public-release-2-0-1-2026-06-01.md",
+    "docs/releases/v2.md",
+    "package.nix",
+    "plugin.json",
+    "rust/task-registry-flow-cli/Cargo.lock",
+    "rust/task-registry-flow-cli/Cargo.toml",
+    "scripts/test-release-readiness.sh",
+    "templates/.github/workflows/agent-governance.yml.template",
+]
+
+[[tasks.targets]]
+file = "VERSION"
+object = "release version"
+required_change = "Set to 2.0.1."
+
+[[tasks.targets]]
+file = "plugin.json"
+object = "version"
+required_change = "Set to 2.0.1."
+
+[[tasks.targets]]
+file = ".codex-plugin/plugin.json"
+object = "version"
+required_change = "Set to 2.0.1."
+
+[[tasks.targets]]
+file = "MANIFEST.toml"
+object = "plugin_version"
+required_change = "Set to 2.0.1."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/Cargo.toml"
+object = "package.version"
+required_change = "Set to 2.0.1."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/Cargo.lock"
+object = "task-registry-flow-cli package.version"
+required_change = "Set to 2.0.1."
+
+[[tasks.targets]]
+file = "package.nix"
+object = "version"
+required_change = "Set to 2.0.1."
+
+[[tasks.targets]]
+file = "README.md"
+object = "current release"
+required_change = "Set to 2.0.1."
+
+[[tasks.targets]]
+file = "docs/releases/v2.md"
+object = "release version"
+required_change = "Set to 2.0.1."
+
+[[tasks.targets]]
+file = "scripts/test-release-readiness.sh"
+object = "version drift fixture"
+required_change = "Set the negative drift fixture to a version different from 2.0.1."
+
+[[tasks]]
+task_id = "TASK-2026-06-01-public-release-002"
+plan_id = "PLAN-2026-06-01-public-release-2-0-1"
+status = "completed"
+title = "Add public contribution and security docs"
+kind = "documentation"
+source_plan_path = "docs/plans/public-release-2-0-1-2026-06-01.md"
+source_plan_hash_sha256 = "7a684d01328786329d292ff45325add7d7f0d56938aff1972dd1ca9fc8ec8d01"
+reason = "Public users need clear contribution and vulnerability-reporting guidance."
+acceptance_proof = "Behaviors B-2026-06-01-public-release-G02-positive and B-2026-06-01-public-release-G02-negative pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-2026-06-01-public-release-G02-positive",
+    "B-2026-06-01-public-release-G02-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-05-31T22:08:31.015973206-04:00"
+completion_changed_files = [
+    ".codex-plugin/plugin.json",
+    ".github/workflows/agent-governance.yml",
+    ".github/workflows/ci.yml",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "MANIFEST.toml",
+    "README.md",
+    "REQUIREMENTS.toml",
+    "SECURITY.md",
+    "VERSION",
+    "docs/plans/public-release-2-0-1-2026-06-01.md",
+    "docs/releases/v2.md",
+    "package.nix",
+    "plugin.json",
+    "rust/task-registry-flow-cli/Cargo.lock",
+    "rust/task-registry-flow-cli/Cargo.toml",
+    "scripts/test-release-readiness.sh",
+    "templates/.github/workflows/agent-governance.yml.template",
+]
+
+[[tasks.targets]]
+file = "CHANGELOG.md"
+object = "2.0.1 release notes"
+required_change = "Add dated 2.0.1 section and leave Unreleased empty."
+
+[[tasks.targets]]
+file = "CONTRIBUTING.md"
+object = "public contribution guidance"
+required_change = "Add concise issue, PR, and validation guidance."
+
+[[tasks.targets]]
+file = "SECURITY.md"
+object = "vulnerability reporting"
+required_change = "Route vulnerability reports through GitHub private reporting/advisories."
+
+[[tasks]]
+task_id = "TASK-2026-06-01-public-release-003"
+plan_id = "PLAN-2026-06-01-public-release-2-0-1"
+status = "completed"
+title = "Declare public docs in release-source requirements"
+kind = "release"
+source_plan_path = "docs/plans/public-release-2-0-1-2026-06-01.md"
+source_plan_hash_sha256 = "7a684d01328786329d292ff45325add7d7f0d56938aff1972dd1ca9fc8ec8d01"
+reason = "New public release docs must be native release-source files."
+acceptance_proof = "Behaviors B-2026-06-01-public-release-G03-positive and B-2026-06-01-public-release-G03-negative pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-2026-06-01-public-release-G03-positive",
+    "B-2026-06-01-public-release-G03-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-05-31T22:08:31.015973206-04:00"
+completion_changed_files = [
+    ".codex-plugin/plugin.json",
+    ".github/workflows/agent-governance.yml",
+    ".github/workflows/ci.yml",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "MANIFEST.toml",
+    "README.md",
+    "REQUIREMENTS.toml",
+    "SECURITY.md",
+    "VERSION",
+    "docs/plans/public-release-2-0-1-2026-06-01.md",
+    "docs/releases/v2.md",
+    "package.nix",
+    "plugin.json",
+    "rust/task-registry-flow-cli/Cargo.lock",
+    "rust/task-registry-flow-cli/Cargo.toml",
+    "scripts/test-release-readiness.sh",
+    "templates/.github/workflows/agent-governance.yml.template",
+]
+
+[[tasks.targets]]
+file = "REQUIREMENTS.toml"
+object = "release_source"
+required_change = "Set release version to 2.0.1 and require CONTRIBUTING.md plus SECURITY.md."
+
+[[tasks]]
+task_id = "TASK-2026-06-01-public-release-004"
+plan_id = "PLAN-2026-06-01-public-release-2-0-1"
+status = "completed"
+title = "Update checkout actions to Node 24-backed version"
+kind = "implementation"
+source_plan_path = "docs/plans/public-release-2-0-1-2026-06-01.md"
+source_plan_hash_sha256 = "7a684d01328786329d292ff45325add7d7f0d56938aff1972dd1ca9fc8ec8d01"
+reason = "GitHub warns actions/checkout@v4 uses deprecated Node 20 runtime."
+acceptance_proof = "Behaviors B-2026-06-01-public-release-G04-positive and B-2026-06-01-public-release-G04-negative pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-2026-06-01-public-release-G04-positive",
+    "B-2026-06-01-public-release-G04-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-05-31T22:08:31.015973206-04:00"
+completion_changed_files = [
+    ".codex-plugin/plugin.json",
+    ".github/workflows/agent-governance.yml",
+    ".github/workflows/ci.yml",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "MANIFEST.toml",
+    "README.md",
+    "REQUIREMENTS.toml",
+    "SECURITY.md",
+    "VERSION",
+    "docs/plans/public-release-2-0-1-2026-06-01.md",
+    "docs/releases/v2.md",
+    "package.nix",
+    "plugin.json",
+    "rust/task-registry-flow-cli/Cargo.lock",
+    "rust/task-registry-flow-cli/Cargo.toml",
+    "scripts/test-release-readiness.sh",
+    "templates/.github/workflows/agent-governance.yml.template",
+]
+
+[[tasks.targets]]
+file = ".github/workflows/ci.yml"
+object = "checkout action"
+required_change = "Use actions/checkout@v6.0.2."
+
+[[tasks.targets]]
+file = ".github/workflows/agent-governance.yml"
+object = "checkout action"
+required_change = "Use actions/checkout@v6.0.2."
+
+[[tasks.targets]]
+file = "templates/.github/workflows/agent-governance.yml.template"
+object = "checkout action"
+required_change = "Use actions/checkout@v6.0.2."
+
+[[tasks]]
+task_id = "TASK-2026-06-01-public-release-005"
+plan_id = "PLAN-2026-06-01-public-release-2-0-1"
+status = "completed"
+title = "Validate and publish public release"
+kind = "validation"
+source_plan_path = "docs/plans/public-release-2-0-1-2026-06-01.md"
+source_plan_hash_sha256 = "7a684d01328786329d292ff45325add7d7f0d56938aff1972dd1ca9fc8ec8d01"
+reason = "Public release requires local validation and GitHub handoff evidence."
+acceptance_proof = "Behavior B-2026-06-01-public-release-G05-validation passes; final release-source, CI, tags, release, visibility, and public smoke tests pass after commit."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = ["B-2026-06-01-public-release-G05-validation"]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-05-31T22:08:31.015973206-04:00"
+completion_changed_files = [
+    ".codex-plugin/plugin.json",
+    ".github/workflows/agent-governance.yml",
+    ".github/workflows/ci.yml",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "MANIFEST.toml",
+    "README.md",
+    "REQUIREMENTS.toml",
+    "SECURITY.md",
+    "VERSION",
+    "docs/plans/public-release-2-0-1-2026-06-01.md",
+    "docs/releases/v2.md",
+    "package.nix",
+    "plugin.json",
+    "rust/task-registry-flow-cli/Cargo.lock",
+    "rust/task-registry-flow-cli/Cargo.toml",
+    "scripts/test-release-readiness.sh",
+    "templates/.github/workflows/agent-governance.yml.template",
+]
+
+[[tasks.targets]]
+file = "docs/plans/public-release-2-0-1-2026-06-01.md"
+object = "walkthrough evidence"
+required_change = "Capture local validation and public release handoff evidence."
+
+[[tasks]]
+task_id = "TASK-2026-05-31-ci-nix-001"
+plan_id = "PLAN-2026-05-31-ci-nix-release-readiness"
+status = "completed"
+title = "Install Nix before CI release readiness"
+kind = "implementation"
+source_plan_path = "docs/plans/ci-nix-release-readiness-2026-05-31.md"
+source_plan_hash_sha256 = "3eb542718b31d9d7f2527936e77847a3b0ea4146e60d888dbc804e95e8c92b39"
+reason = "GitHub CI release readiness failed because nix was unavailable on the runner."
+acceptance_proof = "Behaviors B-2026-05-31-ci-nix-G01-positive and B-2026-05-31-ci-nix-G01-negative: workflow order verifiers pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = [
+    "B-2026-05-31-ci-nix-G01-positive",
+    "B-2026-05-31-ci-nix-G01-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-05-31T20:59:49.339136379-04:00"
+completion_changed_files = [
+    ".github/workflows/ci.yml",
+    "docs/plans/ci-nix-release-readiness-2026-05-31.md",
+]
+
+[[tasks.targets]]
+file = ".github/workflows/ci.yml"
+object = "release_readiness_prerequisites"
+required_change = "Install pinned Nix action before Release readiness behavior."
+
+[[tasks]]
+task_id = "TASK-2026-05-31-ci-nix-002"
+plan_id = "PLAN-2026-05-31-ci-nix-release-readiness"
+status = "completed"
+title = "Validate release readiness after CI prerequisite fix"
+kind = "validation"
+source_plan_path = "docs/plans/ci-nix-release-readiness-2026-05-31.md"
+source_plan_hash_sha256 = "3eb542718b31d9d7f2527936e77847a3b0ea4146e60d888dbc804e95e8c92b39"
+reason = "Release handoff requires strict local release, registry, and receipt-chain evidence."
+acceptance_proof = "Behavior B-2026-05-31-ci-nix-G02-validation: local release readiness and registry gates pass."
+created_at = "2026-05-31"
+updated_at = "2026-05-31"
+behavior_ids = ["B-2026-05-31-ci-nix-G02-validation"]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-05-31T20:59:49.339136379-04:00"
+completion_changed_files = [
+    ".github/workflows/ci.yml",
+    "docs/plans/ci-nix-release-readiness-2026-05-31.md",
+]
+
+[[tasks.targets]]
+file = "docs/plans/ci-nix-release-readiness-2026-05-31.md"
+object = "walkthrough_evidence"
+required_change = "Capture release validation and receipt-chain evidence for the CI prerequisite closure."
 
 [[tasks]]
 task_id = "TASK-2026-05-31-active-landing-001"
@@ -167,856 +1196,3 @@ completion_changed_files = [
 file = "docs/plans/landing-active-only-2026-05-31.md"
 object = "validation and handoff evidence"
 required_change = "Run the focused and full validation gates for active-only landing."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-ci-owned-landing-001"
-plan_id = "PLAN-2026-05-31-ci-owned-landing"
-status = "completed"
-title = "Implement verify-landing completion authority"
-kind = "governance"
-source_plan_path = "docs/plans/ci-owned-landing-2026-05-31.md"
-source_plan_hash_sha256 = "8b9cf69a4e0c1d0dfcc4c030a9c64e5a9cce194da099c9b92e22e0b8c765e35b"
-reason = "Task completion must be written only through a landing verifier that binds changed files to activated task targets."
-acceptance_proof = "Behaviors B-2026-05-31-landing-G01-positive, B-2026-05-31-landing-G02-negative, B-2026-05-31-landing-G03-positive, and B-2026-05-31-landing-G03-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-2026-05-31-landing-G01-positive",
-    "B-2026-05-31-landing-G02-negative",
-    "B-2026-05-31-landing-G03-positive",
-    "B-2026-05-31-landing-G03-negative",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-05-31T17:49:55.146266347-04:00"
-completion_changed_files = [
-    ".agents/skills/task-registry-flow.md",
-    ".agents/skills/task-registry-flow/PROJECT.md",
-    ".agents/skills/task-registry-flow/SKILL.md",
-    ".claude/skills/task-registry-flow/PROJECT.md",
-    ".claude/skills/task-registry-flow/SKILL.md",
-    ".codex/agent-governance.toml",
-    ".cursor/skills/task-registry-flow/PROJECT.md",
-    ".cursor/skills/task-registry-flow/SKILL.md",
-    "AGENTS.md",
-    "README.md",
-    "REQUIREMENTS.toml",
-    "docs/plans/ci-owned-landing-2026-05-31.md",
-    "docs/runtime-schemas.md",
-    "rust/task-registry-flow-cli/src/activation.rs",
-    "rust/task-registry-flow-cli/src/landing.rs",
-    "rust/task-registry-flow-cli/src/main.rs",
-    "rust/task-registry-flow-cli/src/model.rs",
-    "rust/task-registry-flow-cli/src/receipts.rs",
-    "rust/task-registry-flow-cli/src/runtime.rs",
-    "rust/task-registry-flow-cli/src/schema.rs",
-    "rust/task-registry-flow-cli/src/tests/activation_terminal_tests.rs",
-    "rust/task-registry-flow-cli/src/tests/landing_tests.rs",
-    "rust/task-registry-flow-cli/src/tests/mod.rs",
-    "scripts/render-from-config.sh",
-    "templates/.codex/agent-governance.toml.template",
-    "templates/AGENTS.md.template",
-    "templates/CLAUDE.md.template",
-    "templates/GEMINI.md.template",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/schema.rs"
-object = "CliCommand verify-landing opcode"
-required_change = "Add canonical verify-landing command enum value."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/runtime.rs"
-object = "CLI dispatcher and usage"
-required_change = "Route verify-landing and remove direct status completion from the user-facing completion path."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/activation.rs"
-object = "task status transition entrypoint"
-required_change = "Reject direct completed status while preserving internal transition validation for landing completion."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/landing.rs"
-object = "verify-landing command implementation"
-required_change = "Bind changed files to active task targets, reject registry-only or unbound changes, run verifiers, and write completion status."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/model.rs"
-object = "RegistryTask completion evidence fields"
-required_change = "Add optional landing-owned completion evidence fields."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/receipts.rs"
-object = "default receipt command list"
-required_change = "Record verify-landing command receipts by default."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/main.rs"
-object = "landing module registration"
-required_change = "Register the landing module."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-ci-owned-landing-002"
-plan_id = "PLAN-2026-05-31-ci-owned-landing"
-status = "completed"
-title = "Cover landing behavior with focused tests"
-kind = "test"
-source_plan_path = "docs/plans/ci-owned-landing-2026-05-31.md"
-source_plan_hash_sha256 = "8b9cf69a4e0c1d0dfcc4c030a9c64e5a9cce194da099c9b92e22e0b8c765e35b"
-reason = "The landing authority change needs positive and negative tests for completion, direct status denial, and off-plan drift."
-acceptance_proof = "Behaviors B-2026-05-31-landing-G01-positive, B-2026-05-31-landing-G02-negative, B-2026-05-31-landing-G03-positive, and B-2026-05-31-landing-G03-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-2026-05-31-landing-G01-positive",
-    "B-2026-05-31-landing-G02-negative",
-    "B-2026-05-31-landing-G03-positive",
-    "B-2026-05-31-landing-G03-negative",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-05-31T17:49:55.146266347-04:00"
-completion_changed_files = [
-    ".agents/skills/task-registry-flow.md",
-    ".agents/skills/task-registry-flow/PROJECT.md",
-    ".agents/skills/task-registry-flow/SKILL.md",
-    ".claude/skills/task-registry-flow/PROJECT.md",
-    ".claude/skills/task-registry-flow/SKILL.md",
-    ".codex/agent-governance.toml",
-    ".cursor/skills/task-registry-flow/PROJECT.md",
-    ".cursor/skills/task-registry-flow/SKILL.md",
-    "AGENTS.md",
-    "README.md",
-    "REQUIREMENTS.toml",
-    "docs/plans/ci-owned-landing-2026-05-31.md",
-    "docs/runtime-schemas.md",
-    "rust/task-registry-flow-cli/src/activation.rs",
-    "rust/task-registry-flow-cli/src/landing.rs",
-    "rust/task-registry-flow-cli/src/main.rs",
-    "rust/task-registry-flow-cli/src/model.rs",
-    "rust/task-registry-flow-cli/src/receipts.rs",
-    "rust/task-registry-flow-cli/src/runtime.rs",
-    "rust/task-registry-flow-cli/src/schema.rs",
-    "rust/task-registry-flow-cli/src/tests/activation_terminal_tests.rs",
-    "rust/task-registry-flow-cli/src/tests/landing_tests.rs",
-    "rust/task-registry-flow-cli/src/tests/mod.rs",
-    "scripts/render-from-config.sh",
-    "templates/.codex/agent-governance.toml.template",
-    "templates/AGENTS.md.template",
-    "templates/CLAUDE.md.template",
-    "templates/GEMINI.md.template",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/landing_tests.rs"
-object = "landing positive and negative tests"
-required_change = "Add focused tests for verify-landing success, direct completed status rejection, and unbound or registry-only changed files."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/mod.rs"
-object = "test module registry and completion expectations"
-required_change = "Register landing tests and update direct completion expectations."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/activation_terminal_tests.rs"
-object = "terminal task setup"
-required_change = "Use landing-owned completion setup for terminal activation tests."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/state_transition_tests.rs"
-object = "transition test notes"
-required_change = "Keep internal transition tests aligned with landing-owned completion behavior."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-ci-owned-landing-003"
-plan_id = "PLAN-2026-05-31-ci-owned-landing"
-status = "completed"
-title = "Update workflow docs and projections"
-kind = "documentation"
-source_plan_path = "docs/plans/ci-owned-landing-2026-05-31.md"
-source_plan_hash_sha256 = "8b9cf69a4e0c1d0dfcc4c030a9c64e5a9cce194da099c9b92e22e0b8c765e35b"
-reason = "Agent-facing docs must not keep teaching direct completed status after completion becomes landing-owned."
-acceptance_proof = "Behaviors B-2026-05-31-landing-G04-positive and B-2026-05-31-landing-G04-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-2026-05-31-landing-G04-positive",
-    "B-2026-05-31-landing-G04-negative",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-05-31T17:49:55.146266347-04:00"
-completion_changed_files = [
-    ".agents/skills/task-registry-flow.md",
-    ".agents/skills/task-registry-flow/PROJECT.md",
-    ".agents/skills/task-registry-flow/SKILL.md",
-    ".claude/skills/task-registry-flow/PROJECT.md",
-    ".claude/skills/task-registry-flow/SKILL.md",
-    ".codex/agent-governance.toml",
-    ".cursor/skills/task-registry-flow/PROJECT.md",
-    ".cursor/skills/task-registry-flow/SKILL.md",
-    "AGENTS.md",
-    "README.md",
-    "REQUIREMENTS.toml",
-    "docs/plans/ci-owned-landing-2026-05-31.md",
-    "docs/runtime-schemas.md",
-    "rust/task-registry-flow-cli/src/activation.rs",
-    "rust/task-registry-flow-cli/src/landing.rs",
-    "rust/task-registry-flow-cli/src/main.rs",
-    "rust/task-registry-flow-cli/src/model.rs",
-    "rust/task-registry-flow-cli/src/receipts.rs",
-    "rust/task-registry-flow-cli/src/runtime.rs",
-    "rust/task-registry-flow-cli/src/schema.rs",
-    "rust/task-registry-flow-cli/src/tests/activation_terminal_tests.rs",
-    "rust/task-registry-flow-cli/src/tests/landing_tests.rs",
-    "rust/task-registry-flow-cli/src/tests/mod.rs",
-    "scripts/render-from-config.sh",
-    "templates/.codex/agent-governance.toml.template",
-    "templates/AGENTS.md.template",
-    "templates/CLAUDE.md.template",
-    "templates/GEMINI.md.template",
-]
-
-[[tasks.targets]]
-file = "README.md"
-object = "daily workflow completion guidance"
-required_change = "Replace direct completion status command with verify-landing workflow."
-
-[[tasks.targets]]
-file = "AGENTS.md"
-object = "gap closure completion instruction"
-required_change = "State that verify-landing owns completed status after typed behavior verification."
-
-[[tasks.targets]]
-file = "docs/runtime-schemas.md"
-object = "runtime completion contract"
-required_change = "Document landing-owned completion and registry-only drift rejection."
-
-[[tasks.targets]]
-file = ".codex/agent-governance.toml"
-object = "task registry command metadata"
-required_change = "Add verify_landing_command metadata."
-
-[[tasks.targets]]
-file = "templates/.codex/agent-governance.toml.template"
-object = "projected task registry metadata"
-required_change = "Add verify_landing_command metadata to generated installs."
-
-[[tasks.targets]]
-file = "scripts/render-from-config.sh"
-object = "project config renderer"
-required_change = "Preserve canonical verify-landing metadata in generated docs/config."
-
-[[tasks.targets]]
-file = "templates/AGENTS.md.template"
-object = "Codex projected completion workflow"
-required_change = "State that verify-landing owns completion."
-
-[[tasks.targets]]
-file = "templates/CLAUDE.md.template"
-object = "Claude projected completion workflow"
-required_change = "State that verify-landing owns completion."
-
-[[tasks.targets]]
-file = "templates/GEMINI.md.template"
-object = "Antigravity projected completion workflow"
-required_change = "State that verify-landing owns completion."
-
-[[tasks.targets]]
-file = ".agents/skills/task-registry-flow/SKILL.md"
-object = "Codex skill completion workflow"
-required_change = "Add TASK_VERIFY_LANDING and remove direct completed status guidance."
-
-[[tasks.targets]]
-file = ".agents/skills/task-registry-flow.md"
-object = "flat Codex skill completion workflow"
-required_change = "Add TASK_VERIFY_LANDING and remove direct completed status guidance."
-
-[[tasks.targets]]
-file = ".cursor/skills/task-registry-flow/SKILL.md"
-object = "Cursor skill completion workflow"
-required_change = "Add TASK_VERIFY_LANDING and remove direct completed status guidance."
-
-[[tasks.targets]]
-file = ".claude/skills/task-registry-flow/SKILL.md"
-object = "Claude skill completion workflow"
-required_change = "Add TASK_VERIFY_LANDING and remove direct completed status guidance."
-
-[[tasks.targets]]
-file = ".agents/skills/task-registry-flow/PROJECT.md"
-object = "Codex skill project opcode table"
-required_change = "Add verify-landing opcode row."
-
-[[tasks.targets]]
-file = ".cursor/skills/task-registry-flow/PROJECT.md"
-object = "Cursor skill project opcode table"
-required_change = "Add verify-landing opcode row."
-
-[[tasks.targets]]
-file = ".claude/skills/task-registry-flow/PROJECT.md"
-object = "Claude skill project opcode table"
-required_change = "Add verify-landing opcode row."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-ci-owned-landing-004"
-plan_id = "PLAN-2026-05-31-ci-owned-landing"
-status = "completed"
-title = "Run final governance validation"
-kind = "validation"
-source_plan_path = "docs/plans/ci-owned-landing-2026-05-31.md"
-source_plan_hash_sha256 = "8b9cf69a4e0c1d0dfcc4c030a9c64e5a9cce194da099c9b92e22e0b8c765e35b"
-reason = "The new completion authority touches shared CLI, registry, docs, and release surfaces."
-acceptance_proof = "Behavior B-2026-05-31-landing-G05-validation passes."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = ["B-2026-05-31-landing-G05-validation"]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-05-31T17:49:55.146266347-04:00"
-completion_changed_files = [
-    ".agents/skills/task-registry-flow.md",
-    ".agents/skills/task-registry-flow/PROJECT.md",
-    ".agents/skills/task-registry-flow/SKILL.md",
-    ".claude/skills/task-registry-flow/PROJECT.md",
-    ".claude/skills/task-registry-flow/SKILL.md",
-    ".codex/agent-governance.toml",
-    ".cursor/skills/task-registry-flow/PROJECT.md",
-    ".cursor/skills/task-registry-flow/SKILL.md",
-    "AGENTS.md",
-    "README.md",
-    "REQUIREMENTS.toml",
-    "docs/plans/ci-owned-landing-2026-05-31.md",
-    "docs/runtime-schemas.md",
-    "rust/task-registry-flow-cli/src/activation.rs",
-    "rust/task-registry-flow-cli/src/landing.rs",
-    "rust/task-registry-flow-cli/src/main.rs",
-    "rust/task-registry-flow-cli/src/model.rs",
-    "rust/task-registry-flow-cli/src/receipts.rs",
-    "rust/task-registry-flow-cli/src/runtime.rs",
-    "rust/task-registry-flow-cli/src/schema.rs",
-    "rust/task-registry-flow-cli/src/tests/activation_terminal_tests.rs",
-    "rust/task-registry-flow-cli/src/tests/landing_tests.rs",
-    "rust/task-registry-flow-cli/src/tests/mod.rs",
-    "scripts/render-from-config.sh",
-    "templates/.codex/agent-governance.toml.template",
-    "templates/AGENTS.md.template",
-    "templates/CLAUDE.md.template",
-    "templates/GEMINI.md.template",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/Cargo.toml"
-object = "Cargo validation target"
-required_change = "Run focused and full cargo validation for the task-registry CLI."
-
-[[tasks.targets]]
-file = "REQUIREMENTS.toml"
-object = "release source declaration"
-required_change = "Declare new landing Rust sources so release readiness cannot ship undeclared source."
-
-[[tasks.targets]]
-file = "docs/plans/ci-owned-landing-2026-05-31.md"
-object = "validation evidence contract"
-required_change = "Keep this closure contract as the task-bound validation evidence surface."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-CRD01"
-plan_id = "PLAN-2026-05-31-claude-runbook-doc-sync"
-status = "completed"
-title = "Refresh Claude runbook smoke documentation"
-kind = "governance"
-source_plan_path = "docs/plans/claude-runbook-doc-sync-2026-05-31.md"
-source_plan_hash_sha256 = "42ca1674087d6e1bc74e9d8109b7569d51b671a42ed2edb00b34d29008ebb0f9"
-reason = "Claude-facing runbook documentation must not lag current release gates."
-acceptance_proof = "Behaviors B-CRD01-positive, B-CRD01-negative, and B-CRD01-validation pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-CRD01-positive",
-    "B-CRD01-negative",
-    "B-CRD01-validation",
-]
-
-[[tasks.targets]]
-file = ".claude/skills/run-governance-plugin/SKILL.md"
-object = "runbook_current_gates"
-required_change = "Document current count-free smoke coverage and strict status behavior."
-
-[[tasks.targets]]
-file = ".claude/skills/run-governance-plugin/smoke.sh"
-object = "count_free_labels"
-required_change = "Remove stale hardcoded count labels and obsolete known-nonzero status wording."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-DOC01"
-plan_id = "PLAN-2026-05-31-documentation-sync"
-status = "completed"
-title = "Update README and system docs"
-kind = "governance"
-source_plan_path = "docs/plans/documentation-sync-2026-05-31.md"
-source_plan_hash_sha256 = "3117f1306aa73aae251ec6a9476b395ba53c61048395acdf479f8d81373baf52"
-reason = "Production-facing docs must match the current hardened runtime before release."
-acceptance_proof = "Behaviors B-DOC01-positive and B-DOC01-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-DOC01-positive",
-    "B-DOC01-negative",
-]
-
-[[tasks.targets]]
-file = "README.md"
-object = "production_contract"
-required_change = "Document clean-tree release readiness, manifest-backed source tracking, native files, receipt chains, terminal task immutability, and Nix verification."
-
-[[tasks.targets]]
-file = "docs/runtime-schemas.md"
-object = "runtime_invariants"
-required_change = "Add runtime invariants for receipts, mutation target parsing, terminal task immutability, release source, and final release waivers."
-
-[[tasks.targets]]
-file = "docs/releases/v2.md"
-object = "release_checklist"
-required_change = "Use REQUIREMENTS.toml as artifact authority and list current final release gates."
-
-[[tasks.targets]]
-file = "docs/agent-environment-matrix.md"
-object = "environment_matrix"
-required_change = "Add Claude Code and shared hardening rules across agent environments."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-DOC02"
-plan_id = "PLAN-2026-05-31-documentation-sync"
-status = "completed"
-title = "Update agent-facing docs and skill projections"
-kind = "governance"
-source_plan_path = "docs/plans/documentation-sync-2026-05-31.md"
-source_plan_hash_sha256 = "3117f1306aa73aae251ec6a9476b395ba53c61048395acdf479f8d81373baf52"
-reason = "All agent-facing docs, templates, and skill projections must reinforce the same canonical rules."
-acceptance_proof = "Behaviors B-DOC02-positive, B-DOC02-negative, and B-DOC02-projection pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-DOC02-positive",
-    "B-DOC02-negative",
-    "B-DOC02-projection",
-]
-
-[[tasks.targets]]
-file = "AGENTS.md"
-object = "agent_hardening_rules"
-required_change = "Add shared production hardening rules for agents."
-
-[[tasks.targets]]
-file = "CLAUDE.md"
-object = "agent_hardening_rules"
-required_change = "Keep Claude Code instructions aligned with shared hardening rules."
-
-[[tasks.targets]]
-file = "GEMINI.md"
-object = "agent_hardening_rules"
-required_change = "Keep Antigravity instructions aligned with shared hardening rules."
-
-[[tasks.targets]]
-file = ".cursor/rules/agent-governance.mdc"
-object = "cursor_hardening_rules"
-required_change = "State Cursor-specific production hardening expectations."
-
-[[tasks.targets]]
-file = "templates/AGENTS.md.template"
-object = "agent_hardening_rules_template"
-required_change = "Render shared hardening rules for future Codex installs."
-
-[[tasks.targets]]
-file = "templates/CLAUDE.md.template"
-object = "agent_hardening_rules_template"
-required_change = "Render shared hardening rules for future Claude Code installs."
-
-[[tasks.targets]]
-file = "templates/GEMINI.md.template"
-object = "agent_hardening_rules_template"
-required_change = "Render shared hardening rules for future Antigravity installs."
-
-[[tasks.targets]]
-file = "templates/.cursor/rules/agent-governance.mdc.template"
-object = "cursor_hardening_rules_template"
-required_change = "Render Cursor hardening rules for future installs."
-
-[[tasks.targets]]
-file = "skills/gap-closure-contract/SKILL.md"
-object = "contract_requirements"
-required_change = "Include documentation sync, terminal task, receipt-chain, and release-source requirements."
-
-[[tasks.targets]]
-file = "skills/task-registry-flow/SKILL.md"
-object = "registry_flow_requirements"
-required_change = "Include terminal immutability and receipt-chain handoff requirements."
-
-[[tasks.targets]]
-file = ".agents/skills/gap-closure-contract/SKILL.md"
-object = "codex_projection"
-required_change = "Mirror canonical gap-closure-contract skill source."
-
-[[tasks.targets]]
-file = ".agents/skills/gap-closure-contract.md"
-object = "antigravity_markdown_projection"
-required_change = "Mirror canonical gap-closure-contract skill source."
-
-[[tasks.targets]]
-file = ".cursor/skills/gap-closure-contract/SKILL.md"
-object = "cursor_projection"
-required_change = "Mirror canonical gap-closure-contract skill source."
-
-[[tasks.targets]]
-file = ".claude/skills/gap-closure-contract/SKILL.md"
-object = "claude_projection"
-required_change = "Mirror canonical gap-closure-contract skill source."
-
-[[tasks.targets]]
-file = ".agents/skills/task-registry-flow/SKILL.md"
-object = "codex_projection"
-required_change = "Mirror canonical task-registry-flow skill source."
-
-[[tasks.targets]]
-file = ".agents/skills/task-registry-flow.md"
-object = "antigravity_markdown_projection"
-required_change = "Mirror canonical task-registry-flow skill source."
-
-[[tasks.targets]]
-file = ".cursor/skills/task-registry-flow/SKILL.md"
-object = "cursor_projection"
-required_change = "Mirror canonical task-registry-flow skill source."
-
-[[tasks.targets]]
-file = ".claude/skills/task-registry-flow/SKILL.md"
-object = "claude_projection"
-required_change = "Mirror canonical task-registry-flow skill source."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-SH01"
-plan_id = "PLAN-2026-05-31-secondary-hardening"
-status = "completed"
-title = "Harden command write-target extraction"
-kind = "authorization"
-source_plan_path = "docs/plans/secondary-hardening-2026-05-31.md"
-source_plan_hash_sha256 = "d2d2f67837a23e7c786c9d4bff81e697318556741cde726a079bd1dcf223450f"
-reason = "Mutation hooks must fail closed for compact shell redirections and hidden inline write targets."
-acceptance_proof = "Behaviors B-SH01-positive, B-SH01-negative-compact, and B-SH01-negative-open pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-SH01-positive",
-    "B-SH01-negative-compact",
-    "B-SH01-negative-open",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/mutation_hook.rs"
-object = "compact_redirection_detection"
-required_change = "Extract compact redirect targets and mark variable compact redirects as ambiguous writes."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/mutation_hook.rs"
-object = "inline_open_write_detection"
-required_change = "Scan every inline open call and reject write-mode calls whose target is not deterministic."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/hook_command_tests.rs"
-object = "command_write_negative_suite"
-required_change = "Add compact redirect and mixed inline open tests."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-SH02"
-plan_id = "PLAN-2026-05-31-secondary-hardening"
-status = "completed"
-title = "Reject symlinked release-source required files"
-kind = "release"
-source_plan_path = "docs/plans/secondary-hardening-2026-05-31.md"
-source_plan_hash_sha256 = "d2d2f67837a23e7c786c9d4bff81e697318556741cde726a079bd1dcf223450f"
-reason = "Release-source required files must be native files, not symlink indirections."
-acceptance_proof = "Behaviors B-SH02-positive and B-SH02-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-SH02-positive",
-    "B-SH02-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/release_checks.rs"
-object = "required_file_native_source"
-required_change = "Use symlink metadata and fail required release-source paths that are symlinks."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/release_source_tests.rs"
-object = "required_symlink_negative"
-required_change = "Add a symlinked required-file negative fixture."
-
-[[tasks.targets]]
-file = "docs/runtime-schemas.md"
-object = "release_native_file_contract"
-required_change = "Document that release-source required artifacts must be native files."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-H01"
-plan_id = "PLAN-2026-05-31-post-rollback-hardening"
-status = "completed"
-title = "Harden mutation hook command parsing and template JSON"
-kind = "authorization"
-source_plan_path = "docs/plans/post-rollback-hardening-2026-05-31.md"
-source_plan_hash_sha256 = "1e38fead936ff4841618988780658c17a9f7f255ccffe0c00d615ae8545af336"
-reason = "Mutation hooks must fail closed for ambiguous write-intent payloads before implementation writes can bypass registry targets."
-acceptance_proof = "Behaviors B-H01-positive, B-H01-negative, B-H04-positive, and B-H04-negative pass their verifier commands."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-H01-positive",
-    "B-H01-negative",
-    "B-H04-positive",
-    "B-H04-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/mutation_hook.rs"
-object = "shell_write_detection"
-required_change = "Deny write-intent shell commands without deterministic target extraction."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/hook_io.rs"
-object = "payload_contract"
-required_change = "Preserve canonical payload shape validation for stricter hook denial."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/hook_command_tests.rs"
-object = "hook_command_negative_suite"
-required_change = "Add shell write-intent positive and negative tests."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/mod.rs"
-object = "hook_command_module_registration"
-required_change = "Register hook command tests without adding behavior to the monolithic test file."
-
-[[tasks.targets]]
-file = "templates/tools/agent-governance/pre-tool-use-gap-closure.sh.template"
-object = "json_escape"
-required_change = "Use canonical JSON serialization for denial reasons."
-
-[[tasks.targets]]
-file = "tools/agent-governance/pre-tool-use-gap-closure.sh"
-object = "json_escape_parity"
-required_change = "Keep live hook aligned with the template."
-
-[[tasks.targets]]
-file = "scripts/test-install-modes.sh"
-object = "rendered_hook_json_negative"
-required_change = "Verify rendered hook denial JSON handles control characters."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-H02"
-plan_id = "PLAN-2026-05-31-post-rollback-hardening"
-status = "completed"
-title = "Make receipt writes atomic and receipt chain strict"
-kind = "implementation"
-source_plan_path = "docs/plans/post-rollback-hardening-2026-05-31.md"
-source_plan_hash_sha256 = "1e38fead936ff4841618988780658c17a9f7f255ccffe0c00d615ae8545af336"
-reason = "Receipt writes must be durable, required receipt failures must fail, and strict chain verification must reject unchained receipts."
-acceptance_proof = "Behaviors B-H02-positive, B-H02-negative, B-H03-positive, B-H03-negative, B-H08-positive, and B-H08-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-H02-positive",
-    "B-H02-negative",
-    "B-H03-positive",
-    "B-H03-negative",
-    "B-H08-positive",
-    "B-H08-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/runtime.rs"
-object = "append_event_lock_order"
-required_change = "Lock receipt file before reading previous hash and appending."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/cli.rs"
-object = "required_receipt_errors"
-required_change = "Propagate required receipt append failures."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/receipts.rs"
-object = "receipt_policy"
-required_change = "Represent required receipt append results accurately."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/metrics.rs"
-object = "unchained_failure_accounting"
-required_change = "Count unchained v2 receipts as failed receipt state."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/verify_chain.rs"
-object = "strict_chain_and_repair"
-required_change = "Fail on unchained v2 receipts and repair parseable v2 chain fields."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/receipt_chain_tests.rs"
-object = "receipt_chain_suite"
-required_change = "Add concurrency, lock, and receipt failure tests."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/verify_chain_tests.rs"
-object = "strict_unchained_suite"
-required_change = "Add unchained strict failure and repair tests."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/mod.rs"
-object = "receipt_chain_module_registration"
-required_change = "Register receipt chain tests."
-
-[[tasks.targets]]
-file = "docs/task-registry/events.jsonl"
-object = "receipt_ledger_migration"
-required_change = "Migrate local ledger to fully chained schema v2 receipts."
-
-[[tasks.targets]]
-file = "docs/runtime-schemas.md"
-object = "receipt_chain_contract"
-required_change = "Document strict chained v2 receipt state."
-
-[[tasks.targets]]
-file = "scripts/status.sh"
-object = "chain_gate"
-required_change = "Run verify-chain in strict and release-source status."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-H03"
-plan_id = "PLAN-2026-05-31-post-rollback-hardening"
-status = "completed"
-title = "Expand release-source coverage and governed-source checks"
-kind = "release"
-source_plan_path = "docs/plans/post-rollback-hardening-2026-05-31.md"
-source_plan_hash_sha256 = "1e38fead936ff4841618988780658c17a9f7f255ccffe0c00d615ae8545af336"
-reason = "Release-source checks must govern every tracked Nix, Claude, hook, and template release surface."
-acceptance_proof = "Behaviors B-H05-positive and B-H05-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-H05-positive",
-    "B-H05-negative",
-]
-
-[[tasks.targets]]
-file = "REQUIREMENTS.toml"
-object = "release_source_required"
-required_change = "Declare all governed release surfaces and new test modules."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/release_checks.rs"
-object = "governed_source_discovery"
-required_change = "Discover non-Rust governed release surfaces and fail omissions."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/schema.rs"
-object = "release_check_id"
-required_change = "Add canonical governed-source release check id."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/release_source_tests.rs"
-object = "release_source_negative_suite"
-required_change = "Add omitted Nix, Claude, hook, and template negative tests."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/mod.rs"
-object = "release_source_module_registration"
-required_change = "Register release source tests."
-
-[[tasks.targets]]
-file = "scripts/test-release-readiness.sh"
-object = "governed_source_negative_fixtures"
-required_change = "Assert governed-source omissions fail release readiness."
-
-[[tasks.targets]]
-file = "scripts/status.sh"
-object = "release_source_gate"
-required_change = "Surface governed-source checks in release-source status."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-H04"
-plan_id = "PLAN-2026-05-31-post-rollback-hardening"
-status = "completed"
-title = "Package runtime assets and harden Nix modules"
-kind = "implementation"
-source_plan_path = "docs/plans/post-rollback-hardening-2026-05-31.md"
-source_plan_hash_sha256 = "1e38fead936ff4841618988780658c17a9f7f255ccffe0c00d615ae8545af336"
-reason = "Nix consumers must receive a complete runtime package and safe update module without relying on the mutable checkout."
-acceptance_proof = "Behaviors B-H06-positive, B-H06-negative, B-H07-positive, and B-H07-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-H06-positive",
-    "B-H06-negative",
-    "B-H07-positive",
-    "B-H07-negative",
-]
-
-[[tasks.targets]]
-file = "package.nix"
-object = "runtime_asset_output"
-required_change = "Install runtime assets under stable share paths."
-
-[[tasks.targets]]
-file = "flake.nix"
-object = "module_exports"
-required_change = "Export agent-governance and auto-update NixOS modules."
-
-[[tasks.targets]]
-file = "modules/nixos/agent-governance.nix"
-object = "runtime_install_module"
-required_change = "Add module for packaged CLI and asset root."
-
-[[tasks.targets]]
-file = "modules/nixos/agent-governance-auto-update.nix"
-object = "root_safe_rollback"
-required_change = "Add root-safe rebuild, validation, lock backup, restore, rollback, and dev-lock behavior."
-
-[[tasks.targets]]
-file = "scripts/test-release-readiness.sh"
-object = "nix_asset_negative_fixtures"
-required_change = "Assert package assets and auto-update guards."
-
-[[tasks.targets]]
-file = "README.md"
-object = "nix_consumption_contract"
-required_change = "Document Nix package asset layout and modules."
-
-[[tasks]]
-task_id = "TASK-2026-05-31-H05"
-plan_id = "PLAN-2026-05-31-post-rollback-hardening"
-status = "completed"
-title = "Enforce terminal task immutability on activation"
-kind = "governance"
-source_plan_path = "docs/plans/post-rollback-hardening-2026-05-31.md"
-source_plan_hash_sha256 = "1e38fead936ff4841618988780658c17a9f7f255ccffe0c00d615ae8545af336"
-reason = "Completed and cancelled registry tasks must remain immutable after closure."
-acceptance_proof = "Behaviors B-H09-positive and B-H09-negative pass."
-created_at = "2026-05-31"
-updated_at = "2026-05-31"
-behavior_ids = [
-    "B-H09-positive",
-    "B-H09-negative",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/activation.rs"
-object = "terminal_reactivation_guard"
-required_change = "Reject terminal task rewrites unless reactivation is idempotent."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/validation.rs"
-object = "terminal_hash_policy"
-required_change = "Remove terminal hash exceptions that permit metadata drift."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/activation_terminal_tests.rs"
-object = "terminal_task_suite"
-required_change = "Add completed and cancelled task immutability tests."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/mod.rs"
-object = "activation_terminal_module_registration"
-required_change = "Register terminal activation tests."

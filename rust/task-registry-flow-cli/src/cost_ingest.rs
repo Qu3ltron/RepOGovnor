@@ -11,7 +11,6 @@ use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 use std::str::FromStr;
 
 use sha2::{Digest, Sha256};
@@ -23,6 +22,7 @@ pub(crate) struct CostIngestReport {
     pub(crate) evidence_source: String,
     pub(crate) transcript_path: String,
     pub(crate) session_id: String,
+    pub(crate) service_tier: String,
     pub(crate) pricing_snapshot_path: String,
     pub(crate) target: CostAttributionTarget,
     pub(crate) receipts_appended: usize,
@@ -48,7 +48,12 @@ struct PricingSnapshot {
     retrieved_at: String,
     effective_from: String,
     version: String,
-    service_tier: String,
+    service_tier: Option<String>,
+    #[serde(default)]
+    reasoning_token_policy: Option<String>,
+    #[serde(default)]
+    service_tiers: Vec<PricingTier>,
+    #[serde(default)]
     models: Vec<PricingModel>,
 }
 
@@ -58,6 +63,12 @@ struct PricingModel {
     input_micros_per_million: u64,
     cached_input_micros_per_million: u64,
     output_micros_per_million: u64,
+}
+
+#[derive(Debug, Deserialize)]
+struct PricingTier {
+    name: String,
+    models: Vec<PricingModel>,
 }
 
 #[derive(Debug, Default)]
@@ -75,6 +86,11 @@ struct UsageAggregate {
 }
 
 pub(crate) fn run_command(root: &Path, args: &[String]) -> RuntimeResult<String> {
+    if matches!(args, [flag] if flag == "--help" || flag == "help")
+        || matches!(args, [subcommand, flag] if subcommand == "codex-transcript" && (flag == "--help" || flag == "help"))
+    {
+        return Ok(help());
+    }
     let request = IngestRequest::parse(args)?;
     let report = ingest(root, &request)?;
     let output = if request.json {
@@ -101,7 +117,15 @@ pub(crate) fn ingest(root: &Path, request: &IngestRequest) -> Result<CostIngestR
         .session_id
         .clone()
         .ok_or_else(|| "missing --session-id <id>".to_string())?;
-    let target = resolve_target(root, request.target_kind, request.target_id.as_deref())?;
+    if let Some(boundary_session_id) = &request.boundary_session_id
+        && boundary_session_id != &session_id
+    {
+        return Err(format!(
+            "boundary session id {boundary_session_id} does not match requested session id {session_id}"
+        ));
+    }
+    let target =
+        crate::cost_targets::resolve(root, request.target_kind, request.target_id.as_deref())?;
     let pricing_snapshot_path = request
         .pricing_snapshot
         .clone()
@@ -109,6 +133,8 @@ pub(crate) fn ingest(root: &Path, request: &IngestRequest) -> Result<CostIngestR
     let pricing_snapshot_full_path = root.join(&pricing_snapshot_path);
     let pricing_snapshot_sha256 = file_sha256(&pricing_snapshot_full_path)?;
     let pricing = load_pricing_snapshot(root, &pricing_snapshot_path)?;
+    let selected_tier = select_service_tier(&pricing, request.service_tier.as_deref())?;
+    let pricing_models = pricing_models_for_tier(&pricing, &selected_tier)?;
     let aggregates = parse_codex_transcript(
         &transcript_path,
         &session_id,
@@ -125,8 +151,14 @@ pub(crate) fn ingest(root: &Path, request: &IngestRequest) -> Result<CostIngestR
     let mut measured = Vec::new();
     for (model_slug, aggregate) in aggregates {
         let selected_event_digest = selected_event_digest(&aggregate.token_event_lines);
-        let rates = pricing
-            .models
+        if let Some(boundary_turn_id) = &request.boundary_turn_id
+            && !aggregate.turn_ids.contains(boundary_turn_id)
+        {
+            return Err(format!(
+                "boundary turn id {boundary_turn_id} not found in selected transcript range"
+            ));
+        }
+        let rates = pricing_models
             .iter()
             .find(|model| model.model_slug.eq_ignore_ascii_case(&model_slug))
             .ok_or_else(|| format!("pricing snapshot missing model {model_slug}"))?;
@@ -135,15 +167,13 @@ pub(crate) fn ingest(root: &Path, request: &IngestRequest) -> Result<CostIngestR
             cached_input_micros_per_million: rates.cached_input_micros_per_million,
             output_micros_per_million: rates.output_micros_per_million,
         };
-        let uncached_input = aggregate
-            .input_tokens
-            .checked_sub(aggregate.cached_input_tokens)
-            .ok_or_else(|| format!("cached input exceeds input tokens for {model_slug}"))?;
-        let amount_micros = credit_micros(
-            uncached_input,
+        let amount_micros = crate::cost_pricing::credit_micros(
+            aggregate.input_tokens,
             aggregate.cached_input_tokens,
             aggregate.output_tokens,
+            aggregate.reasoning_tokens,
             &pricing_rates,
+            pricing.reasoning_token_policy.as_deref(),
         )?;
         measured.push(MeasuredCostEvidence {
             model_slug: model_slug.clone(),
@@ -170,6 +200,11 @@ pub(crate) fn ingest(root: &Path, request: &IngestRequest) -> Result<CostIngestR
                 session_id: session_id.clone(),
                 selected_event_digest_sha256: selected_event_digest,
                 turn_ids: aggregate.turn_ids.into_iter().collect(),
+                tool_use_ids: request
+                    .boundary_tool_use_id
+                    .iter()
+                    .cloned()
+                    .collect::<Vec<_>>(),
             },
         });
     }
@@ -177,11 +212,20 @@ pub(crate) fn ingest(root: &Path, request: &IngestRequest) -> Result<CostIngestR
     let mut receipts_appended = 0;
     if request.append_receipt {
         for evidence in &measured {
-            if !receipt_exists(root, &pricing, &pricing_snapshot_path, &target, evidence)? {
+            if !receipt_exists(
+                root,
+                &pricing,
+                &selected_tier,
+                &pricing_snapshot_path,
+                &pricing_snapshot_sha256,
+                &target,
+                evidence,
+            )? {
                 append_event(
                     root,
                     cost_receipt(
                         &pricing,
+                        &selected_tier,
                         &pricing_snapshot_path,
                         &pricing_snapshot_sha256,
                         &target,
@@ -199,6 +243,7 @@ pub(crate) fn ingest(root: &Path, request: &IngestRequest) -> Result<CostIngestR
         evidence_source: "codex-transcript-token-count".to_string(),
         transcript_path: transcript_path.display().to_string(),
         session_id,
+        service_tier: selected_tier,
         pricing_snapshot_path,
         target,
         receipts_appended,
@@ -213,8 +258,12 @@ pub(crate) struct IngestRequest {
     since_line: Option<usize>,
     until_line: Option<usize>,
     pricing_snapshot: Option<String>,
+    service_tier: Option<String>,
     target_kind: Option<CostAttributionKind>,
     target_id: Option<String>,
+    boundary_session_id: Option<String>,
+    boundary_turn_id: Option<String>,
+    boundary_tool_use_id: Option<String>,
     append_receipt: bool,
     json: bool,
 }
@@ -230,8 +279,12 @@ impl IngestRequest {
             since_line: None,
             until_line: None,
             pricing_snapshot: None,
+            service_tier: None,
             target_kind: None,
             target_id: None,
+            boundary_session_id: None,
+            boundary_turn_id: None,
+            boundary_tool_use_id: None,
             append_receipt: false,
             json: false,
         };
@@ -263,12 +316,16 @@ impl IngestRequest {
                 "--pricing-snapshot" => {
                     request.pricing_snapshot = Some(iter.next().ok_or_else(usage)?.to_string());
                 }
+                "--service-tier" => request.service_tier = Some(iter.next().ok_or_else(usage)?.to_string()),
                 "--commit" => return Err("unsupported legacy flag --commit; use --target-kind commit --target-id <sha|HEAD>".to_string()),
                 "--target-kind" => {
                     let value = iter.next().ok_or_else(usage)?;
                     request.target_kind = Some(CostAttributionKind::from_str(value)?);
                 }
                 "--target-id" => request.target_id = Some(iter.next().ok_or_else(usage)?.to_string()),
+                "--boundary-session-id" => request.boundary_session_id = Some(iter.next().ok_or_else(usage)?.to_string()),
+                "--boundary-turn-id" => request.boundary_turn_id = Some(iter.next().ok_or_else(usage)?.to_string()),
+                "--boundary-tool-use-id" => request.boundary_tool_use_id = Some(iter.next().ok_or_else(usage)?.to_string()),
                 "--append-receipt" => request.append_receipt = true,
                 "--format" => {
                     let value = iter.next().ok_or_else(usage)?;
@@ -308,7 +365,33 @@ impl IngestRequest {
 }
 
 fn usage() -> String {
-    "usage: task-registry-flow cost-ingest codex-transcript --transcript-path <path> --session-id <id> --since-line <n> --until-line <n> --pricing-snapshot <path> --target-kind <kind> --target-id <id> [--append-receipt] [--format json]".to_string()
+    "usage: task-registry-flow cost-ingest codex-transcript --transcript-path <path> --session-id <id> --since-line <n> --until-line <n> --pricing-snapshot <path> [--service-tier <tier>] --target-kind <kind> --target-id <id> [--boundary-session-id <id>] [--boundary-turn-id <id>] [--boundary-tool-use-id <id>] [--append-receipt] [--format json]".to_string()
+}
+
+fn help() -> String {
+    [
+        "usage: task-registry-flow cost-ingest codex-transcript --transcript-path <path> --session-id <id> --since-line <n> --until-line <n> --pricing-snapshot <path> [--service-tier <tier>] --target-kind <kind> --target-id <id> [--boundary-session-id <id>] [--boundary-turn-id <id>] [--boundary-tool-use-id <id>] [--append-receipt] [--format json]",
+        "",
+        "Ingest measured Codex token spend from a bounded local transcript slice.",
+        "",
+        "Required evidence:",
+        "  --transcript-path <path>      Local Codex JSONL transcript path",
+        "  --session-id <id>            Codex session id expected in the transcript",
+        "  --since-line <n>             First line included in the bounded scan",
+        "  --until-line <n>             Last line included in the bounded scan",
+        "  --pricing-snapshot <path>    Governed pricing TOML relative to repo root",
+        "  --service-tier <tier>         Explicit pricing tier; defaults only when snapshot declares one tier",
+        "  --target-kind <kind>         commit, plan, task, verifier-run, landing-attempt, retry, release-cycle, or session",
+        "  --target-id <id>             Explicit governed target id",
+        "  --boundary-session-id <id>   Optional mutation boundary session id for coverage checks",
+        "  --boundary-turn-id <id>      Optional mutation boundary turn id; must appear in selected range",
+        "  --boundary-tool-use-id <id>  Optional mutation boundary tool-use id for coverage checks",
+        "",
+        "Options:",
+        "  --append-receipt             Append measured cost evidence to docs/task-registry/events.jsonl",
+        "  --format json                Emit a JSON report",
+    ]
+    .join("\n")
 }
 
 fn load_pricing_snapshot(root: &Path, path: &str) -> Result<PricingSnapshot> {
@@ -325,17 +408,25 @@ fn load_pricing_snapshot(root: &Path, path: &str) -> Result<PricingSnapshot> {
         || snapshot.retrieved_at.trim().is_empty()
         || snapshot.effective_from.trim().is_empty()
         || snapshot.version.trim().is_empty()
-        || snapshot.service_tier.trim().is_empty()
-        || snapshot.models.is_empty()
+        || snapshot.models.is_empty() && snapshot.service_tiers.is_empty()
     {
         return Err("pricing snapshot missing required provenance or rates".to_string());
     }
     let mut seen = BTreeSet::new();
-    for model in &snapshot.models {
-        if !seen.insert(model.model_slug.to_ascii_lowercase()) {
+    for (tier, model) in snapshot
+        .models
+        .iter()
+        .map(|model| ("default", model))
+        .chain(snapshot.service_tiers.iter().flat_map(|tier| {
+            tier.models
+                .iter()
+                .map(move |model| (tier.name.as_str(), model))
+        }))
+    {
+        if !seen.insert(format!("{tier}:{}", model.model_slug.to_ascii_lowercase())) {
             return Err(format!(
-                "pricing snapshot duplicate model {}",
-                model.model_slug
+                "pricing snapshot duplicate model {} in tier {tier}",
+                model.model_slug,
             ));
         }
         if model.input_micros_per_million == 0
@@ -349,6 +440,59 @@ fn load_pricing_snapshot(root: &Path, path: &str) -> Result<PricingSnapshot> {
         }
     }
     Ok(snapshot)
+}
+
+fn select_service_tier(snapshot: &PricingSnapshot, requested: Option<&str>) -> Result<String> {
+    if let Some(tier) = requested.map(str::trim).filter(|value| !value.is_empty()) {
+        if snapshot
+            .service_tier
+            .as_deref()
+            .is_some_and(|default| default == tier)
+            || snapshot
+                .service_tiers
+                .iter()
+                .any(|entry| entry.name == tier)
+        {
+            return Ok(tier.to_string());
+        }
+        return Err(format!("pricing snapshot missing service tier {tier}"));
+    }
+    if let Some(default) = snapshot
+        .service_tier
+        .as_deref()
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+    {
+        return Ok(default.to_string());
+    }
+    if snapshot.service_tiers.len() == 1 {
+        return Ok(snapshot.service_tiers[0].name.clone());
+    }
+    Err("missing --service-tier <tier> for multi-tier pricing snapshot".to_string())
+}
+
+fn pricing_models_for_tier<'a>(
+    snapshot: &'a PricingSnapshot,
+    selected_tier: &str,
+) -> Result<&'a [PricingModel]> {
+    if let Some(tier) = snapshot
+        .service_tiers
+        .iter()
+        .find(|tier| tier.name == selected_tier)
+    {
+        return Ok(tier.models.as_slice());
+    }
+    if snapshot
+        .service_tier
+        .as_deref()
+        .is_some_and(|default| default == selected_tier)
+        && !snapshot.models.is_empty()
+    {
+        return Ok(&snapshot.models);
+    }
+    Err(format!(
+        "pricing snapshot missing service tier {selected_tier}"
+    ))
 }
 
 fn parse_codex_transcript(
@@ -467,57 +611,9 @@ fn usage_field(usage: &Value, field: &str, line_number: usize) -> Result<u64> {
         .ok_or_else(|| format!("token_count line {line_number} missing numeric {field}"))
 }
 
-fn credit_micros(
-    uncached_input_tokens: u64,
-    cached_input_tokens: u64,
-    output_tokens: u64,
-    rates: &CostPricingRates,
-) -> Result<u64> {
-    let input = (uncached_input_tokens as u128) * (rates.input_micros_per_million as u128);
-    let cached = (cached_input_tokens as u128) * (rates.cached_input_micros_per_million as u128);
-    let output = (output_tokens as u128) * (rates.output_micros_per_million as u128);
-    let total = (input + cached + output) / 1_000_000;
-    u64::try_from(total).map_err(|_| "calculated credit amount overflows u64".to_string())
-}
-
-fn resolve_target(
-    root: &Path,
-    target_kind: Option<CostAttributionKind>,
-    target_id: Option<&str>,
-) -> Result<CostAttributionTarget> {
-    let kind = target_kind.ok_or_else(|| "missing --target-kind <kind>".to_string())?;
-    let id = target_id
-        .filter(|value| !value.trim().is_empty())
-        .ok_or_else(|| "missing --target-id <id>".to_string())?;
-    let resolved_id = if kind == CostAttributionKind::Commit {
-        resolve_commit(root, id)?
-    } else {
-        id.to_string()
-    };
-    Ok(CostAttributionTarget {
-        kind,
-        id: resolved_id,
-    })
-}
-
-fn resolve_commit(root: &Path, commit: &str) -> Result<String> {
-    let output = Command::new("git")
-        .arg("rev-parse")
-        .arg("--verify")
-        .arg(format!("{commit}^{{commit}}"))
-        .current_dir(root)
-        .output()
-        .map_err(|error| format!("run git rev-parse: {error}"))?;
-    if !output.status.success() {
-        return Err(format!("invalid commit {commit}"));
-    }
-    let sha = String::from_utf8(output.stdout)
-        .map_err(|error| format!("decode git rev-parse output: {error}"))?;
-    Ok(sha.trim().to_string())
-}
-
 fn cost_receipt(
     pricing: &PricingSnapshot,
+    selected_tier: &str,
     pricing_snapshot_path: &str,
     pricing_snapshot_sha256: &str,
     target: &CostAttributionTarget,
@@ -545,9 +641,10 @@ fn cost_receipt(
             source: pricing.source_url.clone(),
             version: pricing.version.clone(),
             currency: pricing.currency.clone(),
-            service_tier: pricing.service_tier.clone(),
+            service_tier: selected_tier.to_string(),
             snapshot_path: pricing_snapshot_path.to_string(),
             snapshot_sha256: pricing_snapshot_sha256.to_string(),
+            reasoning_token_policy: pricing.reasoning_token_policy.clone(),
         }),
         amount: Some(evidence.amount),
         pricing_rates: Some(evidence.pricing_rates),
@@ -555,6 +652,9 @@ fn cost_receipt(
         measurement_timestamp: Some(timestamp()),
         estimation_method: None,
         unmeasured_reason: None,
+        boundary_session_id: None,
+        boundary_turn_id: None,
+        boundary_tool_use_id: None,
     });
     event
 }
@@ -562,7 +662,9 @@ fn cost_receipt(
 fn receipt_exists(
     root: &Path,
     pricing: &PricingSnapshot,
-    _pricing_snapshot_path: &str,
+    selected_tier: &str,
+    pricing_snapshot_path: &str,
+    pricing_snapshot_sha256: &str,
     target: &CostAttributionTarget,
     expected: &MeasuredCostEvidence,
 ) -> Result<bool> {
@@ -589,16 +691,35 @@ fn receipt_exists(
         let Some(contribution) = evidence.usage_contributions.first() else {
             continue;
         };
+        let Some(receipt_pricing) = evidence.pricing.as_ref() else {
+            continue;
+        };
+        let Some(receipt_rates) = evidence.pricing_rates.as_ref() else {
+            continue;
+        };
+        let Some(receipt_amount) = evidence.amount.as_ref() else {
+            continue;
+        };
         let same_receipt = evidence.status == CostEvidenceStatus::Measured
             && evidence.attribution_target.kind == target.kind
             && evidence.attribution_target.id == target.id
             && evidence.provider.as_deref() == Some(pricing.provider.as_str())
             && evidence.model_slug.as_deref() == Some(expected.model_slug.as_str())
-            && evidence
-                .pricing
-                .as_ref()
-                .map(|pricing| pricing.version.as_str())
-                == Some(pricing.version.as_str())
+            && receipt_pricing.source == pricing.source_url
+            && receipt_pricing.version == pricing.version
+            && receipt_pricing.currency == pricing.currency
+            && receipt_pricing.service_tier == selected_tier
+            && receipt_pricing.snapshot_path == pricing_snapshot_path
+            && receipt_pricing.snapshot_sha256 == pricing_snapshot_sha256
+            && receipt_pricing.reasoning_token_policy == pricing.reasoning_token_policy
+            && receipt_rates.input_micros_per_million
+                == expected.pricing_rates.input_micros_per_million
+            && receipt_rates.cached_input_micros_per_million
+                == expected.pricing_rates.cached_input_micros_per_million
+            && receipt_rates.output_micros_per_million
+                == expected.pricing_rates.output_micros_per_million
+            && receipt_amount.currency == expected.amount.currency
+            && receipt_amount.amount_micros == expected.amount.amount_micros
             && contribution.source_kind == expected.contribution.source_kind
             && contribution.source_path == expected.contribution.source_path
             && contribution.start_line == expected.contribution.start_line
@@ -631,8 +752,12 @@ pub(crate) fn request_for_test(
         since_line: Some(2),
         until_line: Some(3),
         pricing_snapshot: Some(pricing_snapshot),
+        service_tier: None,
         target_kind: Some(CostAttributionKind::Commit),
         target_id: Some(target_id),
+        boundary_session_id: None,
+        boundary_turn_id: None,
+        boundary_tool_use_id: None,
         append_receipt: false,
         json: true,
     }
@@ -650,8 +775,12 @@ pub(crate) fn append_request_for_test(
         since_line: Some(2),
         until_line: Some(3),
         pricing_snapshot: Some(pricing_snapshot),
+        service_tier: None,
         target_kind: Some(CostAttributionKind::Commit),
         target_id: Some(target_id),
+        boundary_session_id: None,
+        boundary_turn_id: None,
+        boundary_tool_use_id: None,
         append_receipt: true,
         json: true,
     }

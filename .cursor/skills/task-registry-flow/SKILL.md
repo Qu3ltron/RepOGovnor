@@ -31,6 +31,14 @@ Manages `docs/task-registry.toml` — authoritative status ledger for approved p
 
 Exact command strings live in `.codex/agent-governance.toml`; the canonical pattern is `.codex/scripts/task-registry activate|status|defer|report|validate|archive-completed|verify-behaviors|verify-landing|verify-mutation-hook|metrics|source-limit ...`.
 
+Cost evidence commands are also registry-owned: use
+`.codex/scripts/task-registry cost-ingest codex-transcript --help` to discover
+the canonical measured Codex ingestion interface, `cost-record unmeasured` when
+measured evidence cannot be published, `cost-evidence-check` to validate
+measured/estimated/unmeasured receipts, `cost-coverage-check` to ensure
+model-attributed mutations have cost coverage, and `cost-report` to summarize
+target-level spend evidence.
+
 Do not set `deferred` via `TASK_STATUS`. Use `TASK_DEFER` only with governed basis and exact reactivation condition. Do not set `completed` via `TASK_STATUS`; `TASK_VERIFY_LANDING` owns completed status.
 
 ## Activation Rules

@@ -111,6 +111,8 @@ pub(crate) fn run(mut args: Vec<String>) -> RuntimeResult<String> {
         CliCommand::ModelAttributionCheck => crate::model_attribution::run_command(root, &args),
         CliCommand::CostEvidenceCheck => crate::cost_evidence::run_command(root, &args),
         CliCommand::CostIngest => crate::cost_ingest::run_command(root, &args),
+        CliCommand::CostRecord => crate::cost_record::run_command(root, &args),
+        CliCommand::CostCoverageCheck => crate::cost_coverage::run_command(root, &args),
         CliCommand::CostReport => crate::cost_report::run_command(root, &args),
         CliCommand::Metrics => {
             let json = match args.as_slice() {
@@ -143,7 +145,7 @@ pub(crate) fn run(mut args: Vec<String>) -> RuntimeResult<String> {
 }
 
 fn usage() -> String {
-    "usage: task-registry-flow {validate|activate <docs/plans/file.md>|status <task_id> <status>|defer <task_id> <basis> <reactivation>|report <plan_id>|reviewer-report [--format text|markdown]|version-check {validate|next <plan_id>|prerelease <plan_id> --rc <n>|release-check} [--format json]|backlog-check [--format json]|archive-completed|verify-behaviors [plan_id|task_id]|verify-landing [--plan-id <plan_id>] --changed-files <path>...|verify-chain [--format json] [--repair]|verify-mutation-hook [--format codex|antigravity|cursor|claude]|model-attribution-check [--format json]|cost-evidence-check [--format json]|cost-report [--format json]|cost-ingest codex-transcript --transcript-path <path> --session-id <id> --since-line <n> --until-line <n> --pricing-snapshot <path> --target-kind <kind> --target-id <id> [--append-receipt] [--format json]|metrics|source-limit check|source-limit plan|release-check {required|version|tracked|all} [--format json]|install plan [--format json]|status-check [--format json]}".to_string()
+    "usage: task-registry-flow {validate|activate <docs/plans/file.md>|status <task_id> <status>|defer <task_id> <basis> <reactivation>|report <plan_id>|reviewer-report [--format text|markdown]|version-check {validate|next <plan_id>|prerelease <plan_id> --rc <n>|release-check} [--format json]|backlog-check [--format json]|archive-completed|verify-behaviors [plan_id|task_id]|verify-landing [--plan-id <plan_id>] --changed-files <path>...|verify-chain [--format json] [--repair]|verify-mutation-hook [--format codex|antigravity|cursor|claude]|model-attribution-check [--format json]|cost-evidence-check [--format json]|cost-coverage-check [--format json]|cost-record unmeasured --target-kind <kind> --target-id <id> --reason <why>|cost-report [--format json]|cost-ingest codex-transcript --transcript-path <path> --session-id <id> --since-line <n> --until-line <n> --pricing-snapshot <path> [--service-tier <tier>] --target-kind <kind> --target-id <id> [--append-receipt] [--format json]|metrics|source-limit check|source-limit plan|release-check {required|version|tracked|all} [--format json]|install plan [--format json]|status-check [--format json]}".to_string()
 }
 
 fn install_command(root: &Path, args: &[String]) -> RuntimeResult<String> {

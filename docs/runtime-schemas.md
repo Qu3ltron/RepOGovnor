@@ -31,8 +31,10 @@ diagnostic payload:
 .codex/scripts/task-registry backlog-check --format json
 .codex/scripts/task-registry model-attribution-check --format json
 .codex/scripts/task-registry cost-evidence-check --format json
+.codex/scripts/task-registry cost-coverage-check --format json
 .codex/scripts/task-registry cost-report --format json
-.codex/scripts/task-registry cost-ingest codex-transcript --transcript-path <path> --session-id <id> --since-line <n> --until-line <n> --pricing-snapshot <path> --target-kind commit --target-id <sha|HEAD> --format json
+.codex/scripts/task-registry cost-ingest codex-transcript --transcript-path <path> --session-id <id> --since-line <n> --until-line <n> --pricing-snapshot <path> --service-tier <tier> --target-kind commit --target-id <sha|HEAD> --boundary-session-id <id> --boundary-turn-id <id> --boundary-tool-use-id <id> --format json
+.codex/scripts/task-registry cost-record unmeasured --target-kind commit --target-id <sha|HEAD> --reason <why-unmeasured> --provider codex --model gpt-5-codex --boundary-session-id <id> --boundary-turn-id <id> --boundary-tool-use-id <id>
 ```
 
 For command-specific diagnostic JSON, failures still emit the raw diagnostic
@@ -99,16 +101,50 @@ method. Unmeasured evidence requires a reason and must not carry a cost amount.
 Cost per commit is measured only for commits with complete, non-overlapping
 commit-linked measured usage receipts. `cost-report` preserves unmeasured
 entries instead of reporting them as zero cost.
+Measured evidence with reasoning tokens must name the pricing policy for those
+tokens. The runtime does not infer reasoning-token billing from model names or
+agent narration.
 
 `cost-ingest codex-transcript` reads actual local Codex transcript
 `token_count` events. Codex hook docs expose `transcript_path`, but the
 transcript format is not a stable hook interface, so ingestion fails closed when
 required token-count fields are missing. The command requires explicit
 `--transcript-path`, `--session-id`, `--since-line`, `--until-line`,
-`--target-kind`, and `--target-id` values. `--latest` and legacy `--commit`
-selection are rejected because modified-time transcript selection is not
-attribution evidence. `--append-receipt` records the measured cost evidence
+`--pricing-snapshot`, `--service-tier`, `--target-kind`, and `--target-id`
+values. Optional `--boundary-session-id`, `--boundary-turn-id`, and
+`--boundary-tool-use-id` bind measured usage to mutation attribution. Boundary
+turn ids must appear in the selected transcript range. `--latest` and legacy
+`--commit` selection are rejected because modified-time transcript selection is
+not attribution evidence. `--append-receipt` records the measured cost evidence
 locally.
+
+`cost-record unmeasured` appends explicit unmeasured evidence with a reason and
+optional provider, model, session, turn, and tool boundary ids. It rejects
+amounts. Measured receipt dedupe includes service tier, pricing snapshot path
+and hash, pricing rates, amount, target, and selected event digest; different
+tiers are distinct evidence. `cost-report` groups measured entries by service
+tier so tier-specific spend is not merged.
+
+Reasoning token pricing currently supports only
+`reasoning_tokens_not_billed_separately`. When a selected transcript range has
+reasoning tokens, any missing or unsupported `reasoning_token_policy` fails
+closed during ingest and replay.
+
+`cost-coverage-check` compares model-attributed mutation receipts to measured or
+unmeasured cost receipts by model/session/turn/tool boundary and fails when a
+repo mutation lacks cost coverage. If the mutation attribution includes a
+`tool_use_id`, matching cost evidence must name the same tool through
+`boundary_tool_use_id` or `usage_contributions[].tool_use_ids`; an empty tool
+list does not cover a tool-bound mutation.
+
+Command-specific help is available with `cost-ingest --help` and
+`cost-ingest codex-transcript --help`. Installed consumers can run
+`task-registry-flow cost-ingest ...`; governed workspaces can run the same
+interface through `.codex/scripts/task-registry cost-ingest ...`. The packaged
+OpenAI Codex pricing snapshot is installed at
+`$AGENT_GOVERNANCE_ASSET_ROOT/docs/pricing/openai-codex-rate-card-2026-06-02.toml`.
+Supported attribution target kinds are `commit`, `plan`, `task`,
+`verifier-run`, `landing-attempt`, `retry`, `release-cycle`, and `session`.
 
 ```json
 {
@@ -119,10 +155,10 @@ locally.
     "provider": "openai",
     "model_slug": "gpt-5.5",
     "usage": {"input_tokens": 1200, "cached_input_tokens": 100, "output_tokens": 300},
-    "pricing": {"source": "https://help.openai.com/en/articles/20001106-codex-rate-card", "version": "2026-06-02", "currency": "CREDITS", "service_tier": "codex-cloud", "snapshot_path": "docs/pricing/openai-codex-rate-card-2026-06-02.toml", "snapshot_sha256": "5b..."},
+    "pricing": {"source": "https://help.openai.com/en/articles/20001106-codex-rate-card", "version": "2026-06-02", "currency": "CREDITS", "service_tier": "codex-cloud", "snapshot_path": "docs/pricing/openai-codex-rate-card-2026-06-02.toml", "snapshot_sha256": "5b...", "reasoning_token_policy": "reasoning_tokens_not_billed_separately"},
     "pricing_rates": {"input_micros_per_million": 125000000, "cached_input_micros_per_million": 12500000, "output_micros_per_million": 750000000},
     "amount": {"currency": "CREDITS", "amount_micros": 42},
-    "usage_contributions": [{"source_kind": "codex-transcript-token-count", "source_path": "/home/user/.codex/sessions/x.jsonl", "source_sha256": "9f...", "start_line": 10, "end_line": 20, "event_count": 3, "model_slug": "gpt-5.5", "model_context_line": 9, "session_id": "session-id", "selected_event_digest_sha256": "9f..."}],
+    "usage_contributions": [{"source_kind": "codex-transcript-token-count", "source_path": "<local-private-codex-transcript>", "source_sha256": "9f...", "start_line": 10, "end_line": 20, "event_count": 3, "model_slug": "gpt-5.5", "model_context_line": 9, "session_id": "session-id", "selected_event_digest_sha256": "9f...", "turn_ids": ["turn-id"], "tool_use_ids": ["tool-use-id"]}],
     "measurement_timestamp": "2026-06-02T00:00:00Z"
   }
 }
@@ -139,7 +175,7 @@ report chained events, unchained v2 events, malformed events, and chain breaks.
 They also count cost evidence receipts as `cost_measured_events`,
 `cost_estimated_events`, `cost_unmeasured_events`, and
 `cost_measured_amount_micros`; counts and measured totals are local evidence
-posture, not remote billing truth.
+posture, not billing authority.
 Unchained v2 receipts are failures because they are not integrity evidence.
 `verify-chain --repair` may repair parseable schema version 2 receipts only.
 

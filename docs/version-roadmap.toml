@@ -34,5 +34,10 @@ covered_plan_ids = [
   "PLAN-2026-06-02-cost-evidence-model",
   "PLAN-2026-06-02-provider-usage-ingestion",
   "PLAN-2026-06-02-cost-ingest-nix-git-dependency",
+  "PLAN-2026-06-02-cost-ingest-interface-exposure",
   "PLAN-2026-06-02-token-spend-hardening",
+  "PLAN-2026-06-02-token-capture-hardening",
+  "PLAN-2026-06-02-token-capture-review-gap-closure",
+  "PLAN-2026-06-02-token-capture-review-version-coverage",
+  "PLAN-2026-06-02-task-registry-flow-skill-projection-cleanup",
 ]

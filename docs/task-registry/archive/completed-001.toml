@@ -4,46 +4,922 @@ archive_id = "completed-001"
 archive_authority = "docs/task-registry/archive/completed-001.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-06-02-task-registry-flow-skill-projection-cleanup"
+plan_path = "docs/plans/task-registry-flow-skill-projection-cleanup-2026-06-02.md"
+plan_hash_sha256 = "0fe18a8a2bc58e05e9ac3be87af0bf90685c746ef584ae38d3a160ba5ff28245"
+activated_at = "2026-06-02"
+status = "completed"
+
+[[plans]]
+plan_id = "PLAN-2026-06-02-token-capture-review-version-coverage"
+plan_path = "docs/plans/token-capture-review-version-coverage-2026-06-02.md"
+plan_hash_sha256 = "1a57ef5ddc4fcc93c07823d0254836584b3cad3646492f29cbe9eaa5a63d19b2"
+activated_at = "2026-06-02"
+status = "completed"
+
+[[plans]]
+plan_id = "PLAN-2026-06-02-token-capture-review-gap-closure"
+plan_path = "docs/plans/token-capture-review-gap-closure-2026-06-02.md"
+plan_hash_sha256 = "08db3e5394ae0ff5630d16f6dd0629f627b85849d323e712d82480dd494e6d43"
+activated_at = "2026-06-02"
+status = "completed"
+
+[[plans]]
+plan_id = "PLAN-2026-06-02-token-capture-hardening"
+plan_path = "docs/plans/token-capture-hardening-2026-06-02.md"
+plan_hash_sha256 = "9e88683d57b31e7ebcba059e01fb483c15e2af890b11bc393e7b585181e0653a"
+activated_at = "2026-06-02"
+status = "completed"
+
+[[plans]]
+plan_id = "PLAN-2026-06-02-cost-ingest-interface-exposure"
+plan_path = "docs/plans/cost-ingest-interface-exposure-2026-06-02.md"
+plan_hash_sha256 = "aa9e2df39a5ed2f692e474eb722ddd48da3408c65da76f7b05d9354065eb6351"
+activated_at = "2026-06-02"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-06-02-token-spend-hardening"
 plan_path = "docs/plans/token-spend-hardening-2026-06-02.md"
 plan_hash_sha256 = "6f62a5fa49c6540974fea3b7f5345c85b9214298eeab3d3eda31df54d03a5243"
 activated_at = "2026-06-02"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-06-02-cost-ingest-nix-git-dependency"
-plan_path = "docs/plans/cost-ingest-nix-git-dependency-2026-06-02.md"
-plan_hash_sha256 = "1e7a7e6e66362be7e614bcca5c350a8d3f8d8bba4666397e9cdd7200e1377c25"
-activated_at = "2026-06-01"
+[[tasks]]
+task_id = "TASK-2026-06-02-task-registry-flow-skill-projection-cleanup-001"
+plan_id = "PLAN-2026-06-02-task-registry-flow-skill-projection-cleanup"
 status = "completed"
+title = "Align packaged task-registry-flow skill projection"
+kind = "governance"
+source_plan_path = "docs/plans/task-registry-flow-skill-projection-cleanup-2026-06-02.md"
+source_plan_hash_sha256 = "0fe18a8a2bc58e05e9ac3be87af0bf90685c746ef584ae38d3a160ba5ff28245"
+reason = "Packaged skill projection must not duplicate cost-evidence prose or publish stale completion semantics."
+acceptance_proof = "Behaviors B-TRF-SKILL-001-projection-positive, B-TRF-SKILL-002-duplicate-negative, and B-TRF-SKILL-003-version-coverage pass."
+created_at = "2026-06-02"
+updated_at = "2026-06-02"
+behavior_ids = [
+    "B-TRF-SKILL-001-projection-positive",
+    "B-TRF-SKILL-002-duplicate-negative",
+    "B-TRF-SKILL-003-version-coverage",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-02T11:23:51.260362895-04:00"
+completion_changed_files = [
+    "docs/version-roadmap.toml",
+    "skills/task-registry-flow/SKILL.md",
+]
 
-[[plans]]
-plan_id = "PLAN-2026-06-02-provider-usage-ingestion"
-plan_path = "docs/plans/provider-usage-ingestion-2026-06-02.md"
-plan_hash_sha256 = "03212b06a8f4ca3101be39ff707f1cedb686af8c0392999d7389589040c3fdd9"
-activated_at = "2026-06-01"
-status = "completed"
+[[tasks.targets]]
+file = "skills/task-registry-flow/SKILL.md"
+object = "Task Registry Flow packaged skill projection"
+required_change = "Match .agents/skills/task-registry-flow/SKILL.md and remove duplicate cost-evidence prose."
 
-[[plans]]
-plan_id = "PLAN-2026-06-02-cost-evidence-model"
-plan_path = "docs/plans/cost-evidence-model-2026-06-02.md"
-plan_hash_sha256 = "bda69c788bef2c879a121d3b65d32317d428b9d7444502bdf8b0a1358fc03b45"
-activated_at = "2026-06-01"
-status = "completed"
+[[tasks.targets]]
+file = "docs/version-roadmap.toml"
+object = "releases[2.1.0].covered_plan_ids"
+required_change = "Add PLAN-2026-06-02-task-registry-flow-skill-projection-cleanup."
 
-[[plans]]
-plan_id = "PLAN-2026-06-02-codex-model-attribution-hardening"
-plan_path = "docs/plans/codex-model-attribution-hardening-2026-06-02.md"
-plan_hash_sha256 = "6d1ed561e074db21cfb9405242ac3694138715f9b3bdd2acbca08e83c642abf2"
-activated_at = "2026-06-01"
+[[tasks]]
+task_id = "TASK-2026-06-02-token-capture-review-version-coverage-001"
+plan_id = "PLAN-2026-06-02-token-capture-review-version-coverage"
 status = "completed"
+title = "Cover token capture review closure in version roadmap"
+kind = "governance"
+source_plan_path = "docs/plans/token-capture-review-version-coverage-2026-06-02.md"
+source_plan_hash_sha256 = "1a57ef5ddc4fcc93c07823d0254836584b3cad3646492f29cbe9eaa5a63d19b2"
+reason = "Completed token capture review closure must be included in release version governance before release readiness can pass."
+acceptance_proof = "Behaviors B-TCR-VC-001-version-coverage-valid and B-TCR-VC-002-version-coverage-negative: version-check validate and uncovered-plan negative test pass."
+created_at = "2026-06-02"
+updated_at = "2026-06-02"
+behavior_ids = [
+    "B-TCR-VC-001-version-coverage-valid",
+    "B-TCR-VC-002-version-coverage-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-02T11:02:04.188801358-04:00"
+completion_changed_files = ["docs/version-roadmap.toml"]
 
-[[plans]]
-plan_id = "PLAN-2026-06-01-policy-posture-version-coverage"
-plan_path = "docs/plans/policy-posture-version-coverage-2026-06-01.md"
-plan_hash_sha256 = "d7ef271f9c761ab66d0fa68350cbff565feb84e42eb9c9ef94ab9d14e431dc10"
-activated_at = "2026-06-01"
+[[tasks.targets]]
+file = "docs/version-roadmap.toml"
+object = "releases[2.1.0].covered_plan_ids"
+required_change = "Add PLAN-2026-06-02-token-capture-review-gap-closure and PLAN-2026-06-02-token-capture-review-version-coverage."
+
+[[tasks]]
+task_id = "TASK-2026-06-02-token-capture-review-001"
+plan_id = "PLAN-2026-06-02-token-capture-review-gap-closure"
 status = "completed"
+title = "Close token-capture runtime correctness gaps"
+kind = "implementation"
+source_plan_path = "docs/plans/token-capture-review-gap-closure-2026-06-02.md"
+source_plan_hash_sha256 = "08db3e5394ae0ff5630d16f6dd0629f627b85849d323e712d82480dd494e6d43"
+reason = "Pricing identity, tier precedence, reasoning-token policy, and tool-bound coverage must be correct before token capture can govern repo mutations."
+acceptance_proof = "Behaviors B-TCR-001 through B-TCR-008."
+created_at = "2026-06-02"
+updated_at = "2026-06-02"
+behavior_ids = [
+    "B-TCR-001-tier-dedupe-positive",
+    "B-TCR-002-tier-dedupe-negative",
+    "B-TCR-003-tier-precedence-positive",
+    "B-TCR-004-tier-precedence-negative",
+    "B-TCR-005-reasoning-policy-positive",
+    "B-TCR-006-reasoning-policy-negative",
+    "B-TCR-007-tool-coverage-positive",
+    "B-TCR-008-tool-coverage-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-02T10:54:29.950946394-04:00"
+completion_changed_files = [
+    "REQUIREMENTS.toml",
+    "docs/provider-usage-adapter-contract.md",
+    "docs/runtime-schemas.md",
+    "rust/task-registry-flow-cli/src/cost_coverage.rs",
+    "rust/task-registry-flow-cli/src/cost_evidence.rs",
+    "rust/task-registry-flow-cli/src/cost_ingest.rs",
+    "rust/task-registry-flow-cli/src/cost_pricing.rs",
+    "rust/task-registry-flow-cli/src/cost_report.rs",
+    "rust/task-registry-flow-cli/src/main.rs",
+    "rust/task-registry-flow-cli/src/tests/cost_capture_review_tests.rs",
+    "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/cost_ingest.rs"
+object = "receipt_exists, pricing_models_for_tier, and amount calculation"
+required_change = "Use tier-aware receipt identity, prefer named tier models, and call the shared supported reasoning-token pricing helper."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/cost_report.rs"
+object = "CostReport grouping key"
+required_change = "Group measured report entries by service tier as well as target, status, provider, model, and pricing version."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/cost_evidence.rs"
+object = "validate_measured_replay"
+required_change = "Include pricing identity in duplicate/overlap replay keys and reject unsupported reasoning policies through the shared pricing helper."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/cost_pricing.rs"
+object = "pricing helper"
+required_change = "Add canonical amount calculation and supported reasoning policy validation."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/main.rs"
+object = "module list"
+required_change = "Register cost_pricing module."
+
+[[tasks.targets]]
+file = "REQUIREMENTS.toml"
+object = "release_source.required"
+required_change = "Declare cost_pricing.rs and cost_capture_review_tests.rs as release sources."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/cost_coverage.rs"
+object = "cost_matches_agent"
+required_change = "Require matching tool boundary when agent tool_use_id is present."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/cost_capture_review_tests.rs"
+object = "review regression tests"
+required_change = "Add positive and negative tests for tier dedupe, tier precedence, reasoning policy, and tool-bound coverage."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs"
+object = "nested test module registration"
+required_change = "Register cost_capture_review_tests without modifying tests/mod.rs."
+
+[[tasks]]
+task_id = "TASK-2026-06-02-token-capture-review-002"
+plan_id = "PLAN-2026-06-02-token-capture-review-gap-closure"
+status = "completed"
+title = "Update documentation and release validation"
+kind = "implementation"
+source_plan_path = "docs/plans/token-capture-review-gap-closure-2026-06-02.md"
+source_plan_hash_sha256 = "08db3e5394ae0ff5630d16f6dd0629f627b85849d323e712d82480dd494e6d43"
+reason = "Public contracts must state tier, reasoning-policy, and tool-bound coverage semantics."
+acceptance_proof = "Full validation plan plus release readiness."
+created_at = "2026-06-02"
+updated_at = "2026-06-02"
+behavior_ids = [
+    "B-TCR-001-tier-dedupe-positive",
+    "B-TCR-006-reasoning-policy-negative",
+    "B-TCR-008-tool-coverage-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-02T10:54:29.950946394-04:00"
+completion_changed_files = [
+    "REQUIREMENTS.toml",
+    "docs/provider-usage-adapter-contract.md",
+    "docs/runtime-schemas.md",
+    "rust/task-registry-flow-cli/src/cost_coverage.rs",
+    "rust/task-registry-flow-cli/src/cost_evidence.rs",
+    "rust/task-registry-flow-cli/src/cost_ingest.rs",
+    "rust/task-registry-flow-cli/src/cost_pricing.rs",
+    "rust/task-registry-flow-cli/src/cost_report.rs",
+    "rust/task-registry-flow-cli/src/main.rs",
+    "rust/task-registry-flow-cli/src/tests/cost_capture_review_tests.rs",
+    "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs",
+]
+
+[[tasks.targets]]
+file = "docs/runtime-schemas.md"
+object = "Cost capture and reporting"
+required_change = "Document tier-aware dedupe/reporting, supported reasoning policy, and tool-bound coverage."
+
+[[tasks.targets]]
+file = "docs/provider-usage-adapter-contract.md"
+object = "mutation boundary contract"
+required_change = "Require exposed tool-use ids for measured mutation cost coverage."
+
+[[tasks]]
+task_id = "TASK-2026-06-02-token-capture-review-003"
+plan_id = "PLAN-2026-06-02-token-capture-review-gap-closure"
+status = "cancelled"
+title = "Superseded overlapping tool coverage task"
+kind = "implementation"
+source_plan_path = "docs/plans/token-capture-review-gap-closure-2026-06-02.md"
+source_plan_hash_sha256 = "08db3e5394ae0ff5630d16f6dd0629f627b85849d323e712d82480dd494e6d43"
+reason = "Superseded by TASK-2026-06-02-token-capture-review-001 to keep each changed file mapped to one active task target."
+acceptance_proof = "No implementation closure claimed by this cancelled task."
+created_at = "2026-06-02"
+updated_at = "2026-06-02"
+behavior_ids = [
+    "B-TCR-007-tool-coverage-positive",
+    "B-TCR-008-tool-coverage-negative",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/cost_coverage.rs"
+object = "superseded target"
+required_change = "Cancelled duplicate target; active coverage closure is owned by TASK-2026-06-02-token-capture-review-001."
+
+[[tasks]]
+task_id = "TASK-2026-06-02-token-capture-review-004"
+plan_id = "PLAN-2026-06-02-token-capture-review-gap-closure"
+status = "cancelled"
+title = "Superseded overlapping documentation task"
+kind = "implementation"
+source_plan_path = "docs/plans/token-capture-review-gap-closure-2026-06-02.md"
+source_plan_hash_sha256 = "08db3e5394ae0ff5630d16f6dd0629f627b85849d323e712d82480dd494e6d43"
+reason = "Superseded by TASK-2026-06-02-token-capture-review-002 to keep each changed file mapped to one active task target."
+acceptance_proof = "No implementation closure claimed by this cancelled task."
+created_at = "2026-06-02"
+updated_at = "2026-06-02"
+behavior_ids = [
+    "B-TCR-001-tier-dedupe-positive",
+    "B-TCR-006-reasoning-policy-negative",
+    "B-TCR-008-tool-coverage-negative",
+]
+
+[[tasks.targets]]
+file = "docs/runtime-schemas.md"
+object = "superseded target"
+required_change = "Cancelled duplicate target; active documentation closure is owned by TASK-2026-06-02-token-capture-review-002."
+
+[[tasks]]
+task_id = "TASK-2026-06-02-token-capture-hardening-001"
+plan_id = "PLAN-2026-06-02-token-capture-hardening"
+status = "completed"
+title = "Make public cost evidence release-safe"
+kind = "release"
+source_plan_path = "docs/plans/token-capture-hardening-2026-06-02.md"
+source_plan_hash_sha256 = "9e88683d57b31e7ebcba059e01fb483c15e2af890b11bc393e7b585181e0653a"
+reason = "Public tracked evidence must not leak private Codex transcript paths or depend on local-only session files."
+acceptance_proof = "Behaviors B-TOKEN-CAPTURE-001-public-evidence-positive and B-TOKEN-CAPTURE-002-public-evidence-negative."
+created_at = "2026-06-02"
+updated_at = "2026-06-02"
+behavior_ids = [
+    "B-TOKEN-CAPTURE-001-public-evidence-positive",
+    "B-TOKEN-CAPTURE-002-public-evidence-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-02T09:41:56.282727263-04:00"
+completion_changed_files = [
+    ".agents/skills/task-registry-flow.md",
+    ".agents/skills/task-registry-flow/SKILL.md",
+    ".claude/skills/task-registry-flow/SKILL.md",
+    ".cursor/skills/task-registry-flow/SKILL.md",
+    "README.md",
+    "docs/plans/provider-usage-ingestion-2026-06-02.md",
+    "docs/pricing/openai-codex-rate-card-2026-06-02.toml",
+    "docs/provider-usage-adapter-contract.md",
+    "docs/runtime-schemas.md",
+    "docs/task-registry/events.jsonl",
+    "rust/task-registry-flow-cli/src/cost_coverage.rs",
+    "rust/task-registry-flow-cli/src/cost_evidence.rs",
+    "rust/task-registry-flow-cli/src/cost_ingest.rs",
+    "rust/task-registry-flow-cli/src/cost_record.rs",
+    "rust/task-registry-flow-cli/src/cost_report.rs",
+    "rust/task-registry-flow-cli/src/cost_targets.rs",
+    "rust/task-registry-flow-cli/src/main.rs",
+    "rust/task-registry-flow-cli/src/mutation_hook.rs",
+    "rust/task-registry-flow-cli/src/release_checks.rs",
+    "rust/task-registry-flow-cli/src/runtime.rs",
+    "rust/task-registry-flow-cli/src/schema.rs",
+    "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs",
+    "rust/task-registry-flow-cli/src/tests/release_source_tests.rs",
+    "scripts/test-release-readiness.sh",
+    "skills/task-registry-flow/SKILL.md",
+]
+
+[[tasks.targets]]
+file = "docs/task-registry/events.jsonl"
+object = "public_cost_evidence"
+required_change = "Remove private measured transcript path evidence or convert it to public-safe unmeasured evidence."
+
+[[tasks.targets]]
+file = "docs/plans/provider-usage-ingestion-2026-06-02.md"
+object = "historical_cost_examples"
+required_change = "Replace private transcript commands with public-safe canonical examples."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/release_checks.rs"
+object = "public_cost_path_gate"
+required_change = "Reject private transcript path leakage in tracked public evidence."
+
+[[tasks.targets]]
+file = "scripts/test-release-readiness.sh"
+object = "public_cost_path_gate"
+required_change = "Fail release readiness on private transcript path leakage."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/release_source_tests.rs"
+object = "private_cost_path_tests"
+required_change = "Test sanitized public evidence and private transcript rejection."
+
+[[tasks]]
+task_id = "TASK-2026-06-02-token-capture-hardening-002"
+plan_id = "PLAN-2026-06-02-token-capture-hardening"
+status = "completed"
+title = "Add target validation and unmeasured recording"
+kind = "schema"
+source_plan_path = "docs/plans/token-capture-hardening-2026-06-02.md"
+source_plan_hash_sha256 = "9e88683d57b31e7ebcba059e01fb483c15e2af890b11bc393e7b585181e0653a"
+reason = "Unknown spend must have a canonical receipt path, and all cost targets must be governed."
+acceptance_proof = "Behaviors B-003 through B-006."
+created_at = "2026-06-02"
+updated_at = "2026-06-02"
+behavior_ids = [
+    "B-TOKEN-CAPTURE-003-unmeasured-record-positive",
+    "B-TOKEN-CAPTURE-004-unmeasured-record-negative",
+    "B-TOKEN-CAPTURE-005-target-validation-positive",
+    "B-TOKEN-CAPTURE-006-target-validation-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-02T09:41:56.282727263-04:00"
+completion_changed_files = [
+    ".agents/skills/task-registry-flow.md",
+    ".agents/skills/task-registry-flow/SKILL.md",
+    ".claude/skills/task-registry-flow/SKILL.md",
+    ".cursor/skills/task-registry-flow/SKILL.md",
+    "README.md",
+    "docs/plans/provider-usage-ingestion-2026-06-02.md",
+    "docs/pricing/openai-codex-rate-card-2026-06-02.toml",
+    "docs/provider-usage-adapter-contract.md",
+    "docs/runtime-schemas.md",
+    "docs/task-registry/events.jsonl",
+    "rust/task-registry-flow-cli/src/cost_coverage.rs",
+    "rust/task-registry-flow-cli/src/cost_evidence.rs",
+    "rust/task-registry-flow-cli/src/cost_ingest.rs",
+    "rust/task-registry-flow-cli/src/cost_record.rs",
+    "rust/task-registry-flow-cli/src/cost_report.rs",
+    "rust/task-registry-flow-cli/src/cost_targets.rs",
+    "rust/task-registry-flow-cli/src/main.rs",
+    "rust/task-registry-flow-cli/src/mutation_hook.rs",
+    "rust/task-registry-flow-cli/src/release_checks.rs",
+    "rust/task-registry-flow-cli/src/runtime.rs",
+    "rust/task-registry-flow-cli/src/schema.rs",
+    "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs",
+    "rust/task-registry-flow-cli/src/tests/release_source_tests.rs",
+    "scripts/test-release-readiness.sh",
+    "skills/task-registry-flow/SKILL.md",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/schema.rs"
+object = "cost_evidence_contract"
+required_change = "Add cost hardening fields and unmeasured reason support."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/cost_record.rs"
+object = "unmeasured_cost_record"
+required_change = "Add canonical unmeasured cost recording command."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/cost_targets.rs"
+object = "target_resolver"
+required_change = "Validate governed cost attribution targets."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/main.rs"
+object = "module_list"
+required_change = "Include new cost modules."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/runtime.rs"
+object = "dispatcher"
+required_change = "Route cost-record and cost-coverage-check."
+
+[[tasks.targets]]
+file = "REQUIREMENTS.toml"
+object = "release_source"
+required_change = "Declare new runtime source files."
+
+[[tasks]]
+task_id = "TASK-2026-06-02-token-capture-hardening-003"
+plan_id = "PLAN-2026-06-02-token-capture-hardening"
+status = "completed"
+title = "Add boundary capture and tiered pricing"
+kind = "implementation"
+source_plan_path = "docs/plans/token-capture-hardening-2026-06-02.md"
+source_plan_hash_sha256 = "9e88683d57b31e7ebcba059e01fb483c15e2af890b11bc393e7b585181e0653a"
+reason = "Measured Codex cost must be tied to mutation boundaries and correctly priced by service tier."
+acceptance_proof = "Behaviors B-007 through B-012."
+created_at = "2026-06-02"
+updated_at = "2026-06-02"
+behavior_ids = [
+    "B-TOKEN-CAPTURE-007-boundary-capture-positive",
+    "B-TOKEN-CAPTURE-008-boundary-capture-negative",
+    "B-TOKEN-CAPTURE-009-tier-pricing-positive",
+    "B-TOKEN-CAPTURE-010-tier-pricing-negative",
+    "B-TOKEN-CAPTURE-011-reasoning-positive",
+    "B-TOKEN-CAPTURE-012-reasoning-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-02T09:41:56.282727263-04:00"
+completion_changed_files = [
+    ".agents/skills/task-registry-flow.md",
+    ".agents/skills/task-registry-flow/SKILL.md",
+    ".claude/skills/task-registry-flow/SKILL.md",
+    ".cursor/skills/task-registry-flow/SKILL.md",
+    "README.md",
+    "docs/plans/provider-usage-ingestion-2026-06-02.md",
+    "docs/pricing/openai-codex-rate-card-2026-06-02.toml",
+    "docs/provider-usage-adapter-contract.md",
+    "docs/runtime-schemas.md",
+    "docs/task-registry/events.jsonl",
+    "rust/task-registry-flow-cli/src/cost_coverage.rs",
+    "rust/task-registry-flow-cli/src/cost_evidence.rs",
+    "rust/task-registry-flow-cli/src/cost_ingest.rs",
+    "rust/task-registry-flow-cli/src/cost_record.rs",
+    "rust/task-registry-flow-cli/src/cost_report.rs",
+    "rust/task-registry-flow-cli/src/cost_targets.rs",
+    "rust/task-registry-flow-cli/src/main.rs",
+    "rust/task-registry-flow-cli/src/mutation_hook.rs",
+    "rust/task-registry-flow-cli/src/release_checks.rs",
+    "rust/task-registry-flow-cli/src/runtime.rs",
+    "rust/task-registry-flow-cli/src/schema.rs",
+    "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs",
+    "rust/task-registry-flow-cli/src/tests/release_source_tests.rs",
+    "scripts/test-release-readiness.sh",
+    "skills/task-registry-flow/SKILL.md",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/mutation_hook.rs"
+object = "codex_cost_boundary"
+required_change = "Capture Codex transcript/session/turn/tool boundary evidence."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/model_attribution.rs"
+object = "boundary_validation"
+required_change = "Validate boundary evidence on measured Codex mutation attribution."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/cost_ingest.rs"
+object = "boundary_ingest"
+required_change = "Support boundary-based ingestion and tier evidence."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/cost_pricing.rs"
+object = "pricing_loader"
+required_change = "Load tiered pricing and enforce reasoning-token policy."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/cost_evidence.rs"
+object = "tiered_replay"
+required_change = "Replay measured evidence through tiered pricing semantics."
+
+[[tasks.targets]]
+file = "docs/pricing/openai-codex-rate-card-2026-06-02.toml"
+object = "tiered_pricing_snapshot"
+required_change = "Represent standard and fast Codex tiers."
+
+[[tasks.targets]]
+file = ".codex/hooks.json"
+object = "codex_hook_projection"
+required_change = "Keep pre/post hook projection wired for boundary evidence."
+
+[[tasks.targets]]
+file = "hooks/codex-hooks.json"
+object = "codex_hook_projection"
+required_change = "Mirror hook projection."
+
+[[tasks.targets]]
+file = "templates/.codex/hooks.json.template"
+object = "codex_hook_projection"
+required_change = "Mirror hook template."
+
+[[tasks]]
+task_id = "TASK-2026-06-02-token-capture-hardening-004"
+plan_id = "PLAN-2026-06-02-token-capture-hardening"
+status = "completed"
+title = "Add cost coverage and verified reporting"
+kind = "validation"
+source_plan_path = "docs/plans/token-capture-hardening-2026-06-02.md"
+source_plan_hash_sha256 = "9e88683d57b31e7ebcba059e01fb483c15e2af890b11bc393e7b585181e0653a"
+reason = "Cost reports must not total invalid receipts, and mutation cost coverage must be explicit."
+acceptance_proof = "Behaviors B-013 through B-016."
+created_at = "2026-06-02"
+updated_at = "2026-06-02"
+behavior_ids = [
+    "B-TOKEN-CAPTURE-013-coverage-positive",
+    "B-TOKEN-CAPTURE-014-coverage-negative",
+    "B-TOKEN-CAPTURE-015-report-positive",
+    "B-TOKEN-CAPTURE-016-report-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-02T09:41:56.282727263-04:00"
+completion_changed_files = [
+    ".agents/skills/task-registry-flow.md",
+    ".agents/skills/task-registry-flow/SKILL.md",
+    ".claude/skills/task-registry-flow/SKILL.md",
+    ".cursor/skills/task-registry-flow/SKILL.md",
+    "README.md",
+    "docs/plans/provider-usage-ingestion-2026-06-02.md",
+    "docs/pricing/openai-codex-rate-card-2026-06-02.toml",
+    "docs/provider-usage-adapter-contract.md",
+    "docs/runtime-schemas.md",
+    "docs/task-registry/events.jsonl",
+    "rust/task-registry-flow-cli/src/cost_coverage.rs",
+    "rust/task-registry-flow-cli/src/cost_evidence.rs",
+    "rust/task-registry-flow-cli/src/cost_ingest.rs",
+    "rust/task-registry-flow-cli/src/cost_record.rs",
+    "rust/task-registry-flow-cli/src/cost_report.rs",
+    "rust/task-registry-flow-cli/src/cost_targets.rs",
+    "rust/task-registry-flow-cli/src/main.rs",
+    "rust/task-registry-flow-cli/src/mutation_hook.rs",
+    "rust/task-registry-flow-cli/src/release_checks.rs",
+    "rust/task-registry-flow-cli/src/runtime.rs",
+    "rust/task-registry-flow-cli/src/schema.rs",
+    "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs",
+    "rust/task-registry-flow-cli/src/tests/release_source_tests.rs",
+    "scripts/test-release-readiness.sh",
+    "skills/task-registry-flow/SKILL.md",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/cost_coverage.rs"
+object = "coverage_check"
+required_change = "Add mutation-to-cost coverage checker."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/cost_report.rs"
+object = "verified_totals"
+required_change = "Total only replay-valid measured receipts and report invalid evidence."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/metrics.rs"
+object = "cost_coverage_counts"
+required_change = "Count verified, invalid, covered, uncovered, and unmeasured cost posture."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/model.rs"
+object = "metrics_report"
+required_change = "Add cost coverage count fields."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/reviewer_report.rs"
+object = "cost_posture_summary"
+required_change = "Include honest cost coverage summary."
+
+[[tasks]]
+task_id = "TASK-2026-06-02-token-capture-hardening-005"
+plan_id = "PLAN-2026-06-02-token-capture-hardening"
+status = "completed"
+title = "Add token capture hardening tests"
+kind = "test"
+source_plan_path = "docs/plans/token-capture-hardening-2026-06-02.md"
+source_plan_hash_sha256 = "9e88683d57b31e7ebcba059e01fb483c15e2af890b11bc393e7b585181e0653a"
+reason = "The migration requires comprehensive positive and negative behavior coverage."
+acceptance_proof = "Behavior B-TOKEN-CAPTURE-019-token-capture-validation."
+created_at = "2026-06-02"
+updated_at = "2026-06-02"
+behavior_ids = ["B-TOKEN-CAPTURE-019-token-capture-validation"]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-02T09:41:56.282727263-04:00"
+completion_changed_files = [
+    ".agents/skills/task-registry-flow.md",
+    ".agents/skills/task-registry-flow/SKILL.md",
+    ".claude/skills/task-registry-flow/SKILL.md",
+    ".cursor/skills/task-registry-flow/SKILL.md",
+    "README.md",
+    "docs/plans/provider-usage-ingestion-2026-06-02.md",
+    "docs/pricing/openai-codex-rate-card-2026-06-02.toml",
+    "docs/provider-usage-adapter-contract.md",
+    "docs/runtime-schemas.md",
+    "docs/task-registry/events.jsonl",
+    "rust/task-registry-flow-cli/src/cost_coverage.rs",
+    "rust/task-registry-flow-cli/src/cost_evidence.rs",
+    "rust/task-registry-flow-cli/src/cost_ingest.rs",
+    "rust/task-registry-flow-cli/src/cost_record.rs",
+    "rust/task-registry-flow-cli/src/cost_report.rs",
+    "rust/task-registry-flow-cli/src/cost_targets.rs",
+    "rust/task-registry-flow-cli/src/main.rs",
+    "rust/task-registry-flow-cli/src/mutation_hook.rs",
+    "rust/task-registry-flow-cli/src/release_checks.rs",
+    "rust/task-registry-flow-cli/src/runtime.rs",
+    "rust/task-registry-flow-cli/src/schema.rs",
+    "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs",
+    "rust/task-registry-flow-cli/src/tests/release_source_tests.rs",
+    "scripts/test-release-readiness.sh",
+    "skills/task-registry-flow/SKILL.md",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs"
+object = "token_capture_hardening_tests"
+required_change = "Add positive and negative token capture hardening tests."
+
+[[tasks]]
+task_id = "TASK-2026-06-02-token-capture-hardening-006"
+plan_id = "PLAN-2026-06-02-token-capture-hardening"
+status = "completed"
+title = "Document honest token capture posture"
+kind = "documentation"
+source_plan_path = "docs/plans/token-capture-hardening-2026-06-02.md"
+source_plan_hash_sha256 = "9e88683d57b31e7ebcba059e01fb483c15e2af890b11bc393e7b585181e0653a"
+reason = "Public docs and agent skills must reflect measured/unmeasured cost posture without overclaims."
+acceptance_proof = "Behaviors B-TOKEN-CAPTURE-017-docs-positive and B-TOKEN-CAPTURE-018-docs-negative."
+created_at = "2026-06-02"
+updated_at = "2026-06-02"
+behavior_ids = [
+    "B-TOKEN-CAPTURE-017-docs-positive",
+    "B-TOKEN-CAPTURE-018-docs-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-02T09:41:56.282727263-04:00"
+completion_changed_files = [
+    ".agents/skills/task-registry-flow.md",
+    ".agents/skills/task-registry-flow/SKILL.md",
+    ".claude/skills/task-registry-flow/SKILL.md",
+    ".cursor/skills/task-registry-flow/SKILL.md",
+    "README.md",
+    "docs/plans/provider-usage-ingestion-2026-06-02.md",
+    "docs/pricing/openai-codex-rate-card-2026-06-02.toml",
+    "docs/provider-usage-adapter-contract.md",
+    "docs/runtime-schemas.md",
+    "docs/task-registry/events.jsonl",
+    "rust/task-registry-flow-cli/src/cost_coverage.rs",
+    "rust/task-registry-flow-cli/src/cost_evidence.rs",
+    "rust/task-registry-flow-cli/src/cost_ingest.rs",
+    "rust/task-registry-flow-cli/src/cost_record.rs",
+    "rust/task-registry-flow-cli/src/cost_report.rs",
+    "rust/task-registry-flow-cli/src/cost_targets.rs",
+    "rust/task-registry-flow-cli/src/main.rs",
+    "rust/task-registry-flow-cli/src/mutation_hook.rs",
+    "rust/task-registry-flow-cli/src/release_checks.rs",
+    "rust/task-registry-flow-cli/src/runtime.rs",
+    "rust/task-registry-flow-cli/src/schema.rs",
+    "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs",
+    "rust/task-registry-flow-cli/src/tests/release_source_tests.rs",
+    "scripts/test-release-readiness.sh",
+    "skills/task-registry-flow/SKILL.md",
+]
+
+[[tasks.targets]]
+file = "README.md"
+object = "cost_capture_posture"
+required_change = "Document governed Codex cost evidence and non-claims."
+
+[[tasks.targets]]
+file = "docs/runtime-schemas.md"
+object = "cost_capture_schema"
+required_change = "Document boundary capture, unmeasured records, tiered pricing, coverage checks, and verified reporting."
+
+[[tasks.targets]]
+file = "docs/provider-usage-adapter-contract.md"
+object = "adapter_contract"
+required_change = "Require service tier, reasoning-token semantics, and public-safe evidence."
+
+[[tasks.targets]]
+file = "docs/engineering-policy-compliance.md"
+object = "cost_policy_evidence"
+required_change = "Document cost evidence as engineering-policy evidence."
+
+[[tasks.targets]]
+file = "docs/gap-pipeline.md"
+object = "GP-007"
+required_change = "Update current token capture evidence and remaining gaps."
+
+[[tasks.targets]]
+file = "ROADMAP.md"
+object = "token_cost_evidence"
+required_change = "Reflect closed hardening and future non-Codex work."
+
+[[tasks.targets]]
+file = "skills/task-registry-flow/SKILL.md"
+object = "cost_commands"
+required_change = "Add cost-record and cost-coverage guidance."
+
+[[tasks.targets]]
+file = ".agents/skills/task-registry-flow.md"
+object = "cost_commands"
+required_change = "Mirror cost command guidance."
+
+[[tasks.targets]]
+file = ".agents/skills/task-registry-flow/SKILL.md"
+object = "cost_commands"
+required_change = "Mirror cost command guidance."
+
+[[tasks.targets]]
+file = ".cursor/skills/task-registry-flow/SKILL.md"
+object = "cost_commands"
+required_change = "Mirror cost command guidance."
+
+[[tasks.targets]]
+file = ".claude/skills/task-registry-flow/SKILL.md"
+object = "cost_commands"
+required_change = "Mirror cost command guidance."
+
+[[tasks]]
+task_id = "TASK-2026-06-02-cost-ingest-interface-exposure-001"
+plan_id = "PLAN-2026-06-02-cost-ingest-interface-exposure"
+status = "completed"
+title = "Expose command-specific cost-ingest help"
+kind = "implementation"
+source_plan_path = "docs/plans/cost-ingest-interface-exposure-2026-06-02.md"
+source_plan_hash_sha256 = "aa9e2df39a5ed2f692e474eb722ddd48da3408c65da76f7b05d9354065eb6351"
+reason = "Public users need a discoverable canonical ingestion interface without source inspection."
+acceptance_proof = "Behaviors B-001 and B-002 pass."
+created_at = "2026-06-02"
+updated_at = "2026-06-02"
+behavior_ids = [
+    "B-001-cost-ingest-help-positive",
+    "B-002-cost-ingest-help-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-02T01:52:56.510587355-04:00"
+completion_changed_files = [
+    ".agents/skills/task-registry-flow.md",
+    ".agents/skills/task-registry-flow/SKILL.md",
+    ".claude/skills/task-registry-flow/SKILL.md",
+    ".cursor/skills/task-registry-flow/SKILL.md",
+    "README.md",
+    "docs/plans/cost-ingest-interface-exposure-2026-06-02.md",
+    "docs/provider-usage-adapter-contract.md",
+    "docs/runtime-schemas.md",
+    "docs/task-registry.toml",
+    "docs/task-registry/events.jsonl",
+    "rust/task-registry-flow-cli/src/cost_ingest.rs",
+    "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs",
+    "scripts/test-release-readiness.sh",
+    "skills/task-registry-flow/SKILL.md",
+]
+
+[[tasks.targets]]
+file = "docs/plans/cost-ingest-interface-exposure-2026-06-02.md"
+object = "closure_contract"
+required_change = "Create and maintain the activated closure contract for this scope."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/cost_ingest.rs"
+object = "help_surface"
+required_change = "Add command-specific help for cost-ingest and codex-transcript."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs"
+object = "cost_ingest_help_tests"
+required_change = "Add positive and negative help discoverability tests."
+
+[[tasks.targets]]
+file = "plugins/agent-governance/rust/task-registry-flow-cli/src/cost_ingest.rs"
+object = "help_surface"
+required_change = "Mirror command-specific help for the repo-local wrapper runtime."
+
+[[tasks.targets]]
+file = "plugins/agent-governance/rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs"
+object = "cost_ingest_help_tests"
+required_change = "Mirror positive and negative help discoverability tests for the wrapper runtime."
+
+[[tasks]]
+task_id = "TASK-2026-06-02-cost-ingest-interface-exposure-002"
+plan_id = "PLAN-2026-06-02-cost-ingest-interface-exposure"
+status = "completed"
+title = "Document public and agent cost-ingest usage"
+kind = "documentation"
+source_plan_path = "docs/plans/cost-ingest-interface-exposure-2026-06-02.md"
+source_plan_hash_sha256 = "aa9e2df39a5ed2f692e474eb722ddd48da3408c65da76f7b05d9354065eb6351"
+reason = "Humans and agents need the installed and repo-local command shape documented."
+acceptance_proof = "Behaviors B-001 and B-002 pass and source-limit remains valid."
+created_at = "2026-06-02"
+updated_at = "2026-06-02"
+behavior_ids = [
+    "B-001-cost-ingest-help-positive",
+    "B-002-cost-ingest-help-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-02T01:52:56.510587355-04:00"
+completion_changed_files = [
+    ".agents/skills/task-registry-flow.md",
+    ".agents/skills/task-registry-flow/SKILL.md",
+    ".claude/skills/task-registry-flow/SKILL.md",
+    ".cursor/skills/task-registry-flow/SKILL.md",
+    "README.md",
+    "docs/plans/cost-ingest-interface-exposure-2026-06-02.md",
+    "docs/provider-usage-adapter-contract.md",
+    "docs/runtime-schemas.md",
+    "docs/task-registry.toml",
+    "docs/task-registry/events.jsonl",
+    "rust/task-registry-flow-cli/src/cost_ingest.rs",
+    "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs",
+    "scripts/test-release-readiness.sh",
+    "skills/task-registry-flow/SKILL.md",
+]
+
+[[tasks.targets]]
+file = "README.md"
+object = "cost_ingest_public_usage"
+required_change = "Document installed binary, wrapper, target kinds, pricing snapshot, and fail-closed selectors."
+
+[[tasks.targets]]
+file = "docs/runtime-schemas.md"
+object = "cost_ingest_runtime_schema"
+required_change = "Document command help, installed/package usage, target kinds, and pricing snapshot path."
+
+[[tasks.targets]]
+file = "docs/provider-usage-adapter-contract.md"
+object = "consumer_contract"
+required_change = "Add discoverable help and package-visible pricing evidence requirements."
+
+[[tasks.targets]]
+file = "skills/task-registry-flow/SKILL.md"
+object = "cost_commands"
+required_change = "Add canonical cost command guidance."
+
+[[tasks.targets]]
+file = ".agents/skills/task-registry-flow/SKILL.md"
+object = "cost_commands"
+required_change = "Mirror canonical cost command guidance."
+
+[[tasks.targets]]
+file = ".agents/skills/task-registry-flow.md"
+object = "cost_commands"
+required_change = "Mirror canonical cost command guidance."
+
+[[tasks.targets]]
+file = ".cursor/skills/task-registry-flow/SKILL.md"
+object = "cost_commands"
+required_change = "Mirror canonical cost command guidance."
+
+[[tasks.targets]]
+file = ".claude/skills/task-registry-flow/SKILL.md"
+object = "cost_commands"
+required_change = "Mirror canonical cost command guidance."
+
+[[tasks.targets]]
+file = "plugins/agent-governance/skills/task-registry-flow/SKILL.md"
+object = "cost_commands"
+required_change = "Mirror canonical cost command guidance in plugin source."
+
+[[tasks]]
+task_id = "TASK-2026-06-02-cost-ingest-interface-exposure-003"
+plan_id = "PLAN-2026-06-02-cost-ingest-interface-exposure"
+status = "completed"
+title = "Prove packaged cost-ingest interface and assets"
+kind = "release"
+source_plan_path = "docs/plans/cost-ingest-interface-exposure-2026-06-02.md"
+source_plan_hash_sha256 = "aa9e2df39a5ed2f692e474eb722ddd48da3408c65da76f7b05d9354065eb6351"
+reason = "Public release readiness must fail if cost-ingest is not installable and discoverable."
+acceptance_proof = "Behaviors B-003 and B-004 pass."
+created_at = "2026-06-02"
+updated_at = "2026-06-02"
+behavior_ids = [
+    "B-003-package-cost-assets-positive",
+    "B-004-package-cost-assets-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-02T01:52:56.510587355-04:00"
+completion_changed_files = [
+    ".agents/skills/task-registry-flow.md",
+    ".agents/skills/task-registry-flow/SKILL.md",
+    ".claude/skills/task-registry-flow/SKILL.md",
+    ".cursor/skills/task-registry-flow/SKILL.md",
+    "README.md",
+    "docs/plans/cost-ingest-interface-exposure-2026-06-02.md",
+    "docs/provider-usage-adapter-contract.md",
+    "docs/runtime-schemas.md",
+    "docs/task-registry.toml",
+    "docs/task-registry/events.jsonl",
+    "rust/task-registry-flow-cli/src/cost_ingest.rs",
+    "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs",
+    "scripts/test-release-readiness.sh",
+    "skills/task-registry-flow/SKILL.md",
+]
+
+[[tasks.targets]]
+file = "scripts/test-release-readiness.sh"
+object = "nix_asset_cost_ingest_checks"
+required_change = "Assert packaged binary help, provider contract, runtime schema, and pricing snapshot."
 
 [[tasks]]
 task_id = "TASK-2026-06-02-token-spend-hardening-001"
@@ -345,574 +1221,3 @@ required_change = "Include new source and docs files."
 file = "package.nix"
 object = "release_source"
 required_change = "Keep release-source packaging aligned when explicit path lists require it."
-
-[[tasks]]
-task_id = "TASK-2026-06-02-cost-ingest-nix-git-dependency-001"
-plan_id = "PLAN-2026-06-02-cost-ingest-nix-git-dependency"
-status = "completed"
-title = "Declare Git for Nix package cost-ingest tests"
-kind = "release"
-source_plan_path = "docs/plans/cost-ingest-nix-git-dependency-2026-06-02.md"
-source_plan_hash_sha256 = "1e7a7e6e66362be7e614bcca5c350a8d3f8d8bba4666397e9cdd7200e1377c25"
-reason = "Cost-ingest commit attribution uses real Git commit resolution, so package tests need Git available."
-acceptance_proof = "Behaviors B-001, B-002, and B-003."
-created_at = "2026-06-01"
-updated_at = "2026-06-01"
-behavior_ids = [
-    "B-001-nix-package-git-positive",
-    "B-002-commit-required-negative",
-    "B-003-release-readiness-validation",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-06-01T23:56:44.169946521-04:00"
-completion_changed_files = [
-    "docs/plans/cost-ingest-nix-git-dependency-2026-06-02.md",
-    "docs/task-registry.toml",
-    "docs/task-registry/events.jsonl",
-    "package.nix",
-    "rust/task-registry-flow-cli/src/tests/receipt_chain_tests.rs",
-]
-
-[[tasks.targets]]
-file = "package.nix"
-object = "native_build_inputs"
-required_change = "Include git for package tests that resolve commits."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/receipt_chain_tests.rs"
-object = "concurrent_writer_retry_budget"
-required_change = "Make receipt lock contention retry budget adequate for slow Nix package sandboxes."
-
-[[tasks.targets]]
-file = "docs/plans/cost-ingest-nix-git-dependency-2026-06-02.md"
-object = "closure_contract"
-required_change = "Track the follow-up package-gate gap and validation evidence."
-
-[[tasks.targets]]
-file = "docs/task-registry.toml"
-object = "active_registry"
-required_change = "Record activated package dependency task."
-
-[[tasks.targets]]
-file = "docs/task-registry/events.jsonl"
-object = "release_gate_receipts"
-required_change = "Append activation, landing, and validation receipts."
-
-[[tasks]]
-task_id = "TASK-2026-06-02-provider-usage-ingestion-001"
-plan_id = "PLAN-2026-06-02-provider-usage-ingestion"
-status = "completed"
-title = "Implement actual Codex transcript cost ingestion"
-kind = "implementation"
-source_plan_path = "docs/plans/provider-usage-ingestion-2026-06-02.md"
-source_plan_hash_sha256 = "03212b06a8f4ca3101be39ff707f1cedb686af8c0392999d7389589040c3fdd9"
-reason = "GP-007 requires real provider usage ingestion and pricing evidence before honest spend metrics."
-acceptance_proof = "Behaviors B-001, B-002, B-003, B-004, and B-006."
-created_at = "2026-06-01"
-updated_at = "2026-06-01"
-behavior_ids = [
-    "B-001-live-codex-usage-positive",
-    "B-002-live-codex-usage-negative",
-    "B-003-pricing-snapshot-positive",
-    "B-004-pricing-snapshot-negative",
-    "B-006-commit-attribution-negative",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-06-01T23:36:22.939781065-04:00"
-completion_changed_files = [
-    "README.md",
-    "REQUIREMENTS.toml",
-    "ROADMAP.md",
-    "docs/engineering-policy-compliance.md",
-    "docs/gap-pipeline.md",
-    "docs/plans/provider-usage-ingestion-2026-06-02.md",
-    "docs/pricing/openai-codex-rate-card-2026-06-02.toml",
-    "docs/runtime-schemas.md",
-    "docs/task-registry.toml",
-    "docs/task-registry/events.jsonl",
-    "docs/version-roadmap.toml",
-    "rust/task-registry-flow-cli/src/cost_evidence.rs",
-    "rust/task-registry-flow-cli/src/cost_ingest.rs",
-    "rust/task-registry-flow-cli/src/main.rs",
-    "rust/task-registry-flow-cli/src/runtime.rs",
-    "rust/task-registry-flow-cli/src/schema.rs",
-    "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/schema.rs"
-object = "cost_evidence_contributions"
-required_change = "Add transcript contribution and pricing-rate evidence fields."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/cost_ingest.rs"
-object = "codex_transcript_ingest"
-required_change = "Parse real Codex token_count events, calculate credit cost, and optionally append receipts."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/main.rs"
-object = "module_list"
-required_change = "Include cost_ingest module."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/runtime.rs"
-object = "dispatcher"
-required_change = "Route cost-ingest command and usage."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/cost_evidence.rs"
-object = "measured_validation"
-required_change = "Require contribution and pricing evidence for measured receipts."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs"
-object = "cost_ingest_tests"
-required_change = "Cover parser and fail-closed behavior."
-
-[[tasks]]
-task_id = "TASK-2026-06-02-provider-usage-ingestion-002"
-plan_id = "PLAN-2026-06-02-provider-usage-ingestion"
-status = "completed"
-title = "Add pricing snapshot, docs, and live commit attribution proof"
-kind = "governance"
-source_plan_path = "docs/plans/provider-usage-ingestion-2026-06-02.md"
-source_plan_hash_sha256 = "03212b06a8f4ca3101be39ff707f1cedb686af8c0392999d7389589040c3fdd9"
-reason = "Measured cost evidence must carry official pricing provenance and commit attribution."
-acceptance_proof = "Behaviors B-005 and B-007."
-created_at = "2026-06-01"
-updated_at = "2026-06-01"
-behavior_ids = [
-    "B-005-commit-attribution-positive",
-    "B-007-provider-ingestion-validation",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-06-01T23:36:22.939781065-04:00"
-completion_changed_files = [
-    "README.md",
-    "REQUIREMENTS.toml",
-    "ROADMAP.md",
-    "docs/engineering-policy-compliance.md",
-    "docs/gap-pipeline.md",
-    "docs/plans/provider-usage-ingestion-2026-06-02.md",
-    "docs/pricing/openai-codex-rate-card-2026-06-02.toml",
-    "docs/runtime-schemas.md",
-    "docs/task-registry.toml",
-    "docs/task-registry/events.jsonl",
-    "docs/version-roadmap.toml",
-    "rust/task-registry-flow-cli/src/cost_evidence.rs",
-    "rust/task-registry-flow-cli/src/cost_ingest.rs",
-    "rust/task-registry-flow-cli/src/main.rs",
-    "rust/task-registry-flow-cli/src/runtime.rs",
-    "rust/task-registry-flow-cli/src/schema.rs",
-    "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs",
-]
-
-[[tasks.targets]]
-file = "docs/pricing/openai-codex-rate-card-2026-06-02.toml"
-object = "official_rate_card_snapshot"
-required_change = "Record official OpenAI Codex token-based credit rates."
-
-[[tasks.targets]]
-file = "README.md"
-object = "cost_ingest"
-required_change = "Document live transcript ingestion and commit attribution."
-
-[[tasks.targets]]
-file = "ROADMAP.md"
-object = "cost_evidence"
-required_change = "Update token/cost evidence posture."
-
-[[tasks.targets]]
-file = "docs/engineering-policy-compliance.md"
-object = "token_cost_evidence"
-required_change = "Document measured Codex transcript usage evidence."
-
-[[tasks.targets]]
-file = "docs/runtime-schemas.md"
-object = "cost_ingest_schema"
-required_change = "Document cost-ingest command and receipt contribution schema."
-
-[[tasks.targets]]
-file = "docs/gap-pipeline.md"
-object = "GP-007"
-required_change = "Update current evidence and remaining gaps."
-
-[[tasks.targets]]
-file = "docs/version-roadmap.toml"
-object = "v2_1_0"
-required_change = "Add this plan to release evidence."
-
-[[tasks.targets]]
-file = "REQUIREMENTS.toml"
-object = "release_source"
-required_change = "Include new ingestion source and pricing snapshot."
-
-[[tasks.targets]]
-file = "docs/plans/provider-usage-ingestion-2026-06-02.md"
-object = "closure_contract"
-required_change = "Track approved scope, bounded transcript verifiers, targets, and validation evidence."
-
-[[tasks.targets]]
-file = "docs/task-registry.toml"
-object = "active_registry"
-required_change = "Record activated provider usage ingestion tasks."
-
-[[tasks.targets]]
-file = "docs/task-registry/events.jsonl"
-object = "cost_receipt"
-required_change = "Append bounded actual Codex transcript cost evidence receipt and activation receipts."
-
-[[tasks]]
-task_id = "TASK-2026-06-02-cost-evidence-model-001"
-plan_id = "PLAN-2026-06-02-cost-evidence-model"
-status = "completed"
-title = "Add typed cost evidence runtime validation"
-kind = "implementation"
-source_plan_path = "docs/plans/cost-evidence-model-2026-06-02.md"
-source_plan_hash_sha256 = "bda69c788bef2c879a121d3b65d32317d428b9d7444502bdf8b0a1358fc03b45"
-reason = "GP-007 needs structured usage evidence states before any honest spend metric."
-acceptance_proof = "Behaviors B-001-cost-evidence-measured-positive and B-002-cost-evidence-measured-negative."
-created_at = "2026-06-01"
-updated_at = "2026-06-01"
-behavior_ids = [
-    "B-001-cost-evidence-measured-positive",
-    "B-002-cost-evidence-measured-negative",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-06-01T23:04:35.878251809-04:00"
-completion_changed_files = [
-    "README.md",
-    "REQUIREMENTS.toml",
-    "ROADMAP.md",
-    "docs/engineering-policy-compliance.md",
-    "docs/gap-pipeline.md",
-    "docs/runtime-schemas.md",
-    "docs/version-roadmap.toml",
-    "rust/task-registry-flow-cli/src/cost_evidence.rs",
-    "rust/task-registry-flow-cli/src/main.rs",
-    "rust/task-registry-flow-cli/src/metrics.rs",
-    "rust/task-registry-flow-cli/src/model.rs",
-    "rust/task-registry-flow-cli/src/runtime.rs",
-    "rust/task-registry-flow-cli/src/schema.rs",
-    "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/schema.rs"
-object = "cost_evidence_schema"
-required_change = "Add provider-neutral cost evidence types and optional receipt field."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/cost_evidence.rs"
-object = "cost_evidence_check"
-required_change = "Validate measured, estimated, and unmeasured cost evidence honestly."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/main.rs"
-object = "module_list"
-required_change = "Include the cost evidence module."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/runtime.rs"
-object = "dispatcher"
-required_change = "Dispatch cost-evidence-check."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs"
-object = "cost_evidence_tests"
-required_change = "Add focused positive and negative cost evidence tests."
-
-[[tasks]]
-task_id = "TASK-2026-06-02-cost-evidence-model-002"
-plan_id = "PLAN-2026-06-02-cost-evidence-model"
-status = "completed"
-title = "Expose honest cost evidence docs and metrics"
-kind = "governance"
-source_plan_path = "docs/plans/cost-evidence-model-2026-06-02.md"
-source_plan_hash_sha256 = "bda69c788bef2c879a121d3b65d32317d428b9d7444502bdf8b0a1358fc03b45"
-reason = "Cost evidence state counts must not be overread as calculated spend."
-acceptance_proof = "Behaviors B-003-cost-evidence-docs-positive, B-004-cost-evidence-docs-negative, and B-005-cost-evidence-validation."
-created_at = "2026-06-01"
-updated_at = "2026-06-01"
-behavior_ids = [
-    "B-003-cost-evidence-docs-positive",
-    "B-004-cost-evidence-docs-negative",
-    "B-005-cost-evidence-validation",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-06-01T23:04:35.878251809-04:00"
-completion_changed_files = [
-    "README.md",
-    "REQUIREMENTS.toml",
-    "ROADMAP.md",
-    "docs/engineering-policy-compliance.md",
-    "docs/gap-pipeline.md",
-    "docs/runtime-schemas.md",
-    "docs/version-roadmap.toml",
-    "rust/task-registry-flow-cli/src/cost_evidence.rs",
-    "rust/task-registry-flow-cli/src/main.rs",
-    "rust/task-registry-flow-cli/src/metrics.rs",
-    "rust/task-registry-flow-cli/src/model.rs",
-    "rust/task-registry-flow-cli/src/runtime.rs",
-    "rust/task-registry-flow-cli/src/schema.rs",
-    "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/model.rs"
-object = "metrics_report"
-required_change = "Add measured, estimated, and unmeasured cost evidence counts."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/metrics.rs"
-object = "cost_counts"
-required_change = "Count cost evidence receipts by status."
-
-[[tasks.targets]]
-file = "README.md"
-object = "cost_evidence"
-required_change = "Document cost-evidence-check and current non-claims."
-
-[[tasks.targets]]
-file = "ROADMAP.md"
-object = "cost_evidence"
-required_change = "Reflect typed cost evidence as the next slice before cost per commit."
-
-[[tasks.targets]]
-file = "docs/engineering-policy-compliance.md"
-object = "token_cost_evidence"
-required_change = "Document current measured, estimated, and unmeasured cost evidence posture."
-
-[[tasks.targets]]
-file = "docs/runtime-schemas.md"
-object = "cost_evidence_schema"
-required_change = "Document cost evidence receipt schema, command, and metrics."
-
-[[tasks.targets]]
-file = "docs/gap-pipeline.md"
-object = "GP-007"
-required_change = "Update current evidence and remaining cost-per-commit gap."
-
-[[tasks.targets]]
-file = "docs/version-roadmap.toml"
-object = "v2_1_0"
-required_change = "Add this plan to release evidence."
-
-[[tasks.targets]]
-file = "REQUIREMENTS.toml"
-object = "release_source"
-required_change = "Include the new cost evidence module."
-
-[[tasks]]
-task_id = "TASK-2026-06-02-codex-model-attribution-hardening-001"
-plan_id = "PLAN-2026-06-02-codex-model-attribution-hardening"
-status = "completed"
-title = "Implement runtime model attribution"
-kind = "implementation"
-source_plan_path = "docs/plans/codex-model-attribution-hardening-2026-06-02.md"
-source_plan_hash_sha256 = "6d1ed561e074db21cfb9405242ac3694138715f9b3bdd2acbca08e83c642abf2"
-reason = "Codex mutation governance must record which active model is responsible for supported repo mutation attempts."
-acceptance_proof = "Behaviors B-001, B-002, B-003, and B-004 pass their typed verifiers."
-created_at = "2026-06-01"
-updated_at = "2026-06-01"
-behavior_ids = [
-    "B-001-codex-attribution-positive",
-    "B-002-codex-attribution-negative",
-    "B-003-model-check-positive",
-    "B-004-model-check-negative",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-06-01T21:49:33.302634831-04:00"
-completion_changed_files = [
-    ".codex/hooks.json",
-    "README.md",
-    "REQUIREMENTS.toml",
-    "ROADMAP.md",
-    "docs/engineering-policy-compliance.md",
-    "docs/gap-pipeline.md",
-    "docs/runtime-schemas.md",
-    "docs/version-roadmap.toml",
-    "hooks/codex-hooks.json",
-    "rust/task-registry-flow-cli/src/main.rs",
-    "rust/task-registry-flow-cli/src/metrics.rs",
-    "rust/task-registry-flow-cli/src/model.rs",
-    "rust/task-registry-flow-cli/src/model_attribution.rs",
-    "rust/task-registry-flow-cli/src/mutation_hook.rs",
-    "rust/task-registry-flow-cli/src/runtime.rs",
-    "rust/task-registry-flow-cli/src/schema.rs",
-    "rust/task-registry-flow-cli/src/tests/hook_command_tests.rs",
-    "rust/task-registry-flow-cli/src/tests/mod.rs",
-    "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs",
-    "templates/.codex/hooks.json.template",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/schema.rs"
-object = "receipt_schema"
-required_change = "Add attribution enums, structs, report surface, and command."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/model.rs"
-object = "metrics_report"
-required_change = "Add model attribution metrics counts."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/main.rs"
-object = "module_list"
-required_change = "Include the model attribution module."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/model_attribution.rs"
-object = "model_attribution_check"
-required_change = "Implement receipt scanning and diagnostics for model attribution."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/runtime.rs"
-object = "dispatcher"
-required_change = "Route model-attribution-check and update usage."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/mutation_hook.rs"
-object = "codex_attribution"
-required_change = "Require Codex PreToolUse model identity for supported writes and append attribution receipts."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/metrics.rs"
-object = "attribution_counts"
-required_change = "Count measured and unmeasured mutation attribution receipts."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/reviewer_report.rs"
-object = "attribution_summary"
-required_change = "Show model attribution counts in reviewer reports."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs"
-object = "model_attribution_tests"
-required_change = "Add focused attribution runtime tests."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/mod.rs"
-object = "test_module_list"
-required_change = "Include model attribution tests."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/hook_command_tests.rs"
-object = "codex_identity_fixture"
-required_change = "Carry required Codex identity fields in existing write-scope hook command fixtures."
-
-[[tasks]]
-task_id = "TASK-2026-06-02-codex-model-attribution-hardening-002"
-plan_id = "PLAN-2026-06-02-codex-model-attribution-hardening"
-status = "completed"
-title = "Document and package model attribution hardening"
-kind = "documentation"
-source_plan_path = "docs/plans/codex-model-attribution-hardening-2026-06-02.md"
-source_plan_hash_sha256 = "6d1ed561e074db21cfb9405242ac3694138715f9b3bdd2acbca08e83c642abf2"
-reason = "Public posture must state Codex as first measured adapter without claiming token spend or universal attribution."
-acceptance_proof = "Behaviors B-005 and B-006 pass their typed verifiers."
-created_at = "2026-06-01"
-updated_at = "2026-06-01"
-behavior_ids = [
-    "B-005-docs-positive",
-    "B-006-docs-negative",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-06-01T21:49:33.302634831-04:00"
-completion_changed_files = [
-    ".codex/hooks.json",
-    "README.md",
-    "REQUIREMENTS.toml",
-    "ROADMAP.md",
-    "docs/engineering-policy-compliance.md",
-    "docs/gap-pipeline.md",
-    "docs/runtime-schemas.md",
-    "docs/version-roadmap.toml",
-    "hooks/codex-hooks.json",
-    "rust/task-registry-flow-cli/src/main.rs",
-    "rust/task-registry-flow-cli/src/metrics.rs",
-    "rust/task-registry-flow-cli/src/model.rs",
-    "rust/task-registry-flow-cli/src/model_attribution.rs",
-    "rust/task-registry-flow-cli/src/mutation_hook.rs",
-    "rust/task-registry-flow-cli/src/runtime.rs",
-    "rust/task-registry-flow-cli/src/schema.rs",
-    "rust/task-registry-flow-cli/src/tests/hook_command_tests.rs",
-    "rust/task-registry-flow-cli/src/tests/mod.rs",
-    "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs",
-    "templates/.codex/hooks.json.template",
-]
-
-[[tasks.targets]]
-file = ".codex/hooks.json"
-object = "codex_posttooluse"
-required_change = "Add Codex PostToolUse model attribution hook."
-
-[[tasks.targets]]
-file = "hooks/codex-hooks.json"
-object = "codex_posttooluse"
-required_change = "Mirror packaged Codex PostToolUse hook."
-
-[[tasks.targets]]
-file = "templates/.codex/hooks.json.template"
-object = "codex_posttooluse"
-required_change = "Project PostToolUse hook projection."
-
-[[tasks.targets]]
-file = "README.md"
-object = "model_attribution"
-required_change = "Document Codex as first measured adapter and non-Codex as unmeasured."
-
-[[tasks.targets]]
-file = "ROADMAP.md"
-object = "cost_evidence"
-required_change = "Reflect shipped model attribution before token/cost evidence."
-
-[[tasks.targets]]
-file = "docs/engineering-policy-compliance.md"
-object = "model_evidence"
-required_change = "Clarify model identity versus token spend evidence."
-
-[[tasks.targets]]
-file = "docs/runtime-schemas.md"
-object = "receipt_schema"
-required_change = "Document attribution fields and model-attribution-check."
-
-[[tasks.targets]]
-file = "docs/gap-pipeline.md"
-object = "cost_gap"
-required_change = "Update current evidence and remaining cost gap."
-
-[[tasks.targets]]
-file = "docs/version-roadmap.toml"
-object = "covered_plan_ids"
-required_change = "Add this plan to 2.1.0 release coverage."
-
-[[tasks.targets]]
-file = "REQUIREMENTS.toml"
-object = "release_source.required"
-required_change = "Include model attribution module and tests."
-
-[[tasks]]
-task_id = "TASK-2026-06-01-policy-posture-version-coverage-001"
-plan_id = "PLAN-2026-06-01-policy-posture-version-coverage"
-status = "completed"
-title = "Cover policy posture work in version roadmap"
-kind = "release"
-source_plan_path = "docs/plans/policy-posture-version-coverage-2026-06-01.md"
-source_plan_hash_sha256 = "d7ef271f9c761ab66d0fa68350cbff565feb84e42eb9c9ef94ab9d14e431dc10"
-reason = "Completed post-cutover plans must be represented in release coverage before 2.1.0 validation can pass."
-acceptance_proof = "Behaviors B-001 and B-002 pass their typed verifiers."
-created_at = "2026-06-01"
-updated_at = "2026-06-01"
-behavior_ids = [
-    "B-001-version-coverage-positive",
-    "B-002-version-coverage-negative",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-06-01T19:17:53.275238256-04:00"
-completion_changed_files = ["docs/version-roadmap.toml"]
-
-[[tasks.targets]]
-file = "docs/version-roadmap.toml"
-object = "covered_plan_ids"
-required_change = "Add policy posture and version coverage plan ids to the 2.1.0 release coverage list."

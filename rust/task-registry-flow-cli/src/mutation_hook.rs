@@ -21,6 +21,7 @@ pub(crate) struct HookInspection {
     pub(crate) turn_id: Option<String>,
     pub(crate) tool_use_id: Option<String>,
     pub(crate) hook_event_name: Option<String>,
+    pub(crate) transcript_path: Option<String>,
 }
 
 impl HookInspection {
@@ -149,6 +150,8 @@ fn collect_top_level_hook_metadata(value: &Value, inspection: &mut HookInspectio
     inspection.tool_use_id = string_field(map.get("tool_use_id"));
     inspection.hook_event_name =
         string_field(map.get("hook_event_name")).or_else(|| string_field(map.get("hookEventName")));
+    inspection.transcript_path = string_field(map.get("transcript_path"))
+        .or_else(|| string_field(map.get("transcriptPath")));
 }
 
 fn string_field(value: Option<&Value>) -> Option<String> {
@@ -326,6 +329,7 @@ fn agent_attribution(
         turn_id: inspection.turn_id.clone(),
         tool_use_id: inspection.tool_use_id.clone(),
         hook_event_name: inspection.hook_event_name.clone(),
+        transcript_path: inspection.transcript_path.clone(),
     }
 }
 

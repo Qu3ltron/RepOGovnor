@@ -52,6 +52,16 @@ pub(crate) fn run_command(root: &Path, args: &[String]) -> RuntimeResult<String>
 }
 
 pub(crate) fn report(root: &Path) -> Result<CostReport> {
+    let evidence_report = crate::cost_evidence::check(root)?;
+    if evidence_report.summary.fail > 0 {
+        return Ok(CostReport {
+            schema_version: 1,
+            measured_targets: 0,
+            unmeasured_targets: 0,
+            invalid_events: evidence_report.summary.fail,
+            entries: Vec::new(),
+        });
+    }
     let events_path = root.join(EVENTS_PATH);
     if !events_path.is_file() {
         return Ok(CostReport {
@@ -85,7 +95,7 @@ pub(crate) fn report(root: &Path) -> Result<CostReport> {
         let pricing = evidence.pricing.as_ref();
         let amount = evidence.amount.as_ref();
         let key = format!(
-            "{}\t{}\t{}\t{}\t{}\t{}",
+            "{}\t{}\t{}\t{}\t{}\t{}\t{}",
             evidence.attribution_target.kind,
             evidence.attribution_target.id,
             status,
@@ -93,6 +103,9 @@ pub(crate) fn report(root: &Path) -> Result<CostReport> {
             evidence.model_slug.as_deref().unwrap_or(""),
             pricing
                 .map(|pricing| pricing.version.as_str())
+                .unwrap_or(""),
+            pricing
+                .map(|pricing| pricing.service_tier.as_str())
                 .unwrap_or("")
         );
         let entry = entries.entry(key).or_insert_with(|| CostReportEntry {

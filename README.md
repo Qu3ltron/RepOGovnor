@@ -70,7 +70,12 @@ the terms in [LICENSE](LICENSE).
 - `cost-ingest codex-transcript`: actual local Codex transcript token-count
   events can be priced with an OpenAI Codex credit-rate snapshot and attributed
   to an explicit governed target. The command requires explicit transcript,
-  session, line-range, pricing, and target evidence.
+  session, line-range, pricing, service-tier, and target evidence.
+- `cost-record unmeasured`: unknown spend can be recorded with a reason and
+  optional mutation-boundary ids; unknown cost is never treated as zero.
+- `cost-coverage-check`: model-attributed mutation receipts must have measured
+  or explicitly unmeasured cost evidence for the matching session, turn, tool,
+  and model boundary.
 - `cost-report`: measured token spend is grouped by target, provider, model,
   pricing version, and service tier. Unmeasured evidence stays unmeasured; it
   is not reported as zero cost.
@@ -195,6 +200,48 @@ The package installs runtime assets under
 `MANIFEST.toml`, `REQUIREMENTS.toml`, `project.config.example.toml`, and runtime
 docs. Consumers should use this packaged asset root instead of reading from a
 mutable checkout.
+
+Cost ingestion is exposed through the installed binary and the repo-local
+wrapper:
+
+```bash
+task-registry-flow cost-ingest codex-transcript \
+  --transcript-path <path> \
+  --session-id <id> \
+  --since-line <n> \
+  --until-line <n> \
+  --pricing-snapshot "$AGENT_GOVERNANCE_ASSET_ROOT/docs/pricing/openai-codex-rate-card-2026-06-02.toml" \
+  --service-tier codex-cloud \
+  --target-kind commit \
+  --target-id <sha|HEAD> \
+  --boundary-session-id <id> \
+  --boundary-turn-id <id> \
+  --boundary-tool-use-id <id> \
+  --format json
+```
+
+Repo-local usage can replace `task-registry-flow` with
+`.codex/scripts/task-registry` and use
+`docs/pricing/openai-codex-rate-card-2026-06-02.toml`. Supported target kinds are
+`commit`, `plan`, `task`, `verifier-run`, `landing-attempt`, `retry`,
+`release-cycle`, and `session`. The command intentionally has no latest
+transcript selector and no legacy commit shortcut; transcript, session, line
+range, pricing, and target evidence must be explicit.
+
+When measured transcript evidence cannot be published, record an honest
+unmeasured receipt instead of publishing private session paths:
+
+```bash
+task-registry-flow cost-record unmeasured \
+  --target-kind commit \
+  --target-id <sha|HEAD> \
+  --reason "private transcript evidence is not public release material" \
+  --provider codex \
+  --model gpt-5-codex \
+  --boundary-session-id <id> \
+  --boundary-turn-id <id> \
+  --boundary-tool-use-id <id>
+```
 
 Validate Nix-facing release changes with:
 

@@ -68,6 +68,8 @@ string_enum!(CliCommand {
     ModelAttributionCheck => "model-attribution-check",
     CostEvidenceCheck => "cost-evidence-check",
     CostIngest => "cost-ingest",
+    CostRecord => "cost-record",
+    CostCoverageCheck => "cost-coverage-check",
     CostReport => "cost-report",
     Metrics => "metrics",
     SourceLimit => "source-limit",
@@ -105,6 +107,7 @@ string_enum!(ReportSurface {
     ReceiptChainFix => "receipt-chain-fix",
     ModelAttribution => "model-attribution",
     CostEvidence => "cost-evidence",
+    CostCoverage => "cost-coverage",
 });
 
 string_enum!(FailureCode {
@@ -241,6 +244,7 @@ string_enum!(ReleaseCheckId {
     ReleaseExecutablePlatform => "release-executable-platform",
     ReleaseRustSourceUndeclared => "release-rust-source-undeclared",
     ReleaseGovernedSourceUndeclared => "release-governed-source-undeclared",
+    ReleasePrivateCostEvidenceAbsent => "release-private-cost-evidence-absent",
     StalePathAbsent => "stale-path-absent",
     ReleaseVersionConsistent => "release-version-consistent",
     TrackedForCiPresent => "tracked-for-ci-present",
@@ -505,6 +509,8 @@ pub(crate) struct AgentModelAttribution {
     pub(crate) tool_use_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) hook_event_name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) transcript_path: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -541,6 +547,12 @@ pub(crate) struct CostEvidence {
     pub(crate) estimation_method: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) unmeasured_reason: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) boundary_session_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) boundary_turn_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) boundary_tool_use_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -570,6 +582,8 @@ pub(crate) struct CostPricingSnapshot {
     pub(crate) service_tier: String,
     pub(crate) snapshot_path: String,
     pub(crate) snapshot_sha256: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) reasoning_token_policy: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -602,6 +616,8 @@ pub(crate) struct UsageContribution {
     pub(crate) selected_event_digest_sha256: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub(crate) turn_ids: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub(crate) tool_use_ids: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

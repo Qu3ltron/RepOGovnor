@@ -55,10 +55,10 @@ Out of scope:
 ### GAP-001: Actual provider usage is not ingested
 
 - Current failure: Cost evidence can validate receipts, but no command ingests real usage from a provider-backed source.
-- Good behavior: Given an actual Codex transcript containing `token_count` events, when `cost-ingest codex-transcript --transcript-path /home/hasnamuss/.codex/sessions/2026/05/31/rollout-2026-05-31T16-40-14-019e7fc4-07e6-7760-bd1f-5e599044045f.jsonl --since-line 14128 --until-line 14642 --pricing-snapshot docs/pricing/openai-codex-rate-card-2026-06-02.toml --commit HEAD --format json` runs, then the report contains measured usage derived from real transcript token counts.
+- Good behavior: Given an actual Codex transcript containing `token_count` events, when `cost-ingest codex-transcript --transcript-path <local-private-codex-transcript> --since-line 14128 --until-line 14642 --pricing-snapshot docs/pricing/openai-codex-rate-card-2026-06-02.toml --target-kind commit --target-id HEAD --format json` runs, then the report contains measured usage derived from real transcript token counts.
 - Forbidden behavior: Missing transcript, missing token-count events, malformed token counts, or unknown model pricing must fail instead of producing estimated or synthetic spend.
 - Files involved: `rust/task-registry-flow-cli/src/schema.rs`, `rust/task-registry-flow-cli/src/cost_ingest.rs`, `rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs`.
-- Positive test: `.codex/scripts/task-registry cost-ingest codex-transcript --transcript-path /home/hasnamuss/.codex/sessions/2026/05/31/rollout-2026-05-31T16-40-14-019e7fc4-07e6-7760-bd1f-5e599044045f.jsonl --since-line 14128 --until-line 14642 --pricing-snapshot docs/pricing/openai-codex-rate-card-2026-06-02.toml --commit HEAD --format json`
+- Positive test: `.codex/scripts/task-registry cost-ingest codex-transcript --transcript-path <local-private-codex-transcript> --since-line 14128 --until-line 14642 --pricing-snapshot docs/pricing/openai-codex-rate-card-2026-06-02.toml --target-kind commit --target-id HEAD --format json`
 - Negative test: `cargo test --locked --manifest-path rust/task-registry-flow-cli/Cargo.toml cost_ingest_rejects_missing_usage -- --nocapture`
 - Data/schema/provenance: Usage source must be a real transcript path and line range, not test narration or a generated receipt.
 - Runtime: Local transcript read only; no network telemetry.
@@ -80,7 +80,7 @@ Out of scope:
 - Good behavior: Given an explicit commit SHA and actual transcript usage, when ingestion runs with `--append-receipt`, then a measured cost receipt targets the commit and records the transcript contribution lines.
 - Forbidden behavior: Commit attribution without an explicit commit, an invalid commit, or missing usage contribution evidence must fail.
 - Files involved: `rust/task-registry-flow-cli/src/cost_ingest.rs`, `rust/task-registry-flow-cli/src/schema.rs`, `docs/runtime-schemas.md`.
-- Positive test: `.codex/scripts/task-registry cost-ingest codex-transcript --transcript-path /home/hasnamuss/.codex/sessions/2026/05/31/rollout-2026-05-31T16-40-14-019e7fc4-07e6-7760-bd1f-5e599044045f.jsonl --since-line 14128 --until-line 14642 --pricing-snapshot docs/pricing/openai-codex-rate-card-2026-06-02.toml --commit HEAD --append-receipt --format json`
+- Positive test: `.codex/scripts/task-registry cost-ingest codex-transcript --transcript-path <local-private-codex-transcript> --since-line 14128 --until-line 14642 --pricing-snapshot docs/pricing/openai-codex-rate-card-2026-06-02.toml --target-kind commit --target-id HEAD --append-receipt --format json`
 - Negative test: `cargo test --locked --manifest-path rust/task-registry-flow-cli/Cargo.toml cost_ingest_rejects_missing_commit -- --nocapture`
 - Data/schema/provenance: Receipt target kind is `commit`; id is a resolved local commit SHA.
 - Runtime: Appends local receipt only when `--append-receipt` is present.
@@ -89,8 +89,8 @@ Out of scope:
 
 Focused:
 
-- `.codex/scripts/task-registry cost-ingest codex-transcript --transcript-path /home/hasnamuss/.codex/sessions/2026/05/31/rollout-2026-05-31T16-40-14-019e7fc4-07e6-7760-bd1f-5e599044045f.jsonl --since-line 14128 --until-line 14642 --pricing-snapshot docs/pricing/openai-codex-rate-card-2026-06-02.toml --commit HEAD --format json`
-- `.codex/scripts/task-registry cost-ingest codex-transcript --transcript-path /home/hasnamuss/.codex/sessions/2026/05/31/rollout-2026-05-31T16-40-14-019e7fc4-07e6-7760-bd1f-5e599044045f.jsonl --since-line 14128 --until-line 14642 --pricing-snapshot docs/pricing/openai-codex-rate-card-2026-06-02.toml --commit HEAD --append-receipt --format json`
+- `.codex/scripts/task-registry cost-ingest codex-transcript --transcript-path <local-private-codex-transcript> --since-line 14128 --until-line 14642 --pricing-snapshot docs/pricing/openai-codex-rate-card-2026-06-02.toml --target-kind commit --target-id HEAD --format json`
+- `.codex/scripts/task-registry cost-ingest codex-transcript --transcript-path <local-private-codex-transcript> --since-line 14128 --until-line 14642 --pricing-snapshot docs/pricing/openai-codex-rate-card-2026-06-02.toml --target-kind commit --target-id HEAD --append-receipt --format json`
 - `.codex/scripts/task-registry cost-evidence-check --format json`
 - `cargo test --locked --manifest-path rust/task-registry-flow-cli/Cargo.toml cost_ingest -- --nocapture`
 - `.codex/scripts/task-registry source-limit check`
@@ -131,11 +131,11 @@ title = "Actual Codex transcript usage is ingested"
 given = "The local machine has a Codex transcript with token_count events"
 when = "cost-ingest codex-transcript runs with an actual transcript path, line range, and the official pricing snapshot"
 then = "the JSON report contains measured usage from real transcript token-count events"
-confirmation = ".codex/scripts/task-registry cost-ingest codex-transcript --transcript-path /home/hasnamuss/.codex/sessions/2026/05/31/rollout-2026-05-31T16-40-14-019e7fc4-07e6-7760-bd1f-5e599044045f.jsonl --since-line 14128 --until-line 14642 --pricing-snapshot docs/pricing/openai-codex-rate-card-2026-06-02.toml --commit HEAD --format json"
+confirmation = ".codex/scripts/task-registry cost-ingest codex-transcript --transcript-path <local-private-codex-transcript> --since-line 14128 --until-line 14642 --pricing-snapshot docs/pricing/openai-codex-rate-card-2026-06-02.toml --target-kind commit --target-id HEAD --format json"
 
 [[behaviors.verifiers]]
 type = "command"
-command = ".codex/scripts/task-registry cost-ingest codex-transcript --transcript-path /home/hasnamuss/.codex/sessions/2026/05/31/rollout-2026-05-31T16-40-14-019e7fc4-07e6-7760-bd1f-5e599044045f.jsonl --since-line 14128 --until-line 14642 --pricing-snapshot docs/pricing/openai-codex-rate-card-2026-06-02.toml --commit HEAD --format json"
+command = ".codex/scripts/task-registry cost-ingest codex-transcript --transcript-path <local-private-codex-transcript> --since-line 14128 --until-line 14642 --pricing-snapshot docs/pricing/openai-codex-rate-card-2026-06-02.toml --target-kind commit --target-id HEAD --format json"
 expected_exit = 0
 
 [[behaviors]]
@@ -189,13 +189,13 @@ gap_id = "GAP-003"
 polarity = "positive"
 title = "Measured usage receipt is commit attributed"
 given = "Actual Codex usage and pricing snapshot evidence exist"
-when = "cost-ingest runs with --append-receipt and --commit HEAD"
+when = "cost-ingest runs with --append-receipt and --target-kind commit --target-id HEAD"
 then = "a measured cost receipt targets the resolved commit and records contribution evidence"
-confirmation = ".codex/scripts/task-registry cost-ingest codex-transcript --transcript-path /home/hasnamuss/.codex/sessions/2026/05/31/rollout-2026-05-31T16-40-14-019e7fc4-07e6-7760-bd1f-5e599044045f.jsonl --since-line 14128 --until-line 14642 --pricing-snapshot docs/pricing/openai-codex-rate-card-2026-06-02.toml --commit HEAD --append-receipt --format json"
+confirmation = ".codex/scripts/task-registry cost-ingest codex-transcript --transcript-path <local-private-codex-transcript> --since-line 14128 --until-line 14642 --pricing-snapshot docs/pricing/openai-codex-rate-card-2026-06-02.toml --target-kind commit --target-id HEAD --append-receipt --format json"
 
 [[behaviors.verifiers]]
 type = "command"
-command = ".codex/scripts/task-registry cost-ingest codex-transcript --transcript-path /home/hasnamuss/.codex/sessions/2026/05/31/rollout-2026-05-31T16-40-14-019e7fc4-07e6-7760-bd1f-5e599044045f.jsonl --since-line 14128 --until-line 14642 --pricing-snapshot docs/pricing/openai-codex-rate-card-2026-06-02.toml --commit HEAD --append-receipt --format json"
+command = ".codex/scripts/task-registry cost-ingest codex-transcript --transcript-path <local-private-codex-transcript> --since-line 14128 --until-line 14642 --pricing-snapshot docs/pricing/openai-codex-rate-card-2026-06-02.toml --target-kind commit --target-id HEAD --append-receipt --format json"
 expected_exit = 0
 
 [[behaviors]]

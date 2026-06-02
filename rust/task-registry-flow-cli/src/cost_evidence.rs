@@ -162,6 +162,18 @@ fn validate_cost_evidence(
                     "pricing.snapshot_sha256",
                     Some(&pricing.snapshot_sha256),
                 );
+                if evidence
+                    .usage
+                    .as_ref()
+                    .and_then(|usage| usage.reasoning_tokens)
+                    .is_some_and(|tokens| tokens > 0)
+                {
+                    require_nonempty(
+                        &mut missing,
+                        "pricing.reasoning_token_policy",
+                        pricing.reasoning_token_policy.as_ref(),
+                    );
+                }
             } else {
                 missing.push("pricing");
             }
@@ -194,6 +206,9 @@ fn validate_cost_evidence(
                 );
                 if contribution.model_context_line == 0 {
                     missing.push("usage_contributions.model_context_line");
+                }
+                if contribution.turn_ids.is_empty() {
+                    missing.push("usage_contributions.turn_ids");
                 }
             }
             if !missing.is_empty() {
@@ -303,19 +318,18 @@ fn validate_measured_replay(
         ));
     }
     let cached = usage.cached_input_tokens.unwrap_or(0);
-    if cached > usage.input_tokens {
-        return Some(fail_replay(
-            line_number,
-            path,
-            "cached input exceeds input tokens".to_string(),
-        ));
-    }
-    let uncached = usage.input_tokens - cached;
-    let expected_amount = ((uncached as u128) * (rates.input_micros_per_million as u128)
-        + (cached as u128) * (rates.cached_input_micros_per_million as u128)
-        + (usage.output_tokens as u128) * (rates.output_micros_per_million as u128))
-        / 1_000_000;
-    if expected_amount != amount.amount_micros as u128 {
+    let expected_amount = match crate::cost_pricing::credit_micros(
+        usage.input_tokens,
+        cached,
+        usage.output_tokens,
+        usage.reasoning_tokens.unwrap_or(0),
+        rates,
+        pricing.reasoning_token_policy.as_deref(),
+    ) {
+        Ok(amount) => amount,
+        Err(error) => return Some(fail_replay(line_number, path, error)),
+    };
+    if expected_amount != amount.amount_micros {
         return Some(fail_replay(
             line_number,
             path,
@@ -367,7 +381,18 @@ fn validate_contribution_replay(
         "{}:{}",
         evidence.attribution_target.kind, evidence.attribution_target.id
     );
-    if !seen_event_digests.insert(contribution.selected_event_digest_sha256.clone()) {
+    let Some(pricing_identity) = pricing_identity(evidence) else {
+        return Some(fail_replay(
+            line_number,
+            target_path,
+            "missing pricing identity for measured replay".to_string(),
+        ));
+    };
+    let digest_identity = format!(
+        "{}:{}",
+        contribution.selected_event_digest_sha256, pricing_identity
+    );
+    if !seen_event_digests.insert(digest_identity) {
         return Some(fail_replay(
             line_number,
             target_path,
@@ -403,11 +428,12 @@ fn validate_contribution_replay(
         Err(error) => return Some(fail_replay(line_number, target_path, error)),
     }
     let key = format!(
-        "{}:{}:{}:{}",
+        "{}:{}:{}:{}:{}",
         contribution.session_id,
         contribution.model_slug,
         evidence.attribution_target.kind,
-        evidence.attribution_target.id
+        evidence.attribution_target.id,
+        pricing_identity,
     );
     let ranges = measured_ranges.entry(key).or_default();
     if ranges
@@ -422,6 +448,28 @@ fn validate_contribution_replay(
     }
     ranges.push((contribution.start_line, contribution.end_line));
     None
+}
+
+fn pricing_identity(evidence: &CostEvidence) -> Option<String> {
+    let pricing = evidence.pricing.as_ref()?;
+    let rates = evidence.pricing_rates.as_ref()?;
+    let amount = evidence.amount.as_ref()?;
+    Some(format!(
+        "{}:{}:{}:{}:{}:{}:{}:{}:{}:{}:{}:{}:{}",
+        evidence.provider.as_deref().unwrap_or(""),
+        evidence.model_slug.as_deref().unwrap_or(""),
+        pricing.source,
+        pricing.version,
+        pricing.currency,
+        pricing.service_tier,
+        pricing.snapshot_path,
+        pricing.snapshot_sha256,
+        rates.input_micros_per_million,
+        rates.cached_input_micros_per_million,
+        rates.output_micros_per_million,
+        amount.currency,
+        amount.amount_micros,
+    ))
 }
 
 fn fail_replay(line_number: usize, path: String, actual: String) -> Diagnostic {

@@ -439,9 +439,30 @@ check_nix_package() {
   test -f "$out/share/agent-governance/REQUIREMENTS.toml"
   test -f "$out/share/agent-governance/project.config.example.toml"
   test -f "$out/share/agent-governance/docs/runtime-schemas.md"
+  test -f "$out/share/agent-governance/docs/provider-usage-adapter-contract.md"
+  test -f "$out/share/agent-governance/docs/pricing/openai-codex-rate-card-2026-06-02.toml"
   test -f "$out/share/agent-governance/docs/multi-repo.md"
+  "$out/bin/task-registry-flow" cost-ingest --help >/tmp/release-cost-ingest-help.out
+  grep -q 'cost-ingest codex-transcript' /tmp/release-cost-ingest-help.out
+  grep -q -- '--transcript-path' /tmp/release-cost-ingest-help.out
+  grep -q -- '--session-id' /tmp/release-cost-ingest-help.out
+  grep -q -- '--service-tier' /tmp/release-cost-ingest-help.out
+  grep -q -- '--target-kind' /tmp/release-cost-ingest-help.out
+  grep -q -- '--boundary-turn-id' /tmp/release-cost-ingest-help.out
+  ! grep -q -- '--latest' /tmp/release-cost-ingest-help.out
+  ! grep -q -- '--commit' /tmp/release-cost-ingest-help.out
+  "$out/bin/task-registry-flow" cost-record --help >/tmp/release-cost-record-help.out
+  grep -q 'cost-record unmeasured' /tmp/release-cost-record-help.out
+  "$out/bin/task-registry-flow" cost-coverage-check --format json >/tmp/release-cost-coverage.out
+  grep -q '"surface": "cost-coverage"' /tmp/release-cost-coverage.out
+  grep -q 'cost-ingest codex-transcript' "$out/share/agent-governance/docs/runtime-schemas.md"
+  grep -q 'cost-record unmeasured' "$out/share/agent-governance/docs/runtime-schemas.md"
+  grep -q 'cost-coverage-check' "$out/share/agent-governance/docs/runtime-schemas.md"
+  grep -q 'Provider Usage Adapter Contract' "$out/share/agent-governance/docs/provider-usage-adapter-contract.md"
+  grep -q 'openai-codex-rate-card-2026-06-02.toml' "$out/share/agent-governance/README.md"
   ! grep -R '/home/hasnamuss' \
     "$out/bin" \
+    "$out/share/agent-governance/docs" \
     "$out/share/agent-governance/templates" \
     "$out/share/agent-governance/hooks" \
     "$out/share/agent-governance/modules"

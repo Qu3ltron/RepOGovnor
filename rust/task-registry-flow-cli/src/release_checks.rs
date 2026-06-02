@@ -132,6 +132,7 @@ pub(crate) fn report(root: &Path, mode: Mode) -> Result<CheckReport> {
         checks.extend(executable_policy_checks(root, &requirements));
         checks.extend(rust_source_policy_checks(root, &requirements));
         checks.extend(governed_source_policy_checks(root, &requirements));
+        checks.extend(private_cost_evidence_checks(root, &requirements));
         checks.extend(stale_absent_checks(root, &requirements));
         checks.extend(schema_checks(&requirements));
     }
@@ -348,6 +349,73 @@ fn governed_source_policy_checks(root: &Path, requirements: &Requirements) -> Ve
             )
         })
         .collect()
+}
+
+fn private_cost_evidence_checks(root: &Path, requirements: &Requirements) -> Vec<Diagnostic> {
+    let mut checks = Vec::new();
+    let mut scanned = 0usize;
+    for path in &requirements.release_source.required {
+        if !is_public_cost_evidence_path(path) {
+            continue;
+        }
+        scanned += 1;
+        let full_path = root.join(path);
+        let body = match fs::read_to_string(&full_path) {
+            Ok(body) => body,
+            Err(error) => {
+                checks.push(Diagnostic::fail(
+                    ReleaseCheckId::ReleasePrivateCostEvidenceAbsent.as_str(),
+                    ReportSurface::ReleaseSource,
+                    path,
+                    "public cost evidence readable for private-path scan",
+                    format!("read failed: {error}"),
+                    "restore the release artifact or remove it from release_source.required",
+                ));
+                continue;
+            }
+        };
+        if let Some(private_path) = first_private_cost_path(&body) {
+            checks.push(Diagnostic::fail(
+                ReleaseCheckId::ReleasePrivateCostEvidenceAbsent.as_str(),
+                ReportSurface::ReleaseSource,
+                path,
+                "no private Codex transcript path in public release evidence",
+                private_path,
+                "replace private transcript evidence with sanitized measured evidence or explicit unmeasured evidence",
+            ));
+        }
+    }
+    if checks.is_empty() {
+        checks.push(Diagnostic::pass(
+            ReleaseCheckId::ReleasePrivateCostEvidenceAbsent.as_str(),
+            ReportSurface::ReleaseSource,
+            "release_source.public_cost_evidence",
+            format!("no private transcript paths across {scanned} public cost evidence file(s)"),
+        ));
+    }
+    checks
+}
+
+fn is_public_cost_evidence_path(path: &str) -> bool {
+    path == "docs/task-registry/events.jsonl"
+        || path.starts_with("docs/")
+        || path == "README.md"
+        || path == "VISION.md"
+}
+
+fn first_private_cost_path(body: &str) -> Option<String> {
+    body.lines().find_map(|line| {
+        for marker in ["/.codex/sessions/", "/.codex/conversations/"] {
+            if let Some(index) = line.find(marker) {
+                let prefix_start = line[..index]
+                    .rfind(|character: char| character.is_whitespace() || character == '"')
+                    .map(|position| position + 1)
+                    .unwrap_or(0);
+                return Some(line[prefix_start..].chars().take(180).collect());
+            }
+        }
+        None
+    })
 }
 
 fn discover_governed_sources(root: &Path) -> Vec<String> {
