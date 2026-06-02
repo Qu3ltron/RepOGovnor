@@ -3,9 +3,11 @@ use crate::model::{EVENTS_PATH, EventRecord, Result};
 use crate::reports::{RuntimeFailure, RuntimeResult};
 use crate::schema::{
     CheckReport, CliCommand, CostEvidence, CostEvidenceStatus, Diagnostic, FailureCode,
-    ReportSurface,
+    ReportSurface, UsageContribution,
 };
 use serde_json::Value;
+use sha2::{Digest, Sha256};
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::Path;
 
@@ -32,6 +34,8 @@ pub(crate) fn run_command(root: &Path, args: &[String]) -> RuntimeResult<String>
 
 pub(crate) fn check(root: &Path) -> Result<CheckReport> {
     let mut checks = Vec::new();
+    let mut seen_event_digests = BTreeSet::new();
+    let mut measured_ranges = BTreeMap::<String, Vec<(usize, usize)>>::new();
     let events_path = root.join(EVENTS_PATH);
     if !events_path.is_file() {
         checks.push(no_receipts_check());
@@ -89,7 +93,13 @@ pub(crate) fn check(root: &Path) -> Result<CheckReport> {
         let Some(cost_evidence) = &event.cost_evidence else {
             continue;
         };
-        checks.extend(validate_cost_evidence(cost_evidence, line_number));
+        checks.extend(validate_cost_evidence(
+            root,
+            cost_evidence,
+            line_number,
+            &mut seen_event_digests,
+            &mut measured_ranges,
+        ));
     }
 
     if checks.is_empty() {
@@ -98,7 +108,13 @@ pub(crate) fn check(root: &Path) -> Result<CheckReport> {
     CheckReport::new(ReportSurface::CostEvidence, checks)
 }
 
-fn validate_cost_evidence(evidence: &CostEvidence, line_number: usize) -> Vec<Diagnostic> {
+fn validate_cost_evidence(
+    root: &Path,
+    evidence: &CostEvidence,
+    line_number: usize,
+    seen_event_digests: &mut BTreeSet<String>,
+    measured_ranges: &mut BTreeMap<String, Vec<(usize, usize)>>,
+) -> Vec<Diagnostic> {
     let path = format!(
         "{}:{}",
         evidence.attribution_target.kind, evidence.attribution_target.id
@@ -131,6 +147,21 @@ fn validate_cost_evidence(evidence: &CostEvidence, line_number: usize) -> Vec<Di
                 require_nonempty(&mut missing, "pricing.source", Some(&pricing.source));
                 require_nonempty(&mut missing, "pricing.version", Some(&pricing.version));
                 require_nonempty(&mut missing, "pricing.currency", Some(&pricing.currency));
+                require_nonempty(
+                    &mut missing,
+                    "pricing.service_tier",
+                    Some(&pricing.service_tier),
+                );
+                require_nonempty(
+                    &mut missing,
+                    "pricing.snapshot_path",
+                    Some(&pricing.snapshot_path),
+                );
+                require_nonempty(
+                    &mut missing,
+                    "pricing.snapshot_sha256",
+                    Some(&pricing.snapshot_sha256),
+                );
             } else {
                 missing.push("pricing");
             }
@@ -145,21 +176,50 @@ fn validate_cost_evidence(evidence: &CostEvidence, line_number: usize) -> Vec<Di
             if evidence.usage_contributions.is_empty() {
                 missing.push("usage_contributions");
             }
-            if missing.is_empty() {
+            for contribution in &evidence.usage_contributions {
+                require_nonempty(
+                    &mut missing,
+                    "usage_contributions.source_sha256",
+                    Some(&contribution.source_sha256),
+                );
+                require_nonempty(
+                    &mut missing,
+                    "usage_contributions.session_id",
+                    Some(&contribution.session_id),
+                );
+                require_nonempty(
+                    &mut missing,
+                    "usage_contributions.selected_event_digest_sha256",
+                    Some(&contribution.selected_event_digest_sha256),
+                );
+                if contribution.model_context_line == 0 {
+                    missing.push("usage_contributions.model_context_line");
+                }
+            }
+            if !missing.is_empty() {
+                return vec![Diagnostic::fail(
+                    format!("cost-evidence-measured-{line_number}"),
+                    ReportSurface::CostEvidence,
+                    path,
+                    "measured cost evidence includes all required canonical replay fields",
+                    format!("missing {}", missing.join(", ")),
+                    "record measured cost only from structured usage, transcript hash, event digest, and pricing evidence",
+                )];
+            }
+            if let Some(failure) = validate_measured_replay(
+                root,
+                evidence,
+                line_number,
+                seen_event_digests,
+                measured_ranges,
+            ) {
+                vec![failure]
+            } else {
                 vec![Diagnostic::pass(
                     format!("cost-evidence-measured-{line_number}"),
                     ReportSurface::CostEvidence,
                     path,
-                    "measured cost evidence includes provider, model, usage, pricing, rates, timestamp, target, evidence source, amount, and contributions",
-                )]
-            } else {
-                vec![Diagnostic::fail(
-                    format!("cost-evidence-measured-{line_number}"),
-                    ReportSurface::CostEvidence,
-                    path,
-                    "measured cost evidence includes all required fields and contribution evidence",
-                    format!("missing {}", missing.join(", ")),
-                    "record measured cost only from structured usage and pricing evidence",
+                    "measured cost evidence is replayable, priced, hash-matched, and non-overlapping",
                 )]
             }
         }
@@ -215,6 +275,201 @@ fn validate_cost_evidence(evidence: &CostEvidence, line_number: usize) -> Vec<Di
             }
         }
     }
+}
+
+fn validate_measured_replay(
+    root: &Path,
+    evidence: &CostEvidence,
+    line_number: usize,
+    seen_event_digests: &mut BTreeSet<String>,
+    measured_ranges: &mut BTreeMap<String, Vec<(usize, usize)>>,
+) -> Option<Diagnostic> {
+    let path = format!(
+        "{}:{}",
+        evidence.attribution_target.kind, evidence.attribution_target.id
+    );
+    let usage = evidence.usage.as_ref()?;
+    let rates = evidence.pricing_rates.as_ref()?;
+    let amount = evidence.amount.as_ref()?;
+    let pricing = evidence.pricing.as_ref()?;
+    if amount.currency != pricing.currency {
+        return Some(fail_replay(
+            line_number,
+            path,
+            format!(
+                "amount currency {} does not match pricing currency {}",
+                amount.currency, pricing.currency
+            ),
+        ));
+    }
+    let cached = usage.cached_input_tokens.unwrap_or(0);
+    if cached > usage.input_tokens {
+        return Some(fail_replay(
+            line_number,
+            path,
+            "cached input exceeds input tokens".to_string(),
+        ));
+    }
+    let uncached = usage.input_tokens - cached;
+    let expected_amount = ((uncached as u128) * (rates.input_micros_per_million as u128)
+        + (cached as u128) * (rates.cached_input_micros_per_million as u128)
+        + (usage.output_tokens as u128) * (rates.output_micros_per_million as u128))
+        / 1_000_000;
+    if expected_amount != amount.amount_micros as u128 {
+        return Some(fail_replay(
+            line_number,
+            path,
+            format!(
+                "amount {} does not match recomputed amount {}",
+                amount.amount_micros, expected_amount
+            ),
+        ));
+    }
+    let pricing_path = root.join(&pricing.snapshot_path);
+    match file_sha256(&pricing_path) {
+        Ok(hash) if hash == pricing.snapshot_sha256 => {}
+        Ok(hash) => {
+            return Some(fail_replay(
+                line_number,
+                path,
+                format!(
+                    "pricing snapshot hash {hash} does not match {}",
+                    pricing.snapshot_sha256
+                ),
+            ));
+        }
+        Err(error) => return Some(fail_replay(line_number, path, error)),
+    }
+    for contribution in &evidence.usage_contributions {
+        if let Some(failure) = validate_contribution_replay(
+            root,
+            evidence,
+            line_number,
+            contribution,
+            seen_event_digests,
+            measured_ranges,
+        ) {
+            return Some(failure);
+        }
+    }
+    None
+}
+
+fn validate_contribution_replay(
+    root: &Path,
+    evidence: &CostEvidence,
+    line_number: usize,
+    contribution: &UsageContribution,
+    seen_event_digests: &mut BTreeSet<String>,
+    measured_ranges: &mut BTreeMap<String, Vec<(usize, usize)>>,
+) -> Option<Diagnostic> {
+    let target_path = format!(
+        "{}:{}",
+        evidence.attribution_target.kind, evidence.attribution_target.id
+    );
+    if !seen_event_digests.insert(contribution.selected_event_digest_sha256.clone()) {
+        return Some(fail_replay(
+            line_number,
+            target_path,
+            format!(
+                "duplicate selected event digest {}",
+                contribution.selected_event_digest_sha256
+            ),
+        ));
+    }
+    let source_path = Path::new(&contribution.source_path);
+    let source_path = if source_path.is_absolute() {
+        source_path.to_path_buf()
+    } else {
+        root.join(source_path)
+    };
+    match selected_event_digest(&source_path, contribution.start_line, contribution.end_line) {
+        Ok((digest, event_count))
+            if digest == contribution.selected_event_digest_sha256
+                && digest == contribution.source_sha256
+                && event_count == contribution.event_count => {}
+        Ok((digest, event_count)) => {
+            return Some(fail_replay(
+                line_number,
+                target_path,
+                format!(
+                    "selected event digest {digest} count {event_count} does not match receipt source digest {}, selected digest {}, count {}",
+                    contribution.source_sha256,
+                    contribution.selected_event_digest_sha256,
+                    contribution.event_count
+                ),
+            ));
+        }
+        Err(error) => return Some(fail_replay(line_number, target_path, error)),
+    }
+    let key = format!(
+        "{}:{}:{}:{}",
+        contribution.session_id,
+        contribution.model_slug,
+        evidence.attribution_target.kind,
+        evidence.attribution_target.id
+    );
+    let ranges = measured_ranges.entry(key).or_default();
+    if ranges
+        .iter()
+        .any(|(start, end)| contribution.start_line <= *end && contribution.end_line >= *start)
+    {
+        return Some(fail_replay(
+            line_number,
+            target_path,
+            "overlapping measured token range".to_string(),
+        ));
+    }
+    ranges.push((contribution.start_line, contribution.end_line));
+    None
+}
+
+fn fail_replay(line_number: usize, path: String, actual: String) -> Diagnostic {
+    Diagnostic::fail(
+        format!("cost-evidence-replay-{line_number}"),
+        ReportSurface::CostEvidence,
+        path,
+        "measured cost evidence replays from transcript and pricing sources",
+        actual,
+        "recreate measured cost evidence from canonical ingestion sources or record unmeasured evidence",
+    )
+}
+
+fn file_sha256(path: &Path) -> Result<String> {
+    let body = fs::read(path).map_err(|error| format!("read {}: {error}", path.display()))?;
+    Ok(format!("{:x}", Sha256::digest(&body)))
+}
+
+fn selected_event_digest(
+    path: &Path,
+    start_line: usize,
+    end_line: usize,
+) -> Result<(String, usize)> {
+    let body =
+        fs::read_to_string(path).map_err(|error| format!("read {}: {error}", path.display()))?;
+    let mut hasher = Sha256::new();
+    let mut event_count = 0;
+    for (index, line) in body.lines().enumerate() {
+        let line_number = index + 1;
+        if line_number < start_line || line_number > end_line || line.trim().is_empty() {
+            continue;
+        }
+        let value = serde_json::from_str::<Value>(line)
+            .map_err(|error| format!("parse transcript line {line_number}: {error}"))?;
+        if value.get("type").and_then(Value::as_str) == Some("event_msg")
+            && value.pointer("/payload/type").and_then(Value::as_str) == Some("token_count")
+        {
+            hasher.update(line_number.to_string().as_bytes());
+            hasher.update(b":");
+            hasher.update(line.as_bytes());
+            hasher.update(b"\n");
+            event_count += 1;
+        }
+    }
+    if event_count == 0 {
+        return Err("selected transcript range contains no token_count events".to_string());
+    }
+    Ok((format!("{:x}", hasher.finalize()), event_count))
 }
 
 fn require_nonempty<'a>(missing: &mut Vec<&'a str>, name: &'a str, value: Option<&String>) {

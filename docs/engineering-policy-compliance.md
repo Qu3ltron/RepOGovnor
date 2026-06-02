@@ -78,8 +78,9 @@ elapsed time, commit size, file count, or agent narration.
 For Codex, measured usage can be ingested from actual local transcript
 `token_count` events with `cost-ingest codex-transcript`. The pricing basis is
 the OpenAI Codex token-based rate card in credits per 1M input, cached input,
-and output tokens. The receipt records the transcript path, line range, event
-count, model, pricing snapshot, and explicit commit target. Research-preview or
+and output tokens. The receipt records explicit transcript path, session id,
+selected line range, selected event digest, event count, model context line,
+pricing snapshot hash, service tier, and governed target. Research-preview or
 otherwise unpriced models are not priced.
 
 Current shipped evidence starts with model responsibility for supported Codex

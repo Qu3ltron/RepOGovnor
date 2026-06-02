@@ -4,6 +4,13 @@ archive_id = "completed-002"
 archive_authority = "docs/task-registry/archive/completed-002.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-06-01-policy-compliance-cost-posture"
+plan_path = "docs/plans/policy-compliance-cost-posture-2026-06-01.md"
+plan_hash_sha256 = "f66f74959575ed5e630d1b421399db4d7c5b14f5f09e50732b277a3ad94242ff"
+activated_at = "2026-06-01"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-06-01-version-backlog-governance"
 plan_path = "docs/plans/version-backlog-governance-2026-06-01.md"
 plan_hash_sha256 = "c626f9522d88805958b26335a302510407067b4d61ba8f41fba361924a73b555"
@@ -38,12 +45,132 @@ plan_hash_sha256 = "00bf9b4b3ccca500cd8775716fa09ccaa5754a7f0acfe93ca76ecabe7eba
 activated_at = "2026-06-01"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-06-01-reviewer-report"
-plan_path = "docs/plans/reviewer-report-2026-06-01.md"
-plan_hash_sha256 = "3a79a250dcaf6ed428f09122eccd27665cf42f1a4136da7c705074271362f566"
-activated_at = "2026-06-01"
+[[tasks]]
+task_id = "TASK-2026-06-01-policy-compliance-cost-posture-001"
+plan_id = "PLAN-2026-06-01-policy-compliance-cost-posture"
 status = "completed"
+title = "Align public product posture with engineering policy compliance"
+kind = "documentation"
+source_plan_path = "docs/plans/policy-compliance-cost-posture-2026-06-01.md"
+source_plan_hash_sha256 = "f66f74959575ed5e630d1b421399db4d7c5b14f5f09e50732b277a3ad94242ff"
+reason = "Public docs must state the approved central product direction without overclaiming certification or product correctness."
+acceptance_proof = "Behaviors B-001 and B-002 pass their typed verifiers."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "B-001-policy-positioning-positive",
+    "B-002-policy-positioning-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T19:16:16.266385357-04:00"
+completion_changed_files = [
+    "README.md",
+    "REQUIREMENTS.toml",
+    "ROADMAP.md",
+    "VISION.md",
+    "docs/engineering-policy-compliance.md",
+    "docs/gap-pipeline.md",
+    "docs/runtime-schemas.md",
+    "package.nix",
+]
+
+[[tasks.targets]]
+file = "README.md"
+object = "product_positioning"
+required_change = "Lead with engineering policy compliance for agent-assisted repos, supported agent surfaces, proof boundaries, and corrected validation guidance."
+
+[[tasks.targets]]
+file = "VISION.md"
+object = "product_direction"
+required_change = "Describe declared engineering policy input, local compliance artifact output, current primitives, and non-claims."
+
+[[tasks.targets]]
+file = "ROADMAP.md"
+object = "policy_engine_roadmap"
+required_change = "Replace stale v2 state and add policy engine, compliance artifact, waiver lifecycle, and cost evidence milestones."
+
+[[tasks.targets]]
+file = "docs/gap-pipeline.md"
+object = "current_evidence"
+required_change = "Update current evidence and remaining gaps for engineering policy compliance direction."
+
+[[tasks]]
+task_id = "TASK-2026-06-01-policy-compliance-cost-posture-002"
+plan_id = "PLAN-2026-06-01-policy-compliance-cost-posture"
+status = "completed"
+title = "Document honest token spend and cost evidence direction"
+kind = "documentation"
+source_plan_path = "docs/plans/policy-compliance-cost-posture-2026-06-01.md"
+source_plan_hash_sha256 = "f66f74959575ed5e630d1b421399db4d7c5b14f5f09e50732b277a3ad94242ff"
+reason = "Token spend and cost per commit should be first-class direction without false precision."
+acceptance_proof = "Behaviors B-003 and B-004 pass their typed verifiers."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "B-003-cost-direction-positive",
+    "B-004-cost-direction-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T19:16:16.266385357-04:00"
+completion_changed_files = [
+    "README.md",
+    "REQUIREMENTS.toml",
+    "ROADMAP.md",
+    "VISION.md",
+    "docs/engineering-policy-compliance.md",
+    "docs/gap-pipeline.md",
+    "docs/runtime-schemas.md",
+    "package.nix",
+]
+
+[[tasks.targets]]
+file = "docs/engineering-policy-compliance.md"
+object = "cost_evidence"
+required_change = "Define honest token/cost evidence requirements and unmeasured gaps."
+
+[[tasks]]
+task_id = "TASK-2026-06-01-policy-compliance-cost-posture-003"
+plan_id = "PLAN-2026-06-01-policy-compliance-cost-posture"
+status = "completed"
+title = "Align release docs, schema docs, and packaged assets"
+kind = "release"
+source_plan_path = "docs/plans/policy-compliance-cost-posture-2026-06-01.md"
+source_plan_hash_sha256 = "f66f74959575ed5e630d1b421399db4d7c5b14f5f09e50732b277a3ad94242ff"
+reason = "Public release surfaces must match actual supported agents, schema surfaces, current version, and packaged docs."
+acceptance_proof = "Behaviors B-005 and B-006 pass their typed verifiers."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "B-005-release-docs-positive",
+    "B-006-release-docs-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T19:16:16.266385357-04:00"
+completion_changed_files = [
+    "README.md",
+    "REQUIREMENTS.toml",
+    "ROADMAP.md",
+    "VISION.md",
+    "docs/engineering-policy-compliance.md",
+    "docs/gap-pipeline.md",
+    "docs/runtime-schemas.md",
+    "package.nix",
+]
+
+[[tasks.targets]]
+file = "docs/runtime-schemas.md"
+object = "known_surfaces"
+required_change = "List version and backlog diagnostic surfaces and describe future compliance/cost artifacts as non-shipped direction."
+
+[[tasks.targets]]
+file = "REQUIREMENTS.toml"
+object = "release_source.required"
+required_change = "Require docs/engineering-policy-compliance.md as a release-source file."
+
+[[tasks.targets]]
+file = "package.nix"
+object = "asset_docs"
+required_change = "Package docs/engineering-policy-compliance.md in Nix assets."
 
 [[tasks]]
 task_id = "TASK-2026-06-01-VBG-001"
@@ -631,86 +758,3 @@ required_change = "Seed additional stale hook/settings layouts and assert merge/
 file = "docs/gap-pipeline.md"
 object = "GP-003"
 required_change = "Update GP-003 with current migration preflight evidence and remaining reactivation conditions."
-
-[[tasks]]
-task_id = "TASK-2026-06-01-reviewer-report-001"
-plan_id = "PLAN-2026-06-01-reviewer-report"
-status = "completed"
-title = "Add compact reviewer report"
-kind = "implementation"
-source_plan_path = "docs/plans/reviewer-report-2026-06-01.md"
-source_plan_hash_sha256 = "3a79a250dcaf6ed428f09122eccd27665cf42f1a4136da7c705074271362f566"
-reason = "Maintainers need one local handoff surface for governance proof without overstating product correctness."
-acceptance_proof = "Behaviors B-001 through B-004."
-created_at = "2026-06-01"
-updated_at = "2026-06-01"
-behavior_ids = [
-    "B-001-reviewer-report-positive",
-    "B-002-reviewer-report-negative",
-    "B-003-proof-boundary-positive",
-    "B-004-proof-boundary-negative",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-06-01T14:56:55.300147275-04:00"
-completion_changed_files = [
-    "README.md",
-    "REQUIREMENTS.toml",
-    "docs/gap-pipeline.md",
-    "docs/runtime-schemas.md",
-    "rust/task-registry-flow-cli/src/main.rs",
-    "rust/task-registry-flow-cli/src/reviewer_report.rs",
-    "rust/task-registry-flow-cli/src/runtime.rs",
-    "rust/task-registry-flow-cli/src/schema.rs",
-    "rust/task-registry-flow-cli/src/tests/mod.rs",
-    "rust/task-registry-flow-cli/src/tests/reviewer_report_tests.rs",
-]
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/schema.rs"
-object = "CliCommand"
-required_change = "Add typed reviewer-report command value."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/reviewer_report.rs"
-object = "reviewer_report"
-required_change = "Render compact reviewer handoff evidence from registry and receipts."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/runtime.rs"
-object = "dispatcher"
-required_change = "Route reviewer-report command and update usage."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/main.rs"
-object = "modules"
-required_change = "Include reviewer_report module."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/mod.rs"
-object = "reviewer_report_tests_module"
-required_change = "Register reviewer report tests."
-
-[[tasks.targets]]
-file = "rust/task-registry-flow-cli/src/tests/reviewer_report_tests.rs"
-object = "reviewer_report_tests"
-required_change = "Add positive and negative reviewer report tests."
-
-[[tasks.targets]]
-file = "REQUIREMENTS.toml"
-object = "release_source.required"
-required_change = "Declare reviewer_report.rs as a release source."
-
-[[tasks.targets]]
-file = "README.md"
-object = "reviewer handoff"
-required_change = "Document reviewer-report usage."
-
-[[tasks.targets]]
-file = "docs/runtime-schemas.md"
-object = "Reviewer Report"
-required_change = "Document reviewer report purpose and proof boundary."
-
-[[tasks.targets]]
-file = "docs/gap-pipeline.md"
-object = "GP-002 and GP-005"
-required_change = "Record compact reviewer report closure evidence and remaining PR integration gap."

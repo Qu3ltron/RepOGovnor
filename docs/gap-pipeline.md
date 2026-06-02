@@ -115,16 +115,17 @@ to a first-class typed engineering policy manifest.
   be classified by `cost-evidence-check` as measured, estimated, or
   unmeasured. `cost-ingest codex-transcript` now reads actual local Codex
   transcript `token_count` events, applies a declared OpenAI Codex credit rate
-  snapshot, and can append commit-linked measured usage receipts with transcript
-  line-range contribution evidence.
+  snapshot, and can append measured usage receipts with explicit transcript,
+  session, selected event digest, pricing snapshot hash, service tier, and
+  governed target evidence. `cost-report` separates measured and unmeasured
+  evidence rather than reporting unknown spend as zero.
 - User impact: maintainers can produce honest Codex credit evidence for priced
   Codex models when the local transcript contains usable token-count events.
   Unpriced research-preview models, non-Codex providers, unavailable usage, and
   hidden remote billing data must still be reported as unmeasured.
-- Next closure: expand attribution beyond explicit commit targets to plans,
-  tasks, verifier runs, landing attempts, retries, and release cycles; add
-  non-Codex adapters only when they expose equivalent model, usage, pricing, and
-  contribution evidence.
+- Next closure: add non-Codex adapters only when they expose equivalent model,
+  usage, pricing, and contribution evidence; broaden automated boundary
+  capture where provider APIs make that reliable.
 - Reactivation condition: before publishing cost per commit or token-spend
   metrics as a shipped feature.
 

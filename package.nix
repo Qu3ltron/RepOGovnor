@@ -79,6 +79,7 @@ rustPlatform.buildRustPackage {
     mkdir -p "$asset_root/docs/releases"
     cp ${./docs/agent-environment-matrix.md} "$asset_root/docs/agent-environment-matrix.md"
     cp ${./docs/engineering-policy-compliance.md} "$asset_root/docs/engineering-policy-compliance.md"
+    cp ${./docs/provider-usage-adapter-contract.md} "$asset_root/docs/provider-usage-adapter-contract.md"
     cp ${./docs/runtime-schemas.md} "$asset_root/docs/runtime-schemas.md"
     cp ${./docs/migration-v2.md} "$asset_root/docs/migration-v2.md"
     cp ${./docs/example-workflow.md} "$asset_root/docs/example-workflow.md"
@@ -86,6 +87,8 @@ rustPlatform.buildRustPackage {
     cp ${./docs/versioning.md} "$asset_root/docs/versioning.md"
     cp ${./docs/version-roadmap.toml} "$asset_root/docs/version-roadmap.toml"
     cp ${./docs/releases/v2.md} "$asset_root/docs/releases/v2.md"
+    mkdir -p "$asset_root/docs/pricing"
+    cp ${./docs/pricing/openai-codex-rate-card-2026-06-02.toml} "$asset_root/docs/pricing/openai-codex-rate-card-2026-06-02.toml"
   '';
 
   meta = with lib; {

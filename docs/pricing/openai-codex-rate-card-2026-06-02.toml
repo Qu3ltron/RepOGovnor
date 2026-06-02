@@ -4,7 +4,9 @@ surface = "codex"
 currency = "CREDITS"
 source_url = "https://help.openai.com/en/articles/20001106-codex-rate-card"
 retrieved_at = "2026-06-02T00:00:00Z"
+effective_from = "2026-06-02"
 version = "2026-06-02"
+service_tier = "codex-cloud"
 notes = "OpenAI Help Center Codex token-based rate card, credits per 1M input, cached input, and output tokens."
 
 [[models]]

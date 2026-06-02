@@ -33,4 +33,6 @@ covered_plan_ids = [
   "PLAN-2026-06-02-codex-model-attribution-hardening",
   "PLAN-2026-06-02-cost-evidence-model",
   "PLAN-2026-06-02-provider-usage-ingestion",
+  "PLAN-2026-06-02-cost-ingest-nix-git-dependency",
+  "PLAN-2026-06-02-token-spend-hardening",
 ]

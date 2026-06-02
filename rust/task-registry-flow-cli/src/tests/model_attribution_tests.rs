@@ -4,6 +4,7 @@ use crate::schema::{
     CostPricingRates, CostPricingSnapshot, EventOutcome, ModelIdentityStatus,
     MutationAttributionDecision, ReportSurface, TokenUsage, UsageContribution,
 };
+use sha2::{Digest, Sha256};
 
 fn codex_payload(command: &str, hook_event_name: &str) -> String {
     serde_json::json!({
@@ -69,7 +70,18 @@ fn cost_target(kind: CostAttributionKind, id: &str) -> CostAttributionTarget {
     }
 }
 
-fn measured_cost_evidence() -> CostEvidence {
+fn measured_cost_evidence(root: &Path) -> CostEvidence {
+    let pricing_path = write_pricing_snapshot(root, "gpt-5-codex");
+    let transcript_line = r#"{"type":"event_msg","payload":{"type":"token_count","info":{"last_token_usage":{"input_tokens":1000,"cached_input_tokens":100,"output_tokens":10,"reasoning_output_tokens":0}}}}"#;
+    let transcript = write_cost_transcript(
+        root,
+        &format!(
+            "{}\n{}\n{}\n",
+            r#"{"type":"session_meta","payload":{"id":"session-cost-tests","model":"gpt-5-codex"}}"#,
+            r#"{"type":"turn_context","payload":{"turn_id":"turn-1","model":"gpt-5-codex"}}"#,
+            transcript_line
+        ),
+    );
     CostEvidence {
         status: CostEvidenceStatus::Measured,
         evidence_source: "provider-usage-receipt".to_string(),
@@ -77,38 +89,79 @@ fn measured_cost_evidence() -> CostEvidence {
         provider: Some("openai".to_string()),
         model_slug: Some("gpt-5-codex".to_string()),
         usage: Some(TokenUsage {
-            input_tokens: 1200,
-            output_tokens: 300,
+            input_tokens: 1000,
+            output_tokens: 10,
             cached_input_tokens: Some(100),
             reasoning_tokens: None,
         }),
         pricing: Some(CostPricingSnapshot {
             source: "pricing-snapshot".to_string(),
             version: "2026-06-02".to_string(),
-            currency: "USD".to_string(),
+            currency: "CREDITS".to_string(),
+            service_tier: "codex-cloud".to_string(),
+            snapshot_path: pricing_path.clone(),
+            snapshot_sha256: test_file_sha256(&root.join(&pricing_path)),
         }),
         amount: Some(CostAmount {
-            currency: "USD".to_string(),
-            amount_micros: 42,
+            currency: "CREDITS".to_string(),
+            amount_micros: 121250,
         }),
         pricing_rates: Some(CostPricingRates {
-            input_micros_per_million: 1_250_000,
-            cached_input_micros_per_million: 125_000,
-            output_micros_per_million: 10_000_000,
+            input_micros_per_million: 125_000_000,
+            cached_input_micros_per_million: 12_500_000,
+            output_micros_per_million: 750_000_000,
         }),
         usage_contributions: vec![UsageContribution {
             source_kind: "codex-transcript-token-count".to_string(),
-            source_path: "/tmp/transcript.jsonl".to_string(),
-            start_line: 1,
-            end_line: 1,
+            source_path: transcript.display().to_string(),
+            source_sha256: test_selected_digest(&[(3, transcript_line)]),
+            start_line: 3,
+            end_line: 3,
             event_count: 1,
             model_slug: "gpt-5-codex".to_string(),
+            model_context_line: 2,
+            session_id: "session-cost-tests".to_string(),
+            selected_event_digest_sha256: test_selected_digest(&[(3, transcript_line)]),
             turn_ids: vec!["turn-1".to_string()],
         }],
         measurement_timestamp: Some("2026-06-02T00:00:00Z".to_string()),
         estimation_method: None,
         unmeasured_reason: None,
     }
+}
+
+fn unmeasured_cost_evidence(model_slug: &str) -> CostEvidence {
+    CostEvidence {
+        status: CostEvidenceStatus::Unmeasured,
+        evidence_source: "provider-adapter-contract".to_string(),
+        attribution_target: cost_target(CostAttributionKind::Commit, "abc1234"),
+        provider: Some("unknown".to_string()),
+        model_slug: Some(model_slug.to_string()),
+        usage: None,
+        pricing: None,
+        amount: None,
+        pricing_rates: None,
+        usage_contributions: Vec::new(),
+        measurement_timestamp: None,
+        estimation_method: None,
+        unmeasured_reason: Some("provider adapter or pricing source unavailable".to_string()),
+    }
+}
+
+fn test_file_sha256(path: &Path) -> String {
+    let body = fs::read(path).unwrap();
+    format!("{:x}", Sha256::digest(&body))
+}
+
+fn test_selected_digest(lines: &[(usize, &str)]) -> String {
+    let mut hasher = Sha256::new();
+    for (line_number, line) in lines {
+        hasher.update(line_number.to_string().as_bytes());
+        hasher.update(b":");
+        hasher.update(line.as_bytes());
+        hasher.update(b"\n");
+    }
+    format!("{:x}", hasher.finalize())
 }
 
 #[test]
@@ -258,7 +311,7 @@ fn cost_evidence_check_reports_measured_estimated_and_unmeasured() {
     let root = active_root("cost-evidence-check");
     append_event(
         &root,
-        cost_event("measured commit cost", measured_cost_evidence()),
+        cost_event("measured commit cost", measured_cost_evidence(&root)),
     )
     .unwrap();
     append_event(
@@ -325,7 +378,7 @@ fn cost_evidence_check_reports_measured_estimated_and_unmeasured() {
 #[test]
 fn cost_evidence_check_rejects_false_measured_receipt() {
     let root = active_root("cost-evidence-bad-measured");
-    let mut evidence = measured_cost_evidence();
+    let mut evidence = measured_cost_evidence(&root);
     evidence.provider = None;
     evidence.usage = None;
     evidence.pricing = None;
@@ -336,18 +389,290 @@ fn cost_evidence_check_rejects_false_measured_receipt() {
     assert_eq!(report.summary.fail, 1);
 }
 
+#[test]
+fn cost_capture_records_transcript_and_event_digest() {
+    let root = temp_root("cost-capture-digest");
+    seed_repo(&root);
+    let commit = init_cost_git_commit(&root);
+    let pricing = write_pricing_snapshot(&root, "gpt-5.5");
+    let token_line = r#"{"type":"event_msg","payload":{"type":"token_count","info":{"last_token_usage":{"input_tokens":1000,"cached_input_tokens":100,"output_tokens":10,"reasoning_output_tokens":0}}}}"#;
+    let transcript = write_cost_transcript(
+        &root,
+        &format!(
+            "{}\n{}\n{}\n",
+            r#"{"type":"session_meta","payload":{"id":"session-cost-tests","model":"gpt-5.5"}}"#,
+            r#"{"type":"turn_context","payload":{"turn_id":"turn-1","model":"gpt-5.5"}}"#,
+            token_line
+        ),
+    );
+
+    let request = crate::cost_ingest::request_for_test(transcript.clone(), pricing, commit);
+    let report = crate::cost_ingest::ingest_for_test(&root, &request).unwrap();
+    let contribution = &report.measured[0].contribution;
+
+    assert_eq!(contribution.session_id, "session-cost-tests");
+    assert_eq!(
+        contribution.source_sha256,
+        test_selected_digest(&[(3, token_line)])
+    );
+    assert_eq!(
+        contribution.selected_event_digest_sha256,
+        test_selected_digest(&[(3, token_line)])
+    );
+    assert_eq!(contribution.model_context_line, 2);
+}
+
+#[test]
+fn cost_capture_rejects_tampered_transcript_digest() {
+    let root = active_root("cost-capture-tampered-transcript");
+    let evidence = measured_cost_evidence(&root);
+    let source_path = evidence.usage_contributions[0].source_path.clone();
+    append_event(&root, cost_event("measured commit cost", evidence)).unwrap();
+    fs::write(source_path, "tampered\n").unwrap();
+
+    let report = crate::cost_evidence::check(&root).unwrap();
+    assert_eq!(report.summary.fail, 1);
+}
+
+#[test]
+fn cost_capture_accepts_explicit_session_and_transcript() {
+    let root = temp_root("cost-capture-explicit-session");
+    seed_repo(&root);
+    let commit = init_cost_git_commit(&root);
+    let pricing = write_pricing_snapshot(&root, "gpt-5.5");
+    let transcript = write_cost_transcript(
+        &root,
+        r#"{"type":"session_meta","payload":{"id":"session-cost-tests","model":"gpt-5.5"}}
+{"type":"turn_context","payload":{"turn_id":"turn-1","model":"gpt-5.5"}}
+{"type":"event_msg","payload":{"type":"token_count","info":{"last_token_usage":{"input_tokens":1000,"cached_input_tokens":100,"output_tokens":10,"reasoning_output_tokens":0}}}}
+"#,
+    );
+
+    let request = crate::cost_ingest::request_for_test(transcript, pricing, commit);
+    let report = crate::cost_ingest::ingest_for_test(&root, &request).unwrap();
+
+    assert_eq!(report.session_id, "session-cost-tests");
+    assert_eq!(report.measured.len(), 1);
+}
+
+#[test]
+fn cost_capture_links_measured_usage_to_commit_target() {
+    let root = temp_root("cost-capture-commit-target");
+    seed_repo(&root);
+    let commit = init_cost_git_commit(&root);
+    let pricing = write_pricing_snapshot(&root, "gpt-5.5");
+    let transcript = write_cost_transcript(
+        &root,
+        r#"{"type":"session_meta","payload":{"id":"session-cost-tests","model":"gpt-5.5"}}
+{"type":"turn_context","payload":{"turn_id":"turn-1","model":"gpt-5.5"}}
+{"type":"event_msg","payload":{"type":"token_count","info":{"last_token_usage":{"input_tokens":1000,"cached_input_tokens":100,"output_tokens":10,"reasoning_output_tokens":0}}}}
+"#,
+    );
+
+    let request = crate::cost_ingest::request_for_test(transcript, pricing, "HEAD".to_string());
+    let report = crate::cost_ingest::ingest_for_test(&root, &request).unwrap();
+
+    assert_eq!(report.target.kind, CostAttributionKind::Commit);
+    assert_eq!(report.target.id, commit);
+}
+
+#[test]
+fn pricing_snapshot_accepts_valid_codex_rate_card() {
+    let root = temp_root("pricing-valid-codex");
+    seed_repo(&root);
+    let commit = init_cost_git_commit(&root);
+    let pricing = write_pricing_snapshot(&root, "gpt-5.5");
+    let transcript = write_cost_transcript(
+        &root,
+        r#"{"type":"session_meta","payload":{"id":"session-cost-tests","model":"gpt-5.5"}}
+{"type":"turn_context","payload":{"turn_id":"turn-1","model":"gpt-5.5"}}
+{"type":"event_msg","payload":{"type":"token_count","info":{"last_token_usage":{"input_tokens":1000,"cached_input_tokens":100,"output_tokens":10,"reasoning_output_tokens":0}}}}
+"#,
+    );
+
+    let request = crate::cost_ingest::request_for_test(transcript, pricing, commit);
+    let report = crate::cost_ingest::ingest_for_test(&root, &request).unwrap();
+
+    assert_eq!(report.measured[0].amount.currency, "CREDITS");
+}
+
+#[test]
+fn pricing_snapshot_rejects_zero_rates() {
+    let root = temp_root("pricing-zero-rate");
+    seed_repo(&root);
+    let commit = init_cost_git_commit(&root);
+    let pricing = write_pricing_snapshot(&root, "gpt-5.5");
+    let pricing_path = root.join(&pricing);
+    let body = fs::read_to_string(&pricing_path).unwrap();
+    fs::write(
+        &pricing_path,
+        body.replace(
+            "input_micros_per_million = 125000000",
+            "input_micros_per_million = 0",
+        ),
+    )
+    .unwrap();
+    let transcript = write_cost_transcript(
+        &root,
+        r#"{"type":"session_meta","payload":{"id":"session-cost-tests","model":"gpt-5.5"}}
+{"type":"turn_context","payload":{"turn_id":"turn-1","model":"gpt-5.5"}}
+{"type":"event_msg","payload":{"type":"token_count","info":{"last_token_usage":{"input_tokens":1000,"cached_input_tokens":100,"output_tokens":10,"reasoning_output_tokens":0}}}}
+"#,
+    );
+
+    let request = crate::cost_ingest::request_for_test(transcript, pricing, commit);
+    let error = crate::cost_ingest::ingest_for_test(&root, &request).unwrap_err();
+
+    assert!(error.contains("zero rate"), "{error}");
+}
+
+#[test]
+fn cost_evidence_accepts_non_overlapping_ranges() {
+    let root = active_root("cost-evidence-non-overlap");
+    append_event(
+        &root,
+        cost_event("measured commit cost", measured_cost_evidence(&root)),
+    )
+    .unwrap();
+
+    let report = crate::cost_evidence::check(&root).unwrap();
+    assert_eq!(report.summary.fail, 0);
+}
+
+#[test]
+fn cost_evidence_rejects_duplicate_selected_event_digest() {
+    let root = active_root("cost-evidence-duplicate-digest");
+    let evidence = measured_cost_evidence(&root);
+    append_event(&root, cost_event("measured commit cost", evidence.clone())).unwrap();
+    append_event(
+        &root,
+        cost_event("duplicate measured commit cost", evidence),
+    )
+    .unwrap();
+
+    let report = crate::cost_evidence::check(&root).unwrap();
+    assert_eq!(report.summary.fail, 1);
+}
+
+#[test]
+fn cost_migration_preserves_receipt_chain_integrity() {
+    let root = active_root("cost-migration-chain");
+    append_event(
+        &root,
+        cost_event("measured commit cost", measured_cost_evidence(&root)),
+    )
+    .unwrap();
+
+    crate::verify_chain::run_verify_chain(&root, &["--format".to_string(), "json".to_string()])
+        .unwrap();
+}
+
+#[test]
+fn cost_evidence_rejects_legacy_measured_receipt_after_migration() {
+    let root = active_root("cost-evidence-legacy-reject");
+    let mut evidence = measured_cost_evidence(&root);
+    evidence.usage_contributions[0].source_sha256.clear();
+    evidence.usage_contributions[0]
+        .selected_event_digest_sha256
+        .clear();
+    append_event(&root, cost_event("legacy measured commit cost", evidence)).unwrap();
+
+    let report = crate::cost_evidence::check(&root).unwrap();
+    assert_eq!(report.summary.fail, 1);
+}
+
+#[test]
+fn provider_adapter_records_unknown_model_as_unmeasured() {
+    let root = active_root("provider-unmeasured");
+    append_event(
+        &root,
+        cost_event(
+            "unmeasured provider cost",
+            unmeasured_cost_evidence("deepseek-v4-flash:cloud"),
+        ),
+    )
+    .unwrap();
+
+    let report = crate::cost_evidence::check(&root).unwrap();
+    assert_eq!(report.summary.fail, 0);
+    assert_eq!(report.summary.warn, 1);
+}
+
+#[test]
+fn provider_adapter_rejects_model_name_pricing_inference() {
+    let root = temp_root("provider-no-name-pricing");
+    seed_repo(&root);
+    let commit = init_cost_git_commit(&root);
+    let pricing = write_pricing_snapshot(&root, "gpt-5.5");
+    let transcript = write_cost_transcript(
+        &root,
+        r#"{"type":"session_meta","payload":{"id":"session-cost-tests","model":"deepseek-v4-flash:cloud"}}
+{"type":"turn_context","payload":{"turn_id":"turn-1","model":"deepseek-v4-flash:cloud"}}
+{"type":"event_msg","payload":{"type":"token_count","info":{"last_token_usage":{"input_tokens":1000,"cached_input_tokens":100,"output_tokens":10,"reasoning_output_tokens":0}}}}
+"#,
+    );
+
+    let request = crate::cost_ingest::request_for_test(transcript, pricing, commit);
+    let error = crate::cost_ingest::ingest_for_test(&root, &request).unwrap_err();
+
+    assert!(error.contains("pricing snapshot missing model"), "{error}");
+}
+
+#[test]
+fn cost_report_emits_measured_cost_per_commit() {
+    let root = active_root("cost-report-measured");
+    append_event(
+        &root,
+        cost_event("measured commit cost", measured_cost_evidence(&root)),
+    )
+    .unwrap();
+
+    let report = crate::cost_report::report(&root).unwrap();
+    let entry = report
+        .entries
+        .iter()
+        .find(|entry| entry.status == "measured")
+        .unwrap();
+
+    assert_eq!(entry.target_kind, "commit");
+    assert_eq!(entry.measured_amount_micros, Some(121250));
+}
+
+#[test]
+fn cost_report_does_not_emit_zero_for_unmeasured_commit() {
+    let root = active_root("cost-report-unmeasured");
+    append_event(
+        &root,
+        cost_event("unmeasured commit cost", unmeasured_cost_evidence("gemma4")),
+    )
+    .unwrap();
+
+    let report = crate::cost_report::report(&root).unwrap();
+    let entry = report
+        .entries
+        .iter()
+        .find(|entry| entry.status == "unmeasured")
+        .unwrap();
+
+    assert_eq!(entry.target_kind, "commit");
+    assert_eq!(entry.measured_amount_micros, None);
+}
+
 fn write_pricing_snapshot(root: &Path, model_slug: &str) -> String {
     let path = "pricing.toml";
     fs::write(
         root.join(path),
         format!(
             r#"
+schema_version = 1
 provider = "openai"
 surface = "codex"
 currency = "CREDITS"
 source_url = "https://help.openai.com/en/articles/20001106-codex-rate-card"
 retrieved_at = "2026-06-02T00:00:00Z"
+effective_from = "2026-06-02"
 version = "2026-06-02"
+service_tier = "codex-cloud"
 
 [[models]]
 model_slug = "{model_slug}"
@@ -410,7 +735,8 @@ fn cost_ingest_computes_credit_amount_from_pricing_snapshot() {
     let pricing = write_pricing_snapshot(&root, "gpt-5.5");
     let transcript = write_cost_transcript(
         &root,
-        r#"{"type":"turn_context","payload":{"turn_id":"turn-1","model":"gpt-5.5"}}
+        r#"{"type":"session_meta","payload":{"id":"session-cost-tests","model":"gpt-5.5"}}
+{"type":"turn_context","payload":{"turn_id":"turn-1","model":"gpt-5.5"}}
 {"type":"event_msg","payload":{"type":"token_count","info":{"last_token_usage":{"input_tokens":1000000,"cached_input_tokens":200000,"output_tokens":1000,"reasoning_output_tokens":100}}}}
 "#,
     );
@@ -424,7 +750,7 @@ fn cost_ingest_computes_credit_amount_from_pricing_snapshot() {
     assert_eq!(report.measured[0].usage.cached_input_tokens, Some(200_000));
     assert_eq!(report.measured[0].amount.currency, "CREDITS");
     assert_eq!(report.measured[0].amount.amount_micros, 103_250_000);
-    assert_eq!(report.measured[0].contribution.start_line, 2);
+    assert_eq!(report.measured[0].contribution.start_line, 3);
     assert_eq!(report.measured[0].contribution.event_count, 1);
 }
 
@@ -436,7 +762,8 @@ fn cost_ingest_append_receipt_is_idempotent_for_same_contribution() {
     let pricing = write_pricing_snapshot(&root, "gpt-5.5");
     let transcript = write_cost_transcript(
         &root,
-        r#"{"type":"turn_context","payload":{"turn_id":"turn-1","model":"gpt-5.5"}}
+        r#"{"type":"session_meta","payload":{"id":"session-cost-tests","model":"gpt-5.5"}}
+{"type":"turn_context","payload":{"turn_id":"turn-1","model":"gpt-5.5"}}
 {"type":"event_msg","payload":{"type":"token_count","info":{"last_token_usage":{"input_tokens":1000,"cached_input_tokens":100,"output_tokens":10,"reasoning_output_tokens":0}}}}
 "#,
     );
@@ -466,7 +793,8 @@ fn cost_ingest_rejects_missing_usage() {
     let pricing = write_pricing_snapshot(&root, "gpt-5.5");
     let transcript = write_cost_transcript(
         &root,
-        r#"{"type":"turn_context","payload":{"turn_id":"turn-1","model":"gpt-5.5"}}"#,
+        r#"{"type":"session_meta","payload":{"id":"session-cost-tests","model":"gpt-5.5"}}
+{"type":"turn_context","payload":{"turn_id":"turn-1","model":"gpt-5.5"}}"#,
     );
 
     let request = crate::cost_ingest::request_for_test(transcript, pricing, commit);
@@ -486,7 +814,8 @@ fn cost_ingest_rejects_unknown_pricing_model() {
     let pricing = write_pricing_snapshot(&root, "gpt-5.4");
     let transcript = write_cost_transcript(
         &root,
-        r#"{"type":"turn_context","payload":{"turn_id":"turn-1","model":"gpt-5.5"}}
+        r#"{"type":"session_meta","payload":{"id":"session-cost-tests","model":"gpt-5.5"}}
+{"type":"turn_context","payload":{"turn_id":"turn-1","model":"gpt-5.5"}}
 {"type":"event_msg","payload":{"type":"token_count","info":{"last_token_usage":{"input_tokens":100,"cached_input_tokens":0,"output_tokens":10,"reasoning_output_tokens":0}}}}
 "#,
     );
@@ -501,7 +830,7 @@ fn cost_ingest_rejects_unknown_pricing_model() {
 }
 
 #[test]
-fn cost_ingest_rejects_missing_commit() {
+fn cost_capture_rejects_latest_selector() {
     let error = crate::cost_ingest::run_command(
         Path::new("."),
         &[
@@ -513,5 +842,36 @@ fn cost_ingest_rejects_missing_commit() {
     )
     .unwrap_err();
 
-    assert!(error.summary().contains("missing --commit"), "{error:?}");
+    assert!(
+        error.summary().contains("unsupported selector --latest"),
+        "{error:?}"
+    );
+}
+
+#[test]
+fn cost_capture_rejects_legacy_commit_flag() {
+    let error = crate::cost_ingest::run_command(
+        Path::new("."),
+        &[
+            "codex-transcript".to_string(),
+            "--transcript-path".to_string(),
+            "transcript.jsonl".to_string(),
+            "--session-id".to_string(),
+            "session-cost-tests".to_string(),
+            "--since-line".to_string(),
+            "1".to_string(),
+            "--until-line".to_string(),
+            "2".to_string(),
+            "--pricing-snapshot".to_string(),
+            "pricing.toml".to_string(),
+            "--commit".to_string(),
+            "HEAD".to_string(),
+        ],
+    )
+    .unwrap_err();
+
+    assert!(
+        error.summary().contains("unsupported legacy flag --commit"),
+        "{error:?}"
+    );
 }

@@ -47,11 +47,13 @@ Target: v2.x.
   transcripts priced against an OpenAI Codex credit-rate snapshot.
 - Classify every cost value as measured, estimated, or unmeasured.
 - Require provider, model, usage counts, pricing snapshot, timestamp, attribution
-  target, and evidence source before reporting measured cost.
-- Attribute measured spend to commits, plans, tasks, verifier runs, landing
-  attempts, retries, and release cycles.
+  target, selected event digest, service tier, and evidence source before
+  reporting measured cost.
+- Attribute measured spend through canonical target kind/id values for commits,
+  plans, tasks, verifier runs, landing attempts, retries, and release cycles.
 - Produce cost per commit only when commit-linked measured usage receipts exist;
-  otherwise report the metric as unmeasured.
+  otherwise report the metric as unmeasured. `cost-report` is the first local
+  reporting surface for that distinction.
 
 ## Next: adoption quality
 

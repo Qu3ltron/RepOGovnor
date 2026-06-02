@@ -3,6 +3,7 @@ mod backlog_check;
 mod cli;
 mod cost_evidence;
 mod cost_ingest;
+mod cost_report;
 mod hook_io;
 mod install;
 mod landing;

@@ -68,6 +68,7 @@ string_enum!(CliCommand {
     ModelAttributionCheck => "model-attribution-check",
     CostEvidenceCheck => "cost-evidence-check",
     CostIngest => "cost-ingest",
+    CostReport => "cost-report",
     Metrics => "metrics",
     SourceLimit => "source-limit",
     ReleaseCheck => "release-check",
@@ -566,6 +567,9 @@ pub(crate) struct CostPricingSnapshot {
     pub(crate) source: String,
     pub(crate) version: String,
     pub(crate) currency: String,
+    pub(crate) service_tier: String,
+    pub(crate) snapshot_path: String,
+    pub(crate) snapshot_sha256: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -588,10 +592,14 @@ pub(crate) struct CostPricingRates {
 pub(crate) struct UsageContribution {
     pub(crate) source_kind: String,
     pub(crate) source_path: String,
+    pub(crate) source_sha256: String,
     pub(crate) start_line: usize,
     pub(crate) end_line: usize,
     pub(crate) event_count: usize,
     pub(crate) model_slug: String,
+    pub(crate) model_context_line: usize,
+    pub(crate) session_id: String,
+    pub(crate) selected_event_digest_sha256: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub(crate) turn_ids: Vec<String>,
 }

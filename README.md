@@ -69,7 +69,11 @@ the terms in [LICENSE](LICENSE).
   classified as measured, estimated, or unmeasured before any metric can use it.
 - `cost-ingest codex-transcript`: actual local Codex transcript token-count
   events can be priced with an OpenAI Codex credit-rate snapshot and attributed
-  to an explicit commit.
+  to an explicit governed target. The command requires explicit transcript,
+  session, line-range, pricing, and target evidence.
+- `cost-report`: measured token spend is grouped by target, provider, model,
+  pricing version, and service tier. Unmeasured evidence stays unmeasured; it
+  is not reported as zero cost.
 - Strict v2 plan activation: phased checklists, exact file targets, behavior
   `gap_id`, behavior `polarity`, typed verifiers, and required positive plus
   negative behavior coverage before implementation work.
@@ -86,8 +90,10 @@ evidence where usage can be measured honestly. Current model attribution says
 which measured adapter/model requested supported repo mutation; it is not token
 usage evidence. Cost evidence receipts now provide measured, estimated, and
 unmeasured states. Codex transcript ingestion can create commit-linked measured
-credit evidence when actual token-count events and a pricing snapshot exist.
-Non-Codex providers and unpriced research-preview models remain unmeasured.
+credit evidence when actual token-count events, selected event digests, and a
+pricing snapshot exist. Codex is the first measured adapter example; non-Codex
+providers and unpriced research-preview models remain unmeasured until they
+meet the provider adapter contract.
 
 Important limits:
 

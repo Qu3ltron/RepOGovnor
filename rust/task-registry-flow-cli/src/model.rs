@@ -225,6 +225,7 @@ pub(crate) struct MetricsReport {
     pub(crate) cost_measured_events: usize,
     pub(crate) cost_estimated_events: usize,
     pub(crate) cost_unmeasured_events: usize,
+    pub(crate) cost_measured_amount_micros: u64,
     pub(crate) malformed_events: usize,
     pub(crate) chained_events: usize,
     pub(crate) unchained_events: usize,
