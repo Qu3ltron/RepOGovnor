@@ -1,6 +1,6 @@
 use crate::model::{EVENTS_PATH, EventRecord, MetricsReport, Result};
 use crate::runtime::{discover_manifests, load_registry};
-use crate::schema::{EventOutcome, TaskStatus};
+use crate::schema::{EventOutcome, ModelIdentityStatus, TaskStatus};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::fs;
@@ -22,6 +22,8 @@ pub(crate) fn metrics(root: &Path) -> Result<MetricsReport> {
         events: 0,
         failed_events: 0,
         mutation_denials: 0,
+        model_attributed_mutation_events: 0,
+        model_unmeasured_mutation_events: 0,
         malformed_events: 0,
         chained_events: 0,
         unchained_events: 0,
@@ -71,6 +73,20 @@ fn count_receipts(root: &Path, report: &mut MetricsReport) -> Result<()> {
                 if event.outcome == EventOutcome::MutationDenied {
                     report.mutation_denials += 1;
                 }
+                if event.mutation_attribution.is_some() {
+                    match event
+                        .agent_model_attribution
+                        .as_ref()
+                        .map(|attribution| attribution.identity_status)
+                    {
+                        Some(ModelIdentityStatus::Measured) => {
+                            report.model_attributed_mutation_events += 1;
+                        }
+                        _ => {
+                            report.model_unmeasured_mutation_events += 1;
+                        }
+                    }
+                }
                 if let Some(event_hash) = &event.event_hash_sha256 {
                     report.chained_events += 1;
                     if event_hash != &current_hash
@@ -98,7 +114,7 @@ fn count_receipts(root: &Path, report: &mut MetricsReport) -> Result<()> {
 
 pub(crate) fn format_metrics(report: &MetricsReport) -> String {
     format!(
-        "Task registry metrics: plans={}, tasks={}, manifests={}, planned={}, active={}, completed={}, deferred={}, blocked={}, cancelled={}, events={}, failed_events={}, mutation_denials={}, malformed_events={}, chained_events={}, unchained_events={}, receipt_chain_breaks={}",
+        "Task registry metrics: plans={}, tasks={}, manifests={}, planned={}, active={}, completed={}, deferred={}, blocked={}, cancelled={}, events={}, failed_events={}, mutation_denials={}, model_attributed_mutation_events={}, model_unmeasured_mutation_events={}, malformed_events={}, chained_events={}, unchained_events={}, receipt_chain_breaks={}",
         report.plans,
         report.tasks,
         report.manifests,
@@ -111,6 +127,8 @@ pub(crate) fn format_metrics(report: &MetricsReport) -> String {
         report.events,
         report.failed_events,
         report.mutation_denials,
+        report.model_attributed_mutation_events,
+        report.model_unmeasured_mutation_events,
         report.malformed_events,
         report.chained_events,
         report.unchained_events,

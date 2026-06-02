@@ -12,6 +12,19 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash|apply_patch|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "GOVERNANCE_HOOK_FORMAT=codex bash \"${PLUGIN_ROOT}/scripts/pre-tool-use-gap-closure.sh\" --format codex",
+            "timeout": 60,
+            "statusMessage": "Recording mutation model attribution"
+          }
+        ]
+      }
     ]
   }
 }

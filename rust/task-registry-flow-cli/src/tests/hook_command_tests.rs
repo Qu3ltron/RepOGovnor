@@ -2,7 +2,11 @@ use super::*;
 
 fn bash_payload(command: &str) -> String {
     serde_json::json!({
+        "model": "gpt-5-codex",
+        "session_id": "session-hook-command-tests",
+        "turn_id": "turn-hook-command-tests",
         "tool_name": "Bash",
+        "tool_use_id": "tool-use-hook-command-tests",
         "tool_input": {
             "command": command
         }

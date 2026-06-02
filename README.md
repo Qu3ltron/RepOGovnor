@@ -62,6 +62,9 @@ the terms in [LICENSE](LICENSE).
   read-only commands with `--record-receipt`.
 - Schema version 2 receipt chains with locked appends and `verify-chain`
   integrity checks.
+- Model attribution for supported Codex mutation hooks: Codex is the first
+  measured adapter, and non-Codex mutation surfaces remain unmeasured until
+  equivalent adapter evidence exists.
 - Strict v2 plan activation: phased checklists, exact file targets, behavior
   `gap_id`, behavior `polarity`, typed verifiers, and required positive plus
   negative behavior coverage before implementation work.
@@ -74,9 +77,11 @@ the terms in [LICENSE](LICENSE).
 
 Future policy work will make the input and output more explicit: a typed
 engineering policy as input, a compliance artifact as output, and token/cost
-evidence where usage can be measured honestly. Cost per commit is a product
-goal, but it requires structured usage receipts and pricing evidence; hidden or
-unavailable usage must be reported as unmeasured, not guessed.
+evidence where usage can be measured honestly. Current model attribution says
+which measured adapter/model requested supported repo mutation; it is not token
+usage evidence. Cost per commit is a product goal, but it requires structured
+usage receipts and pricing evidence; hidden or unavailable usage must be
+reported as unmeasured, not guessed.
 
 Important limits:
 

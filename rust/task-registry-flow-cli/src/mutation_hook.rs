@@ -1,6 +1,9 @@
 use crate::hook_io;
 use crate::model::*;
-use crate::schema::{HookFormat, MutationScope};
+use crate::schema::{
+    AgentModelAttribution, EventOutcome, HookFormat, ModelIdentityStatus, MutationAttribution,
+    MutationAttributionDecision, MutationScope,
+};
 use crate::{append_event, load_registry, normalize_relative_path, timestamp, truncate_detail};
 use serde_json::Value;
 use std::env;
@@ -12,9 +15,24 @@ pub(crate) struct HookInspection {
     pub(crate) paths: Vec<String>,
     pub(crate) tool_names: Vec<String>,
     command_write_without_path: bool,
+    command_write_with_path: bool,
+    pub(crate) model: Option<String>,
+    pub(crate) session_id: Option<String>,
+    pub(crate) turn_id: Option<String>,
+    pub(crate) tool_use_id: Option<String>,
+    pub(crate) hook_event_name: Option<String>,
 }
 
 impl HookInspection {
+    pub(crate) fn has_write_intent(&self) -> bool {
+        self.command_write_without_path
+            || self.command_write_with_path
+            || self
+                .tool_names
+                .iter()
+                .any(|name| is_write_hook_tool(name.as_str()))
+    }
+
     pub(crate) fn uncertain_write(&self) -> bool {
         if self.command_write_without_path {
             return true;
@@ -68,8 +86,8 @@ fn verify_mutation_payload_inner(
     }
 
     let mut implementation_paths = Vec::new();
-    for raw_path in inspection.paths {
-        let path = normalize_hook_path(root, &raw_path)?;
+    for raw_path in &inspection.paths {
+        let path = normalize_hook_path(root, raw_path)?;
         if !is_plan_bootstrap_write(&path) {
             implementation_paths.push(path);
         }
@@ -87,8 +105,8 @@ fn verify_mutation_payload_inner(
         .map(|target| MutationScope::from_task_target(&target.file))
         .collect::<Result<Vec<_>>>()?;
 
-    for path in implementation_paths {
-        if allowed_scopes.iter().any(|scope| scope.allows(&path)) {
+    for path in &implementation_paths {
+        if allowed_scopes.iter().any(|scope| scope.allows(path)) {
             continue;
         }
         let _ = append_event(
@@ -106,13 +124,39 @@ fn verify_mutation_payload_inner(
             "{path} is not bound to an active registry task target"
         ));
     }
+    if let Some(format) = format
+        && inspection.has_write_intent()
+    {
+        record_mutation_attribution(root, format, &inspection, &implementation_paths)?;
+    }
     Ok(())
 }
 
 pub(crate) fn inspect_hook_payload(value: &Value) -> HookInspection {
     let mut inspection = HookInspection::default();
+    collect_top_level_hook_metadata(value, &mut inspection);
     collect_hook_signals(value, &mut inspection);
     inspection
+}
+
+fn collect_top_level_hook_metadata(value: &Value, inspection: &mut HookInspection) {
+    let Some(map) = value.as_object() else {
+        return;
+    };
+    inspection.model = string_field(map.get("model"));
+    inspection.session_id = string_field(map.get("session_id"));
+    inspection.turn_id = string_field(map.get("turn_id"));
+    inspection.tool_use_id = string_field(map.get("tool_use_id"));
+    inspection.hook_event_name =
+        string_field(map.get("hook_event_name")).or_else(|| string_field(map.get("hookEventName")));
+}
+
+fn string_field(value: Option<&Value>) -> Option<String> {
+    value
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(ToOwned::to_owned)
 }
 
 fn collect_hook_signals(value: &Value, inspection: &mut HookInspection) {
@@ -134,8 +178,12 @@ fn collect_hook_signals(value: &Value, inspection: &mut HookInspection) {
                     && let Some(command) = child.as_str()
                 {
                     let command_paths = collect_command_paths(command);
+                    let has_write_intent = command_has_write_intent(command);
+                    if has_write_intent && !command_paths.is_empty() {
+                        inspection.command_write_with_path = true;
+                    }
                     if command_has_ambiguous_write_intent(command)
-                        || command_paths.is_empty() && command_has_write_intent(command)
+                        || command_paths.is_empty() && has_write_intent
                     {
                         inspection.command_write_without_path = true;
                     }
@@ -194,6 +242,103 @@ fn is_write_hook_tool(name: &str) -> bool {
             | "replace_file_content"
             | "multi_replace_file_content"
     )
+}
+
+fn record_mutation_attribution(
+    root: &Path,
+    format: HookFormat,
+    inspection: &HookInspection,
+    target_paths: &[String],
+) -> Result<()> {
+    let pre_tool_use = inspection
+        .hook_event_name
+        .as_deref()
+        .map(|name| name == "PreToolUse")
+        .unwrap_or(true);
+    let measured_codex = format == HookFormat::Codex
+        && inspection.model.is_some()
+        && inspection.session_id.is_some()
+        && inspection.turn_id.is_some()
+        && inspection.tool_use_id.is_some();
+    if format == HookFormat::Codex && pre_tool_use && !measured_codex {
+        let summary = "Codex mutation model identity missing".to_string();
+        let _ = append_event(
+            root,
+            EventRecord::mutation_attribution(
+                timestamp(),
+                0,
+                summary.clone(),
+                EventOutcome::MutationDenied,
+                target_paths
+                    .first()
+                    .cloned()
+                    .unwrap_or_else(|| ".".to_string()),
+                agent_attribution(format, inspection, ModelIdentityStatus::Unmeasured),
+                mutation_attribution(
+                    format,
+                    MutationAttributionDecision::Denied,
+                    target_paths.to_vec(),
+                ),
+            ),
+        );
+        return Err(summary);
+    }
+
+    let status = if measured_codex {
+        ModelIdentityStatus::Measured
+    } else {
+        ModelIdentityStatus::Unmeasured
+    };
+    let decision = if pre_tool_use {
+        MutationAttributionDecision::Allowed
+    } else {
+        MutationAttributionDecision::Observed
+    };
+    append_event(
+        root,
+        EventRecord::mutation_attribution(
+            timestamp(),
+            0,
+            format!("{} mutation attribution {}", format, decision.as_str()),
+            EventOutcome::Ok,
+            target_paths
+                .first()
+                .cloned()
+                .unwrap_or_else(|| ".".to_string()),
+            agent_attribution(format, inspection, status),
+            mutation_attribution(format, decision, target_paths.to_vec()),
+        ),
+    )
+}
+
+fn agent_attribution(
+    format: HookFormat,
+    inspection: &HookInspection,
+    identity_status: ModelIdentityStatus,
+) -> AgentModelAttribution {
+    AgentModelAttribution {
+        provider: format.to_string(),
+        adapter: format.to_string(),
+        identity_status,
+        evidence_source: "hook-payload".to_string(),
+        model_slug: inspection.model.clone(),
+        session_id: inspection.session_id.clone(),
+        turn_id: inspection.turn_id.clone(),
+        tool_use_id: inspection.tool_use_id.clone(),
+        hook_event_name: inspection.hook_event_name.clone(),
+    }
+}
+
+fn mutation_attribution(
+    format: HookFormat,
+    decision: MutationAttributionDecision,
+    target_paths: Vec<String>,
+) -> MutationAttribution {
+    MutationAttribution {
+        decision,
+        hook_format: format,
+        target_paths,
+    }
 }
 
 fn collect_command_paths(command: &str) -> Vec<String> {

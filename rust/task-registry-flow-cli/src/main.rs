@@ -7,6 +7,7 @@ mod landing;
 mod manifest;
 mod metrics;
 mod model;
+mod model_attribution;
 mod mutation_hook;
 mod plan_contract;
 mod policy;

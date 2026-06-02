@@ -65,6 +65,7 @@ string_enum!(CliCommand {
     VerifyLanding => "verify-landing",
     VerifyChain => "verify-chain",
     VerifyMutationHook => "verify-mutation-hook",
+    ModelAttributionCheck => "model-attribution-check",
     Metrics => "metrics",
     SourceLimit => "source-limit",
     ReleaseCheck => "release-check",
@@ -99,6 +100,7 @@ string_enum!(ReportSurface {
     Backlog => "backlog",
     ReceiptChain => "receipt-chain",
     ReceiptChainFix => "receipt-chain-fix",
+    ModelAttribution => "model-attribution",
 });
 
 string_enum!(FailureCode {
@@ -135,6 +137,17 @@ string_enum!(EventOutcome {
     Ok => "ok",
     Error => "error",
     MutationDenied => "mutation-denied",
+});
+
+string_enum!(ModelIdentityStatus {
+    Measured => "measured",
+    Unmeasured => "unmeasured",
+});
+
+string_enum!(MutationAttributionDecision {
+    Allowed => "allowed",
+    Denied => "denied",
+    Observed => "observed",
 });
 
 string_enum!(DiagnosticSeverity {
@@ -320,6 +333,10 @@ pub(crate) struct ReceiptEvent {
     pub(crate) verifier_results: Vec<VerifierResult>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) mutation_denial: Option<MutationDenial>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) agent_model_attribution: Option<AgentModelAttribution>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) mutation_attribution: Option<MutationAttribution>,
 }
 
 impl ReceiptEvent {
@@ -343,6 +360,8 @@ impl ReceiptEvent {
             diagnostics: Vec::new(),
             verifier_results: Vec::new(),
             mutation_denial: None,
+            agent_model_attribution: None,
+            mutation_attribution: None,
         }
     }
 
@@ -365,6 +384,35 @@ impl ReceiptEvent {
             diagnostics: Vec::new(),
             verifier_results: Vec::new(),
             mutation_denial: Some(MutationDenial { path, reason }),
+            agent_model_attribution: None,
+            mutation_attribution: None,
+        }
+    }
+
+    pub(crate) fn mutation_attribution(
+        timestamp: String,
+        duration_ms: u128,
+        summary: String,
+        outcome: EventOutcome,
+        subject_path: String,
+        agent_model_attribution: AgentModelAttribution,
+        mutation_attribution: MutationAttribution,
+    ) -> Self {
+        Self {
+            schema_version: SchemaVersion::V2,
+            timestamp,
+            command: CliCommand::VerifyMutationHook,
+            outcome,
+            duration_ms,
+            subject: RuntimeSubject::path(RuntimeSubjectKind::MutationTarget, subject_path),
+            summary,
+            previous_event_hash_sha256: None,
+            event_hash_sha256: None,
+            diagnostics: Vec::new(),
+            verifier_results: Vec::new(),
+            mutation_denial: None,
+            agent_model_attribution: Some(agent_model_attribution),
+            mutation_attribution: Some(mutation_attribution),
         }
     }
 }
@@ -412,6 +460,33 @@ pub(crate) struct VerifierResult {
 pub(crate) struct MutationDenial {
     pub(crate) path: String,
     pub(crate) reason: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct AgentModelAttribution {
+    pub(crate) provider: String,
+    pub(crate) adapter: String,
+    pub(crate) identity_status: ModelIdentityStatus,
+    pub(crate) evidence_source: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) model_slug: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) session_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) turn_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) tool_use_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) hook_event_name: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct MutationAttribution {
+    pub(crate) decision: MutationAttributionDecision,
+    pub(crate) hook_format: HookFormat,
+    pub(crate) target_paths: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

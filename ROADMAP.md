@@ -40,6 +40,8 @@ Target: v2.x.
 
 Target: v2.x.
 
+- Treat current Codex mutation model attribution as the first measured adapter
+  step, not as token spend or universal attribution.
 - Add a cost evidence model for token spend and provider/runtime usage.
 - Classify every cost value as measured, estimated, or unmeasured.
 - Require provider, model, usage counts, pricing snapshot, timestamp, attribution

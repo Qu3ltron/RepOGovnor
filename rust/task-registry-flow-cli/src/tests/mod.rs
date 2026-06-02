@@ -19,6 +19,7 @@ mod backlog_check_tests;
 mod hook_command_tests;
 mod landing_tests;
 mod metrics_tests;
+mod model_attribution_tests;
 mod receipt_chain_tests;
 mod release_source_tests;
 mod reviewer_report_tests;
@@ -372,7 +373,11 @@ fn hook_allows_runtime_governance_write_with_active_target() {
     fs::write(root.join("docs/plans/sample.md"), plan).unwrap();
     activate_plan(&root, "docs/plans/sample.md").unwrap();
     let payload = serde_json::json!({
+        "model": "gpt-5-codex",
+        "session_id": "session-runtime-governance",
+        "turn_id": "turn-runtime-governance",
         "tool_name": "apply_patch",
+        "tool_use_id": "tool-use-runtime-governance",
         "tool_input": {
             "command": "*** Begin Patch\n*** Update File: .codex/config.toml\n@@\n old\n*** End Patch\n"
         }

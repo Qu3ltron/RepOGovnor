@@ -220,6 +220,8 @@ pub(crate) struct MetricsReport {
     pub(crate) events: usize,
     pub(crate) failed_events: usize,
     pub(crate) mutation_denials: usize,
+    pub(crate) model_attributed_mutation_events: usize,
+    pub(crate) model_unmeasured_mutation_events: usize,
     pub(crate) malformed_events: usize,
     pub(crate) chained_events: usize,
     pub(crate) unchained_events: usize,

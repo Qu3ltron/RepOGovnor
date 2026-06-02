@@ -4,6 +4,13 @@ archive_id = "completed-001"
 archive_authority = "docs/task-registry/archive/completed-001.toml"
 
 [[plans]]
+plan_id = "PLAN-2026-06-02-codex-model-attribution-hardening"
+plan_path = "docs/plans/codex-model-attribution-hardening-2026-06-02.md"
+plan_hash_sha256 = "6d1ed561e074db21cfb9405242ac3694138715f9b3bdd2acbca08e83c642abf2"
+activated_at = "2026-06-01"
+status = "completed"
+
+[[plans]]
 plan_id = "PLAN-2026-06-01-policy-posture-version-coverage"
 plan_path = "docs/plans/policy-posture-version-coverage-2026-06-01.md"
 plan_hash_sha256 = "d7ef271f9c761ab66d0fa68350cbff565feb84e42eb9c9ef94ab9d14e431dc10"
@@ -38,12 +45,194 @@ plan_hash_sha256 = "157360947dadb6819ed719432af55c02c980479187e9ff843673dda7a517
 activated_at = "2026-06-01"
 status = "completed"
 
-[[plans]]
-plan_id = "PLAN-2026-06-01-first-run-installer-guidance"
-plan_path = "docs/plans/first-run-installer-guidance-2026-06-01.md"
-plan_hash_sha256 = "2e0e04bdaf91283ee3f5261294d8d1509dea9aa3a0af5351c9218f0ac8346df4"
-activated_at = "2026-06-01"
+[[tasks]]
+task_id = "TASK-2026-06-02-codex-model-attribution-hardening-001"
+plan_id = "PLAN-2026-06-02-codex-model-attribution-hardening"
 status = "completed"
+title = "Implement runtime model attribution"
+kind = "implementation"
+source_plan_path = "docs/plans/codex-model-attribution-hardening-2026-06-02.md"
+source_plan_hash_sha256 = "6d1ed561e074db21cfb9405242ac3694138715f9b3bdd2acbca08e83c642abf2"
+reason = "Codex mutation governance must record which active model is responsible for supported repo mutation attempts."
+acceptance_proof = "Behaviors B-001, B-002, B-003, and B-004 pass their typed verifiers."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "B-001-codex-attribution-positive",
+    "B-002-codex-attribution-negative",
+    "B-003-model-check-positive",
+    "B-004-model-check-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T21:49:33.302634831-04:00"
+completion_changed_files = [
+    ".codex/hooks.json",
+    "README.md",
+    "REQUIREMENTS.toml",
+    "ROADMAP.md",
+    "docs/engineering-policy-compliance.md",
+    "docs/gap-pipeline.md",
+    "docs/runtime-schemas.md",
+    "docs/version-roadmap.toml",
+    "hooks/codex-hooks.json",
+    "rust/task-registry-flow-cli/src/main.rs",
+    "rust/task-registry-flow-cli/src/metrics.rs",
+    "rust/task-registry-flow-cli/src/model.rs",
+    "rust/task-registry-flow-cli/src/model_attribution.rs",
+    "rust/task-registry-flow-cli/src/mutation_hook.rs",
+    "rust/task-registry-flow-cli/src/runtime.rs",
+    "rust/task-registry-flow-cli/src/schema.rs",
+    "rust/task-registry-flow-cli/src/tests/hook_command_tests.rs",
+    "rust/task-registry-flow-cli/src/tests/mod.rs",
+    "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs",
+    "templates/.codex/hooks.json.template",
+]
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/schema.rs"
+object = "receipt_schema"
+required_change = "Add attribution enums, structs, report surface, and command."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/model.rs"
+object = "metrics_report"
+required_change = "Add model attribution metrics counts."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/main.rs"
+object = "module_list"
+required_change = "Include the model attribution module."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/model_attribution.rs"
+object = "model_attribution_check"
+required_change = "Implement receipt scanning and diagnostics for model attribution."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/runtime.rs"
+object = "dispatcher"
+required_change = "Route model-attribution-check and update usage."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/mutation_hook.rs"
+object = "codex_attribution"
+required_change = "Require Codex PreToolUse model identity for supported writes and append attribution receipts."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/metrics.rs"
+object = "attribution_counts"
+required_change = "Count measured and unmeasured mutation attribution receipts."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/reviewer_report.rs"
+object = "attribution_summary"
+required_change = "Show model attribution counts in reviewer reports."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs"
+object = "model_attribution_tests"
+required_change = "Add focused attribution runtime tests."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/mod.rs"
+object = "test_module_list"
+required_change = "Include model attribution tests."
+
+[[tasks.targets]]
+file = "rust/task-registry-flow-cli/src/tests/hook_command_tests.rs"
+object = "codex_identity_fixture"
+required_change = "Carry required Codex identity fields in existing write-scope hook command fixtures."
+
+[[tasks]]
+task_id = "TASK-2026-06-02-codex-model-attribution-hardening-002"
+plan_id = "PLAN-2026-06-02-codex-model-attribution-hardening"
+status = "completed"
+title = "Document and package model attribution hardening"
+kind = "documentation"
+source_plan_path = "docs/plans/codex-model-attribution-hardening-2026-06-02.md"
+source_plan_hash_sha256 = "6d1ed561e074db21cfb9405242ac3694138715f9b3bdd2acbca08e83c642abf2"
+reason = "Public posture must state Codex as first measured adapter without claiming token spend or universal attribution."
+acceptance_proof = "Behaviors B-005 and B-006 pass their typed verifiers."
+created_at = "2026-06-01"
+updated_at = "2026-06-01"
+behavior_ids = [
+    "B-005-docs-positive",
+    "B-006-docs-negative",
+]
+completion_verified_by = "verify-landing"
+completion_verified_at = "2026-06-01T21:49:33.302634831-04:00"
+completion_changed_files = [
+    ".codex/hooks.json",
+    "README.md",
+    "REQUIREMENTS.toml",
+    "ROADMAP.md",
+    "docs/engineering-policy-compliance.md",
+    "docs/gap-pipeline.md",
+    "docs/runtime-schemas.md",
+    "docs/version-roadmap.toml",
+    "hooks/codex-hooks.json",
+    "rust/task-registry-flow-cli/src/main.rs",
+    "rust/task-registry-flow-cli/src/metrics.rs",
+    "rust/task-registry-flow-cli/src/model.rs",
+    "rust/task-registry-flow-cli/src/model_attribution.rs",
+    "rust/task-registry-flow-cli/src/mutation_hook.rs",
+    "rust/task-registry-flow-cli/src/runtime.rs",
+    "rust/task-registry-flow-cli/src/schema.rs",
+    "rust/task-registry-flow-cli/src/tests/hook_command_tests.rs",
+    "rust/task-registry-flow-cli/src/tests/mod.rs",
+    "rust/task-registry-flow-cli/src/tests/model_attribution_tests.rs",
+    "templates/.codex/hooks.json.template",
+]
+
+[[tasks.targets]]
+file = ".codex/hooks.json"
+object = "codex_posttooluse"
+required_change = "Add Codex PostToolUse model attribution hook."
+
+[[tasks.targets]]
+file = "hooks/codex-hooks.json"
+object = "codex_posttooluse"
+required_change = "Mirror packaged Codex PostToolUse hook."
+
+[[tasks.targets]]
+file = "templates/.codex/hooks.json.template"
+object = "codex_posttooluse"
+required_change = "Project PostToolUse hook projection."
+
+[[tasks.targets]]
+file = "README.md"
+object = "model_attribution"
+required_change = "Document Codex as first measured adapter and non-Codex as unmeasured."
+
+[[tasks.targets]]
+file = "ROADMAP.md"
+object = "cost_evidence"
+required_change = "Reflect shipped model attribution before token/cost evidence."
+
+[[tasks.targets]]
+file = "docs/engineering-policy-compliance.md"
+object = "model_evidence"
+required_change = "Clarify model identity versus token spend evidence."
+
+[[tasks.targets]]
+file = "docs/runtime-schemas.md"
+object = "receipt_schema"
+required_change = "Document attribution fields and model-attribution-check."
+
+[[tasks.targets]]
+file = "docs/gap-pipeline.md"
+object = "cost_gap"
+required_change = "Update current evidence and remaining cost gap."
+
+[[tasks.targets]]
+file = "docs/version-roadmap.toml"
+object = "covered_plan_ids"
+required_change = "Add this plan to 2.1.0 release coverage."
+
+[[tasks.targets]]
+file = "REQUIREMENTS.toml"
+object = "release_source.required"
+required_change = "Include model attribution module and tests."
 
 [[tasks]]
 task_id = "TASK-2026-06-01-policy-posture-version-coverage-001"
@@ -698,42 +887,3 @@ required_change = "Assert multi-repo doc content and package asset presence."
 file = "docs/gap-pipeline.md"
 object = "GP-004"
 required_change = "Update GP-004 with manual-boundary evidence and remaining reactivation conditions."
-
-[[tasks]]
-task_id = "TASK-2026-06-01-first-run-installer-guidance-001"
-plan_id = "PLAN-2026-06-01-first-run-installer-guidance"
-status = "completed"
-title = "Clarify first-run installer output"
-kind = "documentation"
-source_plan_path = "docs/plans/first-run-installer-guidance-2026-06-01.md"
-source_plan_hash_sha256 = "2e0e04bdaf91283ee3f5261294d8d1509dea9aa3a0af5351c9218f0ac8346df4"
-reason = "GP-001 needs direct first-run guidance in the command output new public users see."
-acceptance_proof = "Behaviors B-2026-06-01-first-run-positive and B-2026-06-01-first-run-negative pass."
-created_at = "2026-06-01"
-updated_at = "2026-06-01"
-behavior_ids = [
-    "B-2026-06-01-first-run-positive",
-    "B-2026-06-01-first-run-negative",
-]
-completion_verified_by = "verify-landing"
-completion_verified_at = "2026-06-01T15:19:07.998431282-04:00"
-completion_changed_files = [
-    "docs/gap-pipeline.md",
-    "scripts/install-to-workspace.sh",
-    "scripts/test-install-modes.sh",
-]
-
-[[tasks.targets]]
-file = "scripts/install-to-workspace.sh"
-object = "first_run_next_steps"
-required_change = "Print explicit dry-run continuation and applied-install first-run validation guidance."
-
-[[tasks.targets]]
-file = "scripts/test-install-modes.sh"
-object = "first_run_output_assertions"
-required_change = "Assert installer output includes dry-run continuation and applied-install next steps."
-
-[[tasks.targets]]
-file = "docs/gap-pipeline.md"
-object = "GP-001"
-required_change = "Update GP-001 with current first-run installer evidence and remaining reactivation conditions."

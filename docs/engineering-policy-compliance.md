@@ -72,6 +72,13 @@ Measured cost requires provider, model, usage counts, pricing snapshot or
 version, timestamp, attribution target, and evidence source. The system must not
 guess spend from elapsed time, commit size, file count, or agent narration.
 
+Current shipped evidence starts with model responsibility for supported Codex
+repo mutation hooks. Codex is the first measured adapter because its hook
+payload exposes model/session/turn/tool-use identity. Non-Codex mutation
+surfaces remain unmeasured unless an adapter exposes equivalent evidence.
+Model attribution is necessary for cost evidence, but it is not token usage or
+cost per commit.
+
 Cost per commit should only be reported when commit-linked usage receipts exist.
 Otherwise the artifact should say the metric is unmeasured and explain which
 usage evidence is missing.

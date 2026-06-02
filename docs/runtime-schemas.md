@@ -29,6 +29,7 @@ diagnostic payload:
 .codex/scripts/task-registry status-check --format json
 .codex/scripts/task-registry version-check validate --format json
 .codex/scripts/task-registry backlog-check --format json
+.codex/scripts/task-registry model-attribution-check --format json
 ```
 
 For command-specific diagnostic JSON, failures still emit the raw diagnostic
@@ -74,6 +75,15 @@ Receipt events use typed command, outcome, subject-kind, diagnostic-surface,
 verifier-type, and status enums. Known subject kinds are `command`,
 `mutation-target`, and `verifier-target`. Unknown values fail deserialization
 and are not accepted as runtime evidence.
+
+Mutation receipts may include `agent_model_attribution` and
+`mutation_attribution`. Codex is the first measured adapter: supported Codex
+write-intent mutation hooks require `model`, `session_id`, `turn_id`, and
+`tool_use_id` before an active-target mutation is allowed. `PreToolUse` receipts
+record `allowed` or `denied`; `PostToolUse` receipts record `observed`.
+Non-Codex adapters are reported as `unmeasured` until they expose equivalent
+identity evidence. `model-attribution-check` reports measured and unmeasured
+mutation attribution posture without guessing missing provider data.
 
 Schema version 1 receipt lines are invalid for current runtime verification.
 Metrics count them as malformed, `verify-chain` fails them, and `--repair`
@@ -144,8 +154,8 @@ Required fields: `check_id`, `surface`, `path`, `severity`, `status`,
 
 Known surfaces: `cli`, `manifest`, `migration`, `release-source`,
 `tracked-for-ci`, `source-limit`, `source-limit-plan`, `status`, `version`,
-`backlog`, `receipt-chain`, and `receipt-chain-fix`. Unknown surfaces fail
-deserialization.
+`backlog`, `receipt-chain`, `receipt-chain-fix`, and `model-attribution`.
+Unknown surfaces fail deserialization.
 
 Known statuses: `pass`, `warn`, `fail`, `skip`.
 
@@ -247,8 +257,9 @@ waivers, and unproven controls.
 Token and cost evidence should be modeled as measured, estimated, or unmeasured.
 Measured cost requires structured usage evidence, provider and model identity,
 pricing snapshot or version, timestamp, attribution target, and evidence source.
-The current release does not calculate reliable cost per commit; unavailable or
-hidden usage must be reported as unmeasured rather than guessed.
+The current release measures Codex mutation model identity for supported hook
+paths, but it does not calculate reliable cost per commit; unavailable or hidden
+usage must be reported as unmeasured rather than guessed.
 
 ## Activation Plan Contract
 

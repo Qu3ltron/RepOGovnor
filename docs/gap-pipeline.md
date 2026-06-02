@@ -110,14 +110,16 @@ to a first-class typed engineering policy manifest.
 
 ### GP-007: Token spend and cost per commit need structured usage evidence
 - Claim pressure: cost per commit is an intended first-class metric.
-- Current evidence: local workflow metrics exist, but structured token usage,
-  provider/model attribution, pricing snapshots, and commit-linked cost receipts
-  are not shipped.
+- Current evidence: local workflow metrics exist, and supported Codex mutation
+  hooks now record measured model attribution. Structured token usage, pricing
+  snapshots, non-Codex measured adapters, and commit-linked cost receipts are
+  not shipped.
 - User impact: any current cost claim would be false precision. Hidden or
   unavailable usage must be reported as unmeasured.
 - Next closure: add a cost evidence model that distinguishes measured,
   estimated, and unmeasured spend, then attribute measured usage to commits,
   plans, tasks, verifier runs, landing attempts, retries, and release cycles.
+  Codex model attribution is a prerequisite signal, not cost evidence.
 - Reactivation condition: before publishing cost per commit or token-spend
   metrics as a shipped feature.
 
