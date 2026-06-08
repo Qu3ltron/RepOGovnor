@@ -562,6 +562,7 @@ fn skip_dir(path: &str) -> bool {
                 | "out"
                 | "venv"
                 | "vendor"
+                | "xorg-deps"
         )
     })
 }
@@ -586,6 +587,7 @@ fn skip_file(path: &str) -> bool {
             | "deno.lock"
             | "flake.lock"
             | "go.sum"
+            | "keysymdef.go"
     ) || path == "docs/task-registry/events.jsonl"
         || path.starts_with("docs/task-registry/archive/")
 }
