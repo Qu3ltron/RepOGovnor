@@ -596,7 +596,7 @@ def render_agy_skill(skill: str) -> str:
     dest = target_root / ".agents/skills" / f"{skill}.md"
     return f"{rel(dest)}: {write_file(dest, src.read_text())}"
 
-for skill in ("gap-closure-contract", "task-registry-flow"):
+for skill in ("gap-closure-contract", "task-registry-flow", "governed-pr-flow"):
     actions.append(sync_skill(skill, target_root / ".cursor/skills"))
     actions.append(sync_skill(skill, target_root / ".agents/skills"))
     actions.append(sync_skill(skill, target_root / ".claude/skills"))
