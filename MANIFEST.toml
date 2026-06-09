@@ -110,11 +110,6 @@ destination = ".cursor/skills/task-registry-flow"
 recursive = true
 
 [[copy]]
-source = "skills/governed-pr-flow"
-destination = ".cursor/skills/governed-pr-flow"
-recursive = true
-
-[[copy]]
 source = "skills/gap-closure-contract"
 destination = ".agents/skills/gap-closure-contract"
 recursive = true
@@ -122,11 +117,6 @@ recursive = true
 [[copy]]
 source = "skills/task-registry-flow"
 destination = ".agents/skills/task-registry-flow"
-recursive = true
-
-[[copy]]
-source = "skills/governed-pr-flow"
-destination = ".agents/skills/governed-pr-flow"
 recursive = true
 
 [[copy]]
@@ -139,11 +129,6 @@ source = "skills/task-registry-flow"
 destination = ".claude/skills/task-registry-flow"
 recursive = true
 
-[[copy]]
-source = "skills/governed-pr-flow"
-destination = ".claude/skills/governed-pr-flow"
-recursive = true
-
 [[generated]]
 destination = ".agents/skills/gap-closure-contract.md"
 from = "skills/gap-closure-contract/SKILL.md"
@@ -151,10 +136,6 @@ from = "skills/gap-closure-contract/SKILL.md"
 [[generated]]
 destination = ".agents/skills/task-registry-flow.md"
 from = "skills/task-registry-flow/SKILL.md"
-
-[[generated]]
-destination = ".agents/skills/governed-pr-flow.md"
-from = "skills/governed-pr-flow/SKILL.md"
 
 [[generated]]
 destination = ".codex/governance-cli.env"
@@ -218,8 +199,6 @@ tracked_for_ci = [
   ".agents/skills/gap-closure-contract.md",
   ".agents/skills/task-registry-flow",
   ".agents/skills/task-registry-flow.md",
-  ".agents/skills/governed-pr-flow",
-  ".agents/skills/governed-pr-flow.md",
   ".cursor/rules/agent-governance.mdc",
   ".cursor/rules/hook-gate-doctrine.mdc",
   ".cursor/hooks.json",
@@ -228,11 +207,9 @@ tracked_for_ci = [
   "GEMINI.md",
   ".cursor/skills/gap-closure-contract/PROJECT.md",
   ".cursor/skills/task-registry-flow/PROJECT.md",
-  ".cursor/skills/governed-pr-flow/PROJECT.md",
   ".claude/settings.json",
   ".claude/skills/gap-closure-contract/PROJECT.md",
   ".claude/skills/task-registry-flow/PROJECT.md",
-  ".claude/skills/governed-pr-flow/PROJECT.md",
   "docs/task-registry.toml",
   "docs/task-registry/events.jsonl",
 ]
