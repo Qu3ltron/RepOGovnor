@@ -1,0 +1,28 @@
+# Project extensions for governed-pr-flow
+
+Optional. Copy to `PROJECT.md` beside the installed skill and edit for your repository.
+
+## Repository and branches
+
+- Repository root: `<absolute-path>`
+- Default PR base branch: `<branch>`
+- Protected branches: `<comma-separated-list>`
+
+## Required gates before PR
+
+- Focused gates:
+  - `<command>`
+- Full gates:
+  - `<command>`
+
+## Task-registry mapping
+
+- Plan location: `docs/plans/<slug>.md`
+- Activation command: `.codex/scripts/task-registry activate docs/plans/<slug>.md`
+- Landing command: `.codex/scripts/task-registry verify-landing --plan-id <plan_id> --changed-files <paths>`
+
+## PR template conventions
+
+- Title format: `<convention>`
+- Required body sections: `<summary/tests/risk/etc>`
+- Required labels/reviewers: `<policy>`
