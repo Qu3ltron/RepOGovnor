@@ -9,7 +9,7 @@ Use the plugin-owned registry only: `{{TASK_REGISTRY_CLI}} validate`, `status`, 
 
 Keep source, scripts, configs, docs, templates, and governance files at or below 1600 lines. Treat this as a design-time rule. Before adding behavior to a violating file, run `{{TASK_REGISTRY_CLI}} source-limit plan --path <file>` and split first.
 
-Cursor hooks live in `.cursor/hooks.json`; they are runtime guardrails, not the source of truth. CI and `{{TASK_REGISTRY_CLI}} source-limit check` are authoritative.
+Cursor hooks in `.cursor/hooks.json` enforce repo law at mutation time. Treat hook outcomes as **operational directions** (see `.cursor/rules/hook-gate-doctrine.mdc`): a deny names the missing governance step; **invalid JSON ≠ need another plan** — fix stdout on the existing active hook target. Do not disable hooks or skip the mutation gate. Policy authority remains in `.codex/agent-governance.toml`, `docs/task-registry.toml`, and CI; hooks apply that policy live.
 
 Use exact active or planned task targets. Ambiguous shell redirections, compact redirects, and inline write calls without deterministic paths fail closed. A terminal task is immutable after `completed` or `cancelled`; changed follow-up work needs a new `task_id`.
 

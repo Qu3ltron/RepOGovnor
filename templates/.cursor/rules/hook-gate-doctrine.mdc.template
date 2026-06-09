@@ -1,0 +1,22 @@
+---
+description: Hook gate triage — invalid JSON vs plan binding vs path errors.
+alwaysApply: true
+---
+
+# Hook gate triage (operational directions)
+
+Cursor hooks enforce repo law at mutation time. Read `.cursor/rules/agent-governance.mdc` for the full workflow. **Do not disable hooks or use subagents or external terminals to skip registry binding** — except gate self-repair on `{{MUTATION_HOOK_SCRIPT}}` when the hook cannot emit valid JSON.
+
+## Triage table
+
+| Symptom | Meaning | Response |
+|---------|---------|----------|
+| **invalid JSON** from hook | Gate script stdout is polluted (e.g. `TASK_VERIFY_MUTATION_HOOK ok` before JSON) | **Not** “create another plan.” Fix stdout on the **existing active hook target** (capture `verify-mutation-hook` output off the hook pipe). Then retry inside Cursor. |
+| **not bound to an active registry task target** | Path not in `[[tasks.targets]]` for an active task | Write/refresh `docs/plans/<slug>.md`, run `{{TASK_REGISTRY_CLI}} activate`, edit only listed targets. |
+| **did not expose a deterministic target path** | Write/Shell lacked an exact repo-relative path | Use `Write`/`StrReplace` with full path; no vague shell redirects. |
+
+## When a plan is already active
+
+Activation unlocks **only** paths in `[[tasks.targets]]`. If those paths still fail with **invalid JSON**, the gate script is broken — repair it first, not the registry.
+
+Policy authority: `.codex/agent-governance.toml`, `docs/task-registry.toml`, CI. Hooks apply that policy live.

@@ -28,6 +28,7 @@ required = [
   ".agents/skills/task-registry-flow",
   ".agents/skills/task-registry-flow.md",
   ".cursor/rules/agent-governance.mdc",
+  ".cursor/rules/hook-gate-doctrine.mdc",
   ".cursor/hooks.json",
   ".cursor/hooks/gap-closure-gate.sh",
   "AGENTS.md",

@@ -8,7 +8,7 @@ are guardrails.
 |-------------|--------------|--------------|
 | Codex | `AGENTS.md`, `.codex/config.toml`, `.codex/hooks.json`, `.agents/skills/<skill>/SKILL.md` | `plugins/agent-governance/scripts/status.sh --env codex`; Codex hooks require a trusted project |
 | Antigravity CLI | `GEMINI.md`, `.agents/hooks.json`, `.agents/skills/*.md`, `.agents/plugins/agent-governance` | `agy --version` must be 1.0.3 or newer; `agy plugin validate plugins/agent-governance` must process hooks |
-| Cursor | `.cursor/rules/agent-governance.mdc`, `.cursor/skills/<skill>/SKILL.md`, `.cursor/hooks.json` | `plugins/agent-governance/scripts/status.sh --env cursor`; `cursor-agent --plugin-dir plugins/agent-governance` can load local plugin code |
+| Cursor | `.cursor/rules/agent-governance.mdc`, `.cursor/rules/hook-gate-doctrine.mdc` (always-on gate triage), `.cursor/skills/<skill>/SKILL.md`, `.cursor/hooks.json` | `plugins/agent-governance/scripts/status.sh --env cursor`; hooks are **operational directions** at mutation time (deny = missing governance step; invalid JSON = gate repair on active hook target, not a new plan); optional user-level governed subagents complement repo-local skills/hooks |
 | Claude Code | `CLAUDE.md`, `.claude/settings.json`, `.claude/skills/<skill>/SKILL.md` | `plugins/agent-governance/scripts/status.sh --strict`; `.claude/settings.json` must delegate PreToolUse to the canonical mutation gate |
 
 Do not add compatibility shims for old workspace `.gemini/settings.json`, stale `.codex/settings.toml`, or `.codex/hooks/user-plan-approval.toml`. Current install removes those generated paths.

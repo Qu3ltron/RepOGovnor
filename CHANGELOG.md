@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+### Added
+
+- Cursor `hook-gate-doctrine.mdc` rule template (`alwaysApply`) with hook gate triage:
+  invalid JSON vs plan binding vs deterministic path errors.
+- `scripts/test-mutation-hook-stdout.sh` to assert the mutation gate emits one JSON object.
+
+### Changed
+
+- Mutation hook shell adapter: emit codex/claude allow JSON; capture
+  `verify-mutation-hook` stdout/stderr off the hook pipe so Cursor receives valid JSON.
+- Cursor `agent-governance.mdc` template: hooks are operational directions, not
+  obstacles to bypass.
+- `docs/agent-environment-matrix.md` Cursor row documents hook operational doctrine.
+
+### Fixed
+
+- `source-limit check` skips generated `keysymdef.go` and vendored `xorg-deps/` trees
+  in consumer repositories.
+
 ## 2.1.0 - 2026-06-01
 
 ### Added

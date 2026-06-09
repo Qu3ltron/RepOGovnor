@@ -27,6 +27,7 @@ emit_json() {
       printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":%s}}\n' "$escaped_reason"
       ;;
     codex:allow|claude:allow)
+      printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow"}}\n'
       ;;
     cursor:deny)
       printf '{"permission":"deny","user_message":%s,"agent_message":%s}\n' "$escaped_reason" "$escaped_reason"
@@ -88,9 +89,17 @@ if [[ "$base_verify_cmd" != "$canonical_verify_cmd" ]]; then
   exit 0
 fi
 
-if output="$(.codex/scripts/task-registry verify-mutation-hook --format "$format" 2>&1)"; then
+verify_stderr="$(mktemp)"
+verify_stdout="$(mktemp)"
+trap 'rm -f "${verify_stderr}" "${verify_stdout}"' EXIT
+
+if .codex/scripts/task-registry verify-mutation-hook --format "$format" >"${verify_stdout}" 2>"${verify_stderr}"; then
   emit_json allow
 else
+  output="$(tr '\n' ' ' <"${verify_stderr}")"
+  if [[ -z "${output// }" ]]; then
+    output="$(tr '\n' ' ' <"${verify_stdout}")"
+  fi
   emit_deny "mutation gate failed: ${output}"
   exit 0
 fi
